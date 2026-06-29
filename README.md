@@ -1,32 +1,243 @@
-# React + TypeScript + Vite
+# 📸 PICKDAY — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> 나에게 딱 맞는 사진관을 찾아주는 서비스, PICKDAY의 프론트엔드 레포지토리입니다.
 
-Currently, two official plugins are available:
+<br>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📌 프로젝트 소개
 
-## React Compiler
+PICKDAY는 사용자가 촬영 목적, 날짜, 지역 등의 조건으로 사진관을 검색하고 예약할 수 있는 웹 서비스입니다.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+<br>
 
-## Expanding the Oxlint configuration
+## 👥 팀원 및 역할 분담
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+| 이름 | 역할 | 담당 페이지 |
+|------|------|------------|
+| 김이준 (팀장) | FE | TBD |
+| 남현준 | FE | TBD |
+| 전지혜 | FE | TBD |
+| 신승연 | FE | TBD |
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+<br>
+
+## 🛠 기술 스택
+
+| 역할 | 기술 |
+|------|------|
+| 번들러 | Vite |
+| UI | React + TypeScript |
+| 라우터 | React Router v8 |
+| 전역 상태 | Zustand v5 |
+| 서버 상태 | TanStack Query v5 |
+
+<br>
+
+## 📁 폴더 구조
+
+```
+src/
+├── components/
+│   ├── common/       # 공통 UI 컴포넌트 (Button, Card, Chip 등)
+│   ├── layout/       # 레이아웃 컴포넌트 (HomeBar, StatusBar)
+│   └── icons/        # 아이콘 컴포넌트
+├── pages/
+│   ├── search/       # B - 검색
+│   ├── studio/       # C - 사진관 목록/상세
+│   ├── compare/      # D - 사진관 비교
+│   ├── reservation/  # E - 예약
+│   ├── mypage/       # F - 마이페이지
+│   ├── wishlist/     # G-1 위시리스트
+│   └── chat/         # G-2 채팅
+├── hooks/            # 커스텀 훅
+├── stores/           # Zustand 전역 상태
+├── services/         # API 호출 함수
+├── types/            # TypeScript 타입/인터페이스
+├── utils/            # 공통 유틸 함수
+├── assets/           # 이미지, 폰트 등 정적 파일
+├── App.tsx           # 라우트 설정
+└── main.tsx          # 앱 진입점
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+<br>
+
+## 🌿 브랜치 컨벤션
+
+### 브랜치 구성
+
+| 브랜치 | 설명 |
+|--------|------|
+| `main` | 실제 서비스에 배포되는 브랜치 |
+| `develop` | 모든 기능 브랜치가 병합되는 기본 개발 브랜치 |
+| `feature/*` | 기능 단위 브랜치 (develop에서 분기) |
+| `bugfix/*` | 버그 수정 브랜치 (develop에서 분기) |
+| `hotfix/*` | 운영 중 긴급 수정 브랜치 (main에서 분기) |
+
+### 브랜치 네이밍
+
+```
+<type>/<issue-number>-<간단한설명>
+```
+
+```
+feature/12-login-form
+bugfix/45-missing-data-sync
+hotfix/73-server-crash-on-boot
+```
+
+### 병합 흐름
+
+| 단계 | 설명 |
+|------|------|
+| `feature/`, `bugfix/` | develop에서 분기하고 다시 develop으로 병합 |
+| `develop → main` | 정기 릴리즈 또는 QA 완료 시점에 병합 |
+| `hotfix/` | main에서 직접 분기하여 운영 긴급 수정만 처리 |
+| `main → develop` | hotfix 이후 develop과의 상태 동기화 |
+
+<br>
+
+## ✏️ 커밋 컨벤션
+
+### 형식
+
+```
+<Gitmoji> <Type>. <요약 설명>
+
+Why: 변경 이유
+How: 변경 방법 (각 줄 72자 이내)
+
+Tag: #키워드 #기술 #패턴
+See: 링크 또는 이슈 번호
+```
+
+### Gitmoji 목록
+
+| Gitmoji | Type | 설명 |
+|---------|------|------|
+| 🎨 | Style | 코드 포맷, 구조 개선 |
+| ⚡ | Perf | 성능 개선 |
+| 🔥 | Remove | 불필요한 코드/파일 삭제 |
+| 🐛 | Fix | 버그 수정 |
+| 🚑 | Hotfix | 긴급 수정 |
+| ✨ | Feat | 새로운 기능 추가 |
+| 📝 | Docs | 문서 작성 및 수정 |
+| 🚀 | Deploy | 배포 관련 작업 |
+| 🚨 | UI | UI/스타일 변경 |
+| ✅ | Test | 테스트 코드 추가 및 수정 |
+| 🔒 | Security | 보안 이슈 해결 |
+| ♻️ | Refac | 리팩토링 |
+| 🔧 | Config | 설정 파일 수정 |
+| 🔨 | Script | 빌드/개발 스크립트 |
+| 💡 | Comment | 주석 추가/수정 |
+| 🚚 | Move | 리소스 이동/리네이밍 |
+| 📱 | Mobile | 반응형/디바이스 대응 |
+| 🩹 | Patch | 간단한 수정 |
+| ✏️ | Typo | 오타 수정 |
+| ⏪ | Revert | 이전 커밋 롤백 |
+| 🙈 | Ignore | .gitignore 관련 작업 |
+
+### 예시
+
+```
+✨ Feat. 사진관 검색 필터 기능 구현
+
+Why: 사용자가 목적/날짜/지역 조건으로 사진관을 필터링할 수 있어야 함
+
+How: FilterPage에 조건 상태 관리 추가,
+     TanStack Query로 필터 파라미터 API 연동
+
+Tag: #feat #filter #react-query
+See: #21
+```
+
+<br>
+
+## 🔀 PR 컨벤션
+
+```markdown
+## 관련 이슈
+- Closes #이슈번호
+
+## 주요 변경 내용
+-
+
+## 스크린샷 (선택)
+
+## 테스트 체크리스트
+- [ ] 정상 동작 확인
+- [ ] 브라우저 호환성 확인
+
+## 기타 공유 사항
+```
+
+<br>
+
+## 🖥 실행 방법
+
+```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
+npm run dev
+```
+
+> 모바일 UI 확인은 Chrome DevTools에서 `Cmd + Shift + M` (디바이스 모드) 사용을 권장합니다.
+
+<br>
+
+## 📱 화면 목록 및 플로우
+
+### B. 검색
+
+| 화면 | 설명 |
+|------|------|
+| B-2 통합검색 | 키워드 검색 메인 화면 |
+| B-2 자동완성 노출 | 검색어 자동완성 |
+| B-3 날짜 선택 | 촬영 날짜 선택 |
+| B-4 목적 선택 | 촬영 목적 선택 |
+
+### C. 사진관
+
+| 화면 | 설명 |
+|------|------|
+| C-1 지도+리스트 | 지도와 리스트 통합 뷰 |
+| C-2 지도 전체뷰 | 지도 전체 화면 |
+| C-3 결과 없음 | 검색 결과 없음 |
+| C-3 리스트 전체뷰 | 리스트 전체 화면 |
+| C-4 필터 | 필터 설정 (가격, 스타일 등) |
+| C-5 사진관 상세 | 사진관 상세 정보 |
+| C-6 리뷰 상세 | 리뷰 목록 및 상세 |
+| C-7 컨셉 목록 | 촬영 컨셉 목록 |
+| C-8 컨셉 사진 상세 | 컨셉 사진 상세 |
+
+### D. 비교
+
+| 화면 | 설명 |
+|------|------|
+| D-1 비교할 촬영 목적 선택 | 비교 목적 선택 |
+| D-2 비교 2개 | 사진관 2개 비교 |
+| D-3 비교 3개 | 사진관 3개 비교 |
+
+### E. 예약
+
+| 화면 | 설명 |
+|------|------|
+| E-1 예약 | 예약 정보 입력 |
+| E-1 제휴샵 선택 | 헤어메이크업 제휴샵 선택 |
+| E-3 예약 완료 | 예약 완료 확인 |
+
+### F. 마이페이지
+
+| 화면 | 설명 |
+|------|------|
+| F-1 예약 목록 | 전체/촬영완료/취소 탭 |
+| F-1D 예약 상세 | 예약 상세 내역 |
+| F-3 프로필 설정 | 프로필 편집 |
+
+### G. 기타
+
+| 화면 | 설명 |
+|------|------|
+| G-1 위시리스트 | 찜한 사진관 목록 |
+| G-2 채팅 목록 | 사진관과의 채팅 |
