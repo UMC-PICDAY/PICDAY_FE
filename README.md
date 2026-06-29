@@ -69,9 +69,14 @@ src/
 |--------|------|
 | `main` | 실제 서비스에 배포되는 브랜치 |
 | `develop` | 모든 기능 브랜치가 병합되는 기본 개발 브랜치 |
-| `feature/*` | 기능 단위 브랜치 (develop에서 분기) |
-| `bugfix/*` | 버그 수정 브랜치 (develop에서 분기) |
-| `hotfix/*` | 운영 중 긴급 수정 브랜치 (main에서 분기) |
+| `feature/*` | 기능 개발 (develop에서 분기) |
+| `bugfix/*` | 버그 수정 (develop에서 분기) |
+| `hotfix/*` | 운영 중 긴급 수정 (main에서 분기) |
+| `design/*` | 디자인 반영 (develop에서 분기) |
+| `refactor/*` | 리팩토링 (develop에서 분기) |
+| `docs/*` | 문서 작업 (develop에서 분기) |
+| `test/*` | 테스트 (develop에서 분기) |
+| `chore/*` | 기타 작업 (develop에서 분기) |
 
 ### 브랜치 네이밍
 
@@ -83,6 +88,9 @@ src/
 feature/12-login-form
 bugfix/45-missing-data-sync
 hotfix/73-server-crash-on-boot
+design/21-studio-detail-ui
+refactor/34-search-hook
+docs/5-readme-update
 ```
 
 ### 병합 흐름
