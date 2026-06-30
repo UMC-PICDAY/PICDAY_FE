@@ -1,0 +1,27 @@
+@font-face {
+  font-family: 'Pretendard';
+  src: url('../assets/fonts/PretendardVariable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import './colors.css';
+@import './typography.css';
+
+/* ================================
+   Global Reset
+================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Pretendard', sans-serif;
+}
+
+#root {
+  max-width: 390px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background-color: var(--color-white);
+}
