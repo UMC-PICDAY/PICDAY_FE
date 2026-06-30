@@ -1,0 +1,16 @@
+import type { SVGProps } from 'react'
+
+const IcDown = ({ width = 24, height = 24, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path id="Vector" d="M5.33994 8.34422C5.79284 7.88561 6.52702 7.88521 6.98041 8.34332L11.4178 12.8269C11.4632 12.8728 11.5368 12.8728 11.5822 12.8269L16.0196 8.34332C16.473 7.88521 17.2072 7.88561 17.6601 8.34422C18.1133 8.80319 18.1133 9.54732 17.6601 10.0063L11.9113 15.8275C11.6842 16.0575 11.3158 16.0575 11.0887 15.8275L5.33994 10.0063C4.88669 9.54732 4.88669 8.80319 5.33994 8.34422Z" fill="#171617" />
+  </svg>
+)
+
+export default IcDown

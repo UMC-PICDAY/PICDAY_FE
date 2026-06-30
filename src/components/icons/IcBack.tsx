@@ -1,5 +1,16 @@
-const IcBack = () => {
-  return <svg>IcBack</svg>
-}
+import type { SVGProps } from 'react'
+
+const IcBack = ({ width = 24, height = 24, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path id="Vector" d="M15.6558 17.6601C16.1144 17.2072 16.1148 16.473 15.6567 16.0196L11.1731 11.5822C11.1272 11.5368 11.1272 11.4632 11.1731 11.4178L15.6567 6.98041C16.1148 6.52702 16.1144 5.79284 15.6558 5.33994C15.1968 4.88669 14.4527 4.88669 13.9937 5.33994L8.17253 11.0887C7.94249 11.3158 7.94249 11.6842 8.17253 11.9113L13.9937 17.6601C14.4527 18.1133 15.1968 18.1133 15.6558 17.6601Z" fill="#171617" />
+  </svg>
+)
 
 export default IcBack

@@ -1,0 +1,163 @@
+:root {
+  /* ================================
+     Typography - Heading
+  ================================ */
+  /* H1 | Pretendard SemiBold 28px | lh 1.2 | ls -0.56px */
+  --font-h1-size: 28px;
+  --font-h1-weight: 600;
+  --font-h1-line-height: 1.2;
+  --font-h1-letter-spacing: -0.56px;
+
+  /* H2 | Pretendard Bold 24px | lh 1.5 */
+  --font-h2-size: 24px;
+  --font-h2-weight: 700;
+  --font-h2-line-height: 1.5;
+  --font-h2-letter-spacing: 0;
+
+  /* H3 | Pretendard Bold 22px */
+  --font-h3-size: 22px;
+  --font-h3-weight: 700;
+  --font-h3-line-height: normal;
+  --font-h3-letter-spacing: 0;
+
+  /* H4 | Pretendard Bold 20px */
+  --font-h4-size: 20px;
+  --font-h4-weight: 700;
+  --font-h4-line-height: normal;
+  --font-h4-letter-spacing: 0;
+
+  /* H5 | Pretendard SemiBold 20px */
+  --font-h5-size: 20px;
+  --font-h5-weight: 600;
+  --font-h5-line-height: normal;
+  --font-h5-letter-spacing: 0;
+
+  /* H6 | Pretendard SemiBold 18px */
+  --font-h6-size: 18px;
+  --font-h6-weight: 600;
+  --font-h6-line-height: normal;
+  --font-h6-letter-spacing: 0;
+
+  /* ================================
+     Typography - Body
+  ================================ */
+  /* B1 | Pretendard SemiBold 20px | lh 1.5 */
+  --font-b1-size: 20px;
+  --font-b1-weight: 600;
+  --font-b1-line-height: 1.5;
+  --font-b1-letter-spacing: 0;
+
+  /* B2 | Pretendard Regular 20px | lh 1.4 */
+  --font-b2-size: 20px;
+  --font-b2-weight: 400;
+  --font-b2-line-height: 1.4;
+  --font-b2-letter-spacing: 0;
+
+  /* B3 | Pretendard SemiBold 18px | lh 1.4 */
+  --font-b3-size: 18px;
+  --font-b3-weight: 600;
+  --font-b3-line-height: 1.4;
+  --font-b3-letter-spacing: 0;
+
+  /* B4 | Pretendard Regular 18px | lh 1.4 */
+  --font-b4-size: 18px;
+  --font-b4-weight: 400;
+  --font-b4-line-height: 1.4;
+  --font-b4-letter-spacing: 0;
+
+  /* B5 | Pretendard SemiBold 16px | lh 1.3 | ls -0.08px */
+  --font-b5-size: 16px;
+  --font-b5-weight: 600;
+  --font-b5-line-height: 1.3;
+  --font-b5-letter-spacing: -0.08px;
+
+  /* B6 | Pretendard Regular 16px | lh 1.5 */
+  --font-b6-size: 16px;
+  --font-b6-weight: 400;
+  --font-b6-line-height: 1.5;
+  --font-b6-letter-spacing: 0;
+
+  /* B7 | Pretendard SemiBold 14px | lh 1.5 */
+  --font-b7-size: 14px;
+  --font-b7-weight: 600;
+  --font-b7-line-height: 1.5;
+  --font-b7-letter-spacing: 0;
+
+  /* B8 | Pretendard Regular 14px | lh 1.5 */
+  --font-b8-size: 14px;
+  --font-b8-weight: 400;
+  --font-b8-line-height: 1.5;
+  --font-b8-letter-spacing: 0;
+
+  /* B9 | Pretendard SemiBold 12px | lh 1.6 */
+  --font-b9-size: 12px;
+  --font-b9-weight: 600;
+  --font-b9-line-height: 1.6;
+  --font-b9-letter-spacing: 0;
+
+  /* B10 | Pretendard Regular 12px | lh 1.6 | ls -0.18px */
+  --font-b10-size: 12px;
+  --font-b10-weight: 400;
+  --font-b10-line-height: 1.6;
+  --font-b10-letter-spacing: -0.18px;
+
+  /* B11 | Pretendard Regular 11px | lh 1.6 | ls -0.22px */
+  --font-b11-size: 11px;
+  --font-b11-weight: 400;
+  --font-b11-line-height: 1.6;
+  --font-b11-letter-spacing: -0.22px;
+
+  /* B12 | Pretendard SemiBold 11px | lh 1.6 | ls -0.22px */
+  --font-b12-size: 11px;
+  --font-b12-weight: 600;
+  --font-b12-line-height: 1.6;
+  --font-b12-letter-spacing: -0.22px;
+
+  /* ================================
+     Typography - Caption
+  ================================ */
+  /* Cap1 | Pretendard Regular 14px | lh 1.3 */
+  --font-cap1-size: 14px;
+  --font-cap1-weight: 400;
+  --font-cap1-line-height: 1.3;
+  --font-cap1-letter-spacing: 0;
+
+  /* Cap2 | Pretendard Bold 12px | lh 1.3 */
+  --font-cap2-size: 12px;
+  --font-cap2-weight: 700;
+  --font-cap2-line-height: 1.3;
+  --font-cap2-letter-spacing: 0;
+
+  /* Cap3 | Pretendard SemiBold 12px | lh 1.3 */
+  --font-cap3-size: 12px;
+  --font-cap3-weight: 600;
+  --font-cap3-line-height: 1.3;
+  --font-cap3-letter-spacing: 0;
+}
+
+/* ================================
+   Typography Utility Classes
+================================ */
+.font-h1 { font-size: var(--font-h1-size); font-weight: var(--font-h1-weight); line-height: var(--font-h1-line-height); letter-spacing: var(--font-h1-letter-spacing); }
+.font-h2 { font-size: var(--font-h2-size); font-weight: var(--font-h2-weight); line-height: var(--font-h2-line-height); letter-spacing: var(--font-h2-letter-spacing); }
+.font-h3 { font-size: var(--font-h3-size); font-weight: var(--font-h3-weight); line-height: var(--font-h3-line-height); letter-spacing: var(--font-h3-letter-spacing); }
+.font-h4 { font-size: var(--font-h4-size); font-weight: var(--font-h4-weight); line-height: var(--font-h4-line-height); letter-spacing: var(--font-h4-letter-spacing); }
+.font-h5 { font-size: var(--font-h5-size); font-weight: var(--font-h5-weight); line-height: var(--font-h5-line-height); letter-spacing: var(--font-h5-letter-spacing); }
+.font-h6 { font-size: var(--font-h6-size); font-weight: var(--font-h6-weight); line-height: var(--font-h6-line-height); letter-spacing: var(--font-h6-letter-spacing); }
+
+.font-b1  { font-size: var(--font-b1-size);  font-weight: var(--font-b1-weight);  line-height: var(--font-b1-line-height);  letter-spacing: var(--font-b1-letter-spacing); }
+.font-b2  { font-size: var(--font-b2-size);  font-weight: var(--font-b2-weight);  line-height: var(--font-b2-line-height);  letter-spacing: var(--font-b2-letter-spacing); }
+.font-b3  { font-size: var(--font-b3-size);  font-weight: var(--font-b3-weight);  line-height: var(--font-b3-line-height);  letter-spacing: var(--font-b3-letter-spacing); }
+.font-b4  { font-size: var(--font-b4-size);  font-weight: var(--font-b4-weight);  line-height: var(--font-b4-line-height);  letter-spacing: var(--font-b4-letter-spacing); }
+.font-b5  { font-size: var(--font-b5-size);  font-weight: var(--font-b5-weight);  line-height: var(--font-b5-line-height);  letter-spacing: var(--font-b5-letter-spacing); }
+.font-b6  { font-size: var(--font-b6-size);  font-weight: var(--font-b6-weight);  line-height: var(--font-b6-line-height);  letter-spacing: var(--font-b6-letter-spacing); }
+.font-b7  { font-size: var(--font-b7-size);  font-weight: var(--font-b7-weight);  line-height: var(--font-b7-line-height);  letter-spacing: var(--font-b7-letter-spacing); }
+.font-b8  { font-size: var(--font-b8-size);  font-weight: var(--font-b8-weight);  line-height: var(--font-b8-line-height);  letter-spacing: var(--font-b8-letter-spacing); }
+.font-b9  { font-size: var(--font-b9-size);  font-weight: var(--font-b9-weight);  line-height: var(--font-b9-line-height);  letter-spacing: var(--font-b9-letter-spacing); }
+.font-b10 { font-size: var(--font-b10-size); font-weight: var(--font-b10-weight); line-height: var(--font-b10-line-height); letter-spacing: var(--font-b10-letter-spacing); }
+.font-b11 { font-size: var(--font-b11-size); font-weight: var(--font-b11-weight); line-height: var(--font-b11-line-height); letter-spacing: var(--font-b11-letter-spacing); }
+.font-b12 { font-size: var(--font-b12-size); font-weight: var(--font-b12-weight); line-height: var(--font-b12-line-height); letter-spacing: var(--font-b12-letter-spacing); }
+
+.font-cap1 { font-size: var(--font-cap1-size); font-weight: var(--font-cap1-weight); line-height: var(--font-cap1-line-height); letter-spacing: var(--font-cap1-letter-spacing); }
+.font-cap2 { font-size: var(--font-cap2-size); font-weight: var(--font-cap2-weight); line-height: var(--font-cap2-line-height); letter-spacing: var(--font-cap2-letter-spacing); }
+.font-cap3 { font-size: var(--font-cap3-size); font-weight: var(--font-cap3-weight); line-height: var(--font-cap3-line-height); letter-spacing: var(--font-cap3-letter-spacing); }
