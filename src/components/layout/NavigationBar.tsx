@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { IcBack, IcClose } from '../icons'
-import styles from './NavigationBar.module.css'
 
 type NavigationBarProps = {
   title?: string
@@ -17,14 +16,14 @@ const NavigationBar = ({
   leftNode,
   rightNode,
 }: NavigationBarProps) => (
-  <div className={styles.wrapper}>
-    <div className={styles.left}>
+  <div className="flex items-center justify-between w-full px-5 py-3 border-b border-gray-10">
+    <div className="w-8 h-8 flex items-center justify-center overflow-hidden shrink-0">
       {showLeft && (leftNode ?? <IcBack width={24} height={24} />)}
     </div>
-    <div className={styles.center}>
-      {title && <span className={styles.title}>{title}</span>}
+    <div className="flex-1 flex items-center justify-center">
+      {title && <span className="text-[18px] font-semibold text-black whitespace-nowrap">{title}</span>}
     </div>
-    <div className={styles.right}>
+    <div className="w-9 h-9 flex items-center justify-center overflow-hidden shrink-0">
       {showRight && (rightNode ?? <IcClose width={24} height={24} />)}
     </div>
   </div>
