@@ -1,0 +1,41 @@
+.wrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 60px;
+  width: 100%;
+}
+
+.left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 10.72px;
+  padding-bottom: 3.22px;
+}
+
+.time {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.32px;
+  color: var(--color-black);
+}
+
+.center {
+  width: 134px;
+  flex-shrink: 0;
+}
+
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 11.79px;
+  padding-bottom: 3.22px;
+}
+
+.statusIcons {
+  height: 13.94px;
+  width: auto;
+}

@@ -1,0 +1,16 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background-color: transparent;
+  color: var(--color-gray-60);
+  cursor: pointer;
+  padding: 0;
+}
+
+.button.active {
+  color: var(--color-brand-100);
+}

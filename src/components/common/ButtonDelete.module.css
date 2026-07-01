@@ -1,0 +1,21 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--color-gray-40);
+  color: var(--color-white);
+  cursor: pointer;
+  padding: 0;
+}
+
+.default {
+  width: 20px;
+  height: 20px;
+}
+
+.mini {
+  width: 14px;
+  height: 14px;
+}
