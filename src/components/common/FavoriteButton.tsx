@@ -6,20 +6,17 @@ type FavoriteButtonProps = {
   onClick?: () => void
 }
 
-const FavoriteButton = ({ active = false, onClick }: FavoriteButtonProps) => {
-  return (
-    <button
-      className={`${styles.button} ${active ? styles.active : styles.default}`}
-      onClick={onClick}
-      aria-label={active ? '찜 해제' : '찜하기'}
-    >
-      {active ? (
-        <IcFavoriteFill width={24} height={24} />
-      ) : (
-        <IcFavorite width={24} height={24} />
-      )}
-    </button>
-  )
-}
+const FavoriteButton = ({ active = false, onClick }: FavoriteButtonProps) => (
+  <button
+    className={`${styles.button} ${active ? styles.active : ''}`}
+    onClick={onClick}
+    aria-label={active ? '찜 해제' : '찜하기'}
+  >
+    {active
+      ? <IcFavoriteFill width={28} height={28} />
+      : <IcFavorite width={28} height={28} />
+    }
+  </button>
+)
 
 export default FavoriteButton

@@ -16,6 +16,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  color: var(--color-brand-100);
 }
 
 .label {

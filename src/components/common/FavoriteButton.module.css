@@ -5,15 +5,12 @@
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 50%;
+  background-color: transparent;
+  color: var(--color-gray-60);
   cursor: pointer;
   padding: 0;
 }
 
-.default {
-  background-color: transparent;
-}
-
-.active {
-  background-color: var(--color-brand-20);
+.button.active {
+  color: var(--color-brand-100);
 }
