@@ -42,3 +42,6 @@ coverage
 .eslintcache
 .stylelintcache
 .cache
+
+*storybook.log
+storybook-static

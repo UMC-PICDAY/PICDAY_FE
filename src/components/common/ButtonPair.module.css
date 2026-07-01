@@ -1,0 +1,33 @@
+.wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.leftBtn,
+.rightBtn {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px;
+  font-size: var(--font-b8-size);
+  font-weight: var(--font-b8-weight);
+  line-height: var(--font-b8-line-height);
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.leftBtn {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-20);
+  color: var(--color-gray-60);
+  font-weight: var(--font-b8-weight);
+}
+
+.rightBtn {
+  background-color: var(--color-brand-100);
+  border: none;
+  color: var(--color-white);
+  font-weight: var(--font-b7-weight);
+}

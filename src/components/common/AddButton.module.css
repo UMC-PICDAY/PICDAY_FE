@@ -1,0 +1,35 @@
+.button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--color-brand-20);
+  background-color: rgba(254, 228, 235, 0.3);
+  cursor: pointer;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.label {
+  font-size: var(--font-b5-size);
+  font-weight: var(--font-b5-weight);
+  line-height: var(--font-b5-line-height);
+  letter-spacing: var(--font-b5-letter-spacing);
+  color: var(--color-brand-100);
+}
+
+.subLabel {
+  font-size: var(--font-b10-size);
+  font-weight: var(--font-b10-weight);
+  line-height: var(--font-b10-line-height);
+  letter-spacing: var(--font-b10-letter-spacing);
+  color: var(--color-gray-40);
+}

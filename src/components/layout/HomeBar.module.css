@@ -1,0 +1,17 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 32px;
+  width: 100%;
+  padding-bottom: 7.84px;
+  overflow: hidden;
+}
+
+.bar {
+  width: 165px;
+  height: 4.9px;
+  border-radius: 98px;
+  background-color: var(--color-black);
+}
