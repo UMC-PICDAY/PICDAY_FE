@@ -1,5 +1,3 @@
-import styles from './StatusBar.module.css'
-
 const StatusBarIcons = () => (
   <svg width="84" height="15" viewBox="0 0 84.1017 14.44" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g>
@@ -16,12 +14,12 @@ const StatusBarIcons = () => (
 )
 
 const StatusBar = () => (
-  <div className={styles.wrapper}>
-    <div className={styles.left}>
-      <span className={styles.time}>9:41</span>
+  <div className="flex items-end justify-center h-[60px] w-full">
+    <div className="flex-1 flex items-center pl-[10.72px] pb-[3.22px]">
+      <span className="text-[17px] font-semibold tracking-[-0.32px] text-black">9:41</span>
     </div>
-    <div className={styles.center} />
-    <div className={styles.right}>
+    <div className="w-[134px] shrink-0" />
+    <div className="flex-1 flex items-center justify-end pr-[11.79px] pb-[3.22px]">
       <StatusBarIcons />
     </div>
   </div>

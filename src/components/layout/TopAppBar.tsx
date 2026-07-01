@@ -1,8 +1,7 @@
 import LogoType from './LogoType'
-import styles from './TopAppBar.module.css'
 
 const TopAppBar = () => (
-  <div className={styles.wrapper}>
+  <div className="flex items-center justify-between w-full px-5 py-3">
     <LogoType />
   </div>
 )
