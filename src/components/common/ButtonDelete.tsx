@@ -1,3 +1,12 @@
+/**
+ * ButtonDelete 사용법
+ *
+ * 기본 (20x20)
+ *   <ButtonDelete onClick={handleClick} />
+ *
+ * 미니 (14x14)
+ *   <ButtonDelete size="mini" onClick={handleClick} />
+ */
 import { IcClose } from '@/components/icons'
 
 interface Props {
