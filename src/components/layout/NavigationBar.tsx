@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { IcBack, IcClose } from '../icons'
+import { IcBack, IcClose } from '@/components/icons'
 
 interface Props {
   title?: string

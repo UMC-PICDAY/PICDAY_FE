@@ -1,4 +1,4 @@
-import { IcAdd } from '../icons'
+import { IcAdd } from '@/components/icons'
 
 interface Props {
   label?: string

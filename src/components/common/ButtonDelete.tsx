@@ -1,4 +1,4 @@
-import { IcClose } from '../icons'
+import { IcClose } from '@/components/icons'
 
 interface Props {
   size?: 'default' | 'mini'

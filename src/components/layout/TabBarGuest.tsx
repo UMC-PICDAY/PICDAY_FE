@@ -1,6 +1,6 @@
-import { IcSearch, IcWishlist, IcUser } from '../icons'
-import Tap from './Tap'
-import HomeBar from './HomeBar'
+import { IcSearch, IcWishlist, IcUser } from '@/components/icons'
+import Tap from '@/components/layout/Tap'
+import HomeBar from '@/components/layout/HomeBar'
 
 type TabItem = 'search' | 'wishlist' | 'login'
 

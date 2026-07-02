@@ -1,4 +1,4 @@
-import { IcBack, IcShare, IcFavorite, IcFavoriteFill } from '../icons'
+import { IcBack, IcShare, IcFavorite, IcFavoriteFill } from '@/components/icons'
 
 interface Props {
   isFavorited?: boolean

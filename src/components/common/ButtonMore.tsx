@@ -1,4 +1,4 @@
-import { IcRight, IcDown } from '../icons'
+import { IcRight, IcDown } from '@/components/icons'
 
 interface Props {
   label?: string
