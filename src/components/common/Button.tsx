@@ -1,11 +1,11 @@
-type ButtonProps = {
+interface Props {
   children: React.ReactNode
   variant?: 'primary' | 'secondary'
   disabled?: boolean
   onClick?: () => void
 }
 
-const Button = ({ children, variant = 'primary', disabled = false, onClick }: ButtonProps) => (
+const Button = ({ children, variant = 'primary', disabled = false, onClick }: Props) => (
   <button
     className={`flex items-center justify-center w-full py-3 px-5 border-none rounded-lg cursor-pointer transition-opacity duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
       variant === 'primary'

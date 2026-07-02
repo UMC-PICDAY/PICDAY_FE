@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { IcBack, IcClose } from '../icons'
 
-type NavigationBarProps = {
+interface Props {
   title?: string
   showLeft?: boolean
   showRight?: boolean
@@ -15,7 +15,7 @@ const NavigationBar = ({
   showRight = true,
   leftNode,
   rightNode,
-}: NavigationBarProps) => (
+}: Props) => (
   <div className="flex items-center justify-between w-full px-5 py-3 border-b border-gray-10">
     <div className="w-8 h-8 flex items-center justify-center overflow-hidden shrink-0">
       {showLeft && (leftNode ?? <IcBack width={24} height={24} />)}

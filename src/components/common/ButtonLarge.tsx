@@ -1,4 +1,4 @@
-type ButtonLargeProps = {
+interface Props {
   variant?: 'pair' | 'price'
   primaryLabel?: string
   secondaryLabel?: string
@@ -16,7 +16,7 @@ const ButtonLarge = ({
   price,
   onPrimaryClick,
   onSecondaryClick,
-}: ButtonLargeProps) => (
+}: Props) => (
   <div className="flex gap-5 items-center w-full p-5">
     {variant === 'price' && price ? (
       <>
