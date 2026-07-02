@@ -1,11 +1,11 @@
-import { IcFavorite, IcFavoriteFill } from '../icons'
+import { IcFavorite, IcFavoriteFill } from '@/components/icons'
 
-type FavoriteButtonProps = {
+interface Props {
   active?: boolean
   onClick?: () => void
 }
 
-const FavoriteButton = ({ active = false, onClick }: FavoriteButtonProps) => (
+const FavoriteButton = ({ active = false, onClick }: Props) => (
   <button
     className={`flex items-center justify-center w-7 h-7 border-none bg-transparent cursor-pointer p-0 ${
       active ? 'text-brand-100' : 'text-gray-60'

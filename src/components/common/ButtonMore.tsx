@@ -1,12 +1,12 @@
-import { IcRight, IcDown } from '../icons'
+import { IcRight, IcDown } from '@/components/icons'
 
-type ButtonMoreProps = {
+interface Props {
   label?: string
   variant?: 'right' | 'down'
   onClick?: () => void
 }
 
-const ButtonMore = ({ label = '모든 컨셉 보기', variant = 'right', onClick }: ButtonMoreProps) => (
+const ButtonMore = ({ label = '모든 컨셉 보기', variant = 'right', onClick }: Props) => (
   <button
     className="flex items-center justify-between w-full py-3 px-5 border border-brand-100 rounded-lg bg-white cursor-pointer text-brand-100"
     onClick={onClick}

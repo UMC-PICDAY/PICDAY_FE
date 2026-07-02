@@ -1,6 +1,6 @@
-import { IcBack, IcShare, IcFavorite, IcFavoriteFill } from '../icons'
+import { IcBack, IcShare, IcFavorite, IcFavoriteFill } from '@/components/icons'
 
-type NavigationBarTransparentProps = {
+interface Props {
   isFavorited?: boolean
   onBack?: () => void
   onShare?: () => void
@@ -14,7 +14,7 @@ const NavigationBarTransparent = ({
   onBack,
   onShare,
   onFavorite,
-}: NavigationBarTransparentProps) => (
+}: Props) => (
   <div className="flex items-center justify-between w-full p-5">
     <button className={iconBtn} onClick={onBack} aria-label="뒤로가기">
       <IcBack width={24} height={24} />

@@ -1,15 +1,15 @@
-type StudioItem = {
+interface StudioItem {
   id: string
   name: string
   selected: boolean
 }
 
-type ButtonSelectProps = {
+interface Props {
   studios: StudioItem[]
   onReserve?: () => void
 }
 
-const ButtonSelect = ({ studios, onReserve }: ButtonSelectProps) => (
+const ButtonSelect = ({ studios, onReserve }: Props) => (
   <div className="flex flex-col w-full border-t border-gray-10 pt-3">
     <div className="flex gap-2 justify-center px-5">
       {studios.map((studio) => (

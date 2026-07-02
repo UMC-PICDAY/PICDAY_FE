@@ -1,13 +1,13 @@
 import type { FC, SVGProps } from 'react'
 
-type TapProps = {
+interface Props {
   icon: FC<SVGProps<SVGSVGElement>>
   label: string
   active?: boolean
   onClick?: () => void
 }
 
-const Tap = ({ icon: Icon, label, active = false, onClick }: TapProps) => (
+const Tap = ({ icon: Icon, label, active = false, onClick }: Props) => (
   <button
     className={`flex flex-col items-center justify-center gap-1 w-[68px] h-12 bg-transparent border-none cursor-pointer ${active ? 'text-brand-100' : 'text-gray-60'}`}
     onClick={onClick}

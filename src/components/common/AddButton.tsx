@@ -1,6 +1,6 @@
-import { IcAdd } from '../icons'
+import { IcAdd } from '@/components/icons'
 
-type AddButtonProps = {
+interface Props {
   label?: string
   subLabel?: string
   onClick?: () => void
@@ -10,7 +10,7 @@ const AddButton = ({
   label = '사진관 추가',
   subLabel = '최대 3개까지 비교 가능해요',
   onClick,
-}: AddButtonProps) => (
+}: Props) => (
   <button
     className="flex flex-col items-center justify-center gap-0.5 w-full py-3 px-5 rounded-lg border border-brand-20 bg-[rgba(254,228,235,0.3)] cursor-pointer"
     onClick={onClick}
