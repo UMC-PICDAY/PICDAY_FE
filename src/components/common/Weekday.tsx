@@ -1,3 +1,10 @@
+/**
+ * Weekday 사용법
+ *
+ *  캘린더 요일 표시
+ *   <Weekday label="월" />
+ */
+
 import type { HTMLAttributes } from "react";
 
 export type WeekdayProps = HTMLAttributes<HTMLSpanElement> & {

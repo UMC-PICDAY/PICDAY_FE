@@ -1,3 +1,22 @@
+/**
+ * InputField 사용법
+ *
+ * [기본] 일반 텍스트 입력
+ *   <InputField
+ *     label="아이디"
+ *     placeholder="아이디를 입력해 주세요"
+ *     value={value}
+ *     onChange={(event) => setValue(event.target.value)}
+ *   />
+ *
+ * [prefix] 전화번호 등의 고정 prefix 표시
+ *   <InputField
+ *     label="전화번호"
+ *     placeholder="휴대폰 번호를 입력해 주세요"
+ *     prefix="+82"
+ *   />
+ */
+
 import { useId } from "react";
 import type { InputHTMLAttributes } from "react";
 
