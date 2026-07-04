@@ -18,8 +18,8 @@
 
 import { Fragment } from "react";
 
-import DayCell from "./DayCell";
-import Weekday from "./Weekday";
+import DayCell from "@/components/common/DayCell";
+import Weekday from "@/components/common/Weekday";
 
 export type CalendarDate = {
   year: number;

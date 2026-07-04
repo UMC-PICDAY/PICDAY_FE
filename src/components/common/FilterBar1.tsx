@@ -12,7 +12,7 @@
  *   />
  */
 
-import FilterChip from "./FilterChip";
+import FilterChip from "@/components/common/FilterChip";
 
 export type CountFilterItem = {
   value: string;
