@@ -42,6 +42,8 @@ import ChatRoomPage from '@/pages/chat/ChatRoomPage'
 
 import TermsDetailPage from '@/pages/common/TermsDetailPage'
 
+
+
 function App() {
   return (
     <Routes>
@@ -98,6 +100,8 @@ function App() {
 
       {/* 공용 */}
       <Route path="/terms/:termType" element={<TermsDetailPage />} />
+
+
     </Routes>
   )
 }
