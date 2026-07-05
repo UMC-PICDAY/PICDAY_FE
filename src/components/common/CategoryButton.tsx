@@ -14,30 +14,43 @@
  *     onClick={() => setSelectedCategory('profile')}
  *   />
  */
-
 interface Props {
   label?: string
+  imageSrc?: string
   active?: boolean
   onClick?: () => void
 }
 
-const TabProfile = ({
-  label = '프로필',
+const CategoryButton = ({
+  label = '증명',
+  imageSrc,
   active = false,
   onClick,
 }: Props) => (
   <button
     type="button"
     aria-pressed={active}
-    className={`flex h-[32px] items-center justify-center gap-[10px] rounded-full px-5 py-1 whitespace-nowrap ${
+    className={`flex w-[173px] flex-col items-center justify-center gap-[10px] rounded-[16px] border px-[10px] py-[15px] ${
       active
-        ? 'bg-brand-100 font-b6 text-white'
-        : 'bg-transparent font-b7 text-gray-80'
+        ? 'border-brand-40 bg-brand-20 shadow-[0_0_4px_0_#FEE4EB]'
+        : 'border-brand-40 bg-[rgba(252,252,252,0.75)]'
     }`}
     onClick={onClick}
   >
-    {label}
+    {imageSrc ? (
+      <img
+        src={imageSrc}
+        alt=""
+        className="h-10 w-10 object-cover"
+      />
+    ) : (
+      <div className="h-10 w-10 bg-[#D9D9D9]" />
+    )}
+
+    <span className={`${active ? 'font-b5' : 'font-b6'} text-black`}>
+      {label}
+    </span>
   </button>
 )
 
-export default TabProfile
+export default CategoryButton

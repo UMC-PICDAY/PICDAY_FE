@@ -1,3 +1,22 @@
+/**
+ * Alert2 사용법
+ *
+ * 탈퇴/예약 취소 등 확인 알림 다이얼로그
+ *   <Alert2 />
+ *
+ * variant에 따라 다른 형태 표시
+ *   <Alert2 variant="withdrawConfirm" />
+ *   <Alert2 variant="withdrawDelete" />
+ *   <Alert2 variant="reservationCancel" />
+ *
+ * 버튼 동작 연결
+ *   <Alert2
+ *     variant="withdrawDelete"
+ *     onCancel={handleCancel}
+ *     onConfirm={handleConfirm}
+ *   />
+ */
+
 interface Props {
   variant?: 'withdrawConfirm' | 'withdrawDelete' | 'reservationCancel'
   title?: string
