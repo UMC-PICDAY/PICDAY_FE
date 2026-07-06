@@ -1,3 +1,26 @@
+/**
+ * SectionStudioCompare 사용법
+ *
+ * 기본 스튜디오 비교 섹션
+ *   <SectionStudioCompare />
+ *
+ * 비교할 스튜디오 정보 전달
+ *   <SectionStudioCompare
+ *     compareItems={compareItems}
+ *   />
+ *
+ * 하단 버튼 표시
+ *   <SectionStudioCompare
+ *     footerMode="add"
+ *   />
+ *
+ * 하단 안내 문구 표시
+ *   <SectionStudioCompare
+ *     footerMode="notice"
+ *     noticeText="최대 3개까지 비교 가능합니다"
+ *   />
+ */
+
 import AddButton from '@/components/common/AddButton'
 import StudioCompareItem from '@/components/cards/StudioCompareItem'
 

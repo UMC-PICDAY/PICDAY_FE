@@ -1,4 +1,32 @@
-const DEFAULT_IMAGE = 'https://www.figma.com/api/mcp/asset/843eddbc-d5aa-49cf-96ce-b12b1efb1699'
+/**
+ * CardPortfolioGrid 사용법
+ *
+ * 기본 포트폴리오 카드 목록
+ *   <CardPortfolioGrid />
+ *
+ * 포트폴리오 데이터 전달
+ *   <CardPortfolioGrid items={portfolioItems} />
+ *
+ * 포트폴리오 카드 개수 변경
+ *   <CardPortfolioGrid
+ *     items={[
+ *       {
+ *         imageSrc: cardImage1,
+ *         title: '개인화보',
+ *         price: '₩55,000~',
+ *       },
+ *       {
+ *         imageSrc: cardImage2,
+ *         title: '커플',
+ *         price: '₩65,000~',
+ *       },
+ *     ]}
+ *   />
+ */
+
+import defaultImage from '@/assets/CardImage4.png'
+
+const DEFAULT_IMAGE = defaultImage
 
 interface CardPortfolioItem {
   imageSrc?: string | null
@@ -46,36 +74,12 @@ const CardPortfolio = ({
   imageSrc = DEFAULT_IMAGE,
   title = '개인화보',
   price = '₩55,000~',
-  imageWidth = '178px',
-  imageHeight = '267px',
-  imageLeft = '0px',
-  imageTop = '-26px',
-  imageCropLeft = '0',
-  imageCropTop = '0',
 }: CardPortfolioItem) => {
   return (
     <div className="relative flex w-[178px] shrink-0 flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
       <div className="relative flex h-[124px] w-full shrink-0 items-center justify-center overflow-hidden bg-white">
         {imageSrc ? (
-          <div
-            className="absolute overflow-hidden"
-            style={{
-              height: imageHeight,
-              left: imageLeft,
-              top: imageTop,
-              width: imageWidth,
-            }}
-          >
-            <img
-              alt={title}
-              className="absolute h-[726.24%] w-full max-w-none object-fill"
-              src={imageSrc}
-              style={{
-                left: imageCropLeft,
-                top: imageCropTop,
-              }}
-            />
-          </div>
+          <img alt={title} className="h-full w-full object-cover" src={imageSrc} />
         ) : (
           <div className="h-full w-full bg-gray-10" />
         )}

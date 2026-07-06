@@ -1,6 +1,34 @@
-import { IcCheck, IcRight } from '@/components/icons'
+/**
+ * CardStudioDetail 사용법
+ *
+ * 기본 스튜디오 상세 카드
+ *   <CardStudioDetail />
+ *
+ * 스튜디오 정보 전달
+ *   <CardStudioDetail
+ *     name="체리베리벌쓰데이"
+ *     description="기준 1인 (최대 2인)"
+ *     optionText="자연광 스튜디오 · 의상 무료대여 · 보정본 2매 · 약 40분"
+ *     price="₩70,000"
+ *   />
+ *
+ * 이미지 개수 표시 변경
+ *   <CardStudioDetail
+ *     currentImage={1}
+ *     totalImages={8}
+ *   />
+ *
+ * 버튼 이벤트 연결
+ *   <CardStudioDetail
+ *     onDetailClick={handleDetailClick}
+ *     onReserveClick={handleReserveClick}
+ *   />
+ */
 
-const DEFAULT_IMAGE = 'https://www.figma.com/api/mcp/asset/5f4287c4-ca0d-49c5-b894-0e0504b7e71e'
+import { IcCheck, IcRight } from '@/components/icons'
+import defaultImage from '@/assets/CardImage1.png'
+
+const DEFAULT_IMAGE = defaultImage
 
 interface Props {
   className?: string
@@ -40,13 +68,7 @@ const CardStudioDetail = ({
     >
       <div className="relative h-[230px] w-[345px] shrink-0 overflow-hidden bg-white">
         {imageSrc ? (
-          <div className="absolute left-0 top-[-87px] h-[521px] w-[348px] overflow-hidden">
-            <img
-              alt={name}
-              className="absolute left-0 top-0 h-[726.24%] w-full max-w-none object-fill"
-              src={imageSrc}
-            />
-          </div>
+          <img alt={name} className="h-full w-full object-cover" src={imageSrc} />
         ) : (
           <div className="h-full w-full bg-gray-10" />
         )}
@@ -89,7 +111,7 @@ const CardStudioDetail = ({
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 itFems-start gap-[20px] border-t border-gray-10 bg-white px-[20px] py-[10px]">
+      <div className="flex w-full shrink-0 items-start gap-[20px] border-t border-gray-10 bg-white px-[20px] py-[10px]">
         <div className="flex min-w-0 flex-1 items-center rounded-[8px] py-[12px]">
           <p className="shrink-0 whitespace-nowrap text-[var(--font-b3-size)] font-[var(--font-b3-weight)] leading-[var(--font-b3-line-height)] tracking-[var(--font-b3-letter-spacing)] text-[#3d1a24]">
             {price}

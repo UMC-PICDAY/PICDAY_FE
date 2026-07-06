@@ -1,7 +1,37 @@
-import { IcStar } from '@/components/icons'
+/**
+ * CardStudioPreview 사용법
+ *
+ * 기본 스튜디오 미리보기 카드
+ *   <CardStudioPreview />
+ *
+ * 이미지 변경
+ *   <CardStudioPreview
+ *     imageSrc={firstImage}
+ *     secondImageSrc={secondImage}
+ *   />
+ *
+ * 스튜디오 정보 전달
+ *   <CardStudioPreview
+ *     name="데이지스튜디오"
+ *     location="홍대"
+ *     category="개인화보"
+ *     secondaryCategory="프로필"
+ *     price="₩30,000~"
+ *   />
+ *
+ * 연계 서비스 변경
+ *   <CardStudioPreview
+ *     services={['헤어·메이크업', '주차']}
+ *   />
+ */
 
-const DEFAULT_FIRST_IMAGE = 'https://www.figma.com/api/mcp/asset/c4dcee22-d6b1-47ec-aa2a-c1a67025eb6d'
-const DEFAULT_SECOND_IMAGE = 'https://www.figma.com/api/mcp/asset/c4dcee22-d6b1-47ec-aa2a-c1a67025eb6d'
+import { IcStar } from '@/components/icons'
+import firstImage from '@/assets/CardImage1.png'
+import secondImage from '@/assets/CardImage2.png'
+
+
+const DEFAULT_FIRST_IMAGE = firstImage
+const DEFAULT_SECOND_IMAGE = secondImage
 const DEFAULT_SERVICES = ['헤어·메이크업', '주차']
 
 interface Props {

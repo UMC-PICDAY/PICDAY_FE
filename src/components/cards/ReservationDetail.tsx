@@ -1,3 +1,27 @@
+/**
+ * ReservationDetail 사용법
+ *
+ * 기본 예약내역 카드
+ *   <ReservationDetail />
+ *
+ * 체크리스트 카드
+ *   <ReservationDetail
+ *     property1="checklistCard"
+ *   />
+ *
+ * 예약내역 정보 전달
+ *   <ReservationDetail
+ *     receiptItems={receiptItems}
+ *     totalAmount="₩65,000"
+ *   />
+ *
+ * 체크리스트 정보 전달
+ *   <ReservationDetail
+ *     property1="checklistCard"
+ *     checklistItems={checklistItems}
+ *   />
+ */
+
 import { IcCheck, IcCheckBox } from '@/components/icons'
 
 type ReservationDetailVariant = 'receiptCard' | 'checklistCard'

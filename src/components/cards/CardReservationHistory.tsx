@@ -1,4 +1,33 @@
-const DEFAULT_IMAGE = 'https://www.figma.com/api/mcp/asset/06270424-bbfc-43b5-91c0-13566a819d22'
+/**
+ * CardReservationHistory 사용법
+ *
+ * 기본 예약 내역 카드
+ *   <CardReservationHistory />
+ *
+ * 예약 상태 변경
+ *   <CardReservationHistory
+ *     statusTag="촬영 완료"
+ *   />
+ *
+ * 예약 정보 전달
+ *   <CardReservationHistory
+ *     studioName="데이지스튜디오"
+ *     dateTime="2026년 3월 15일 (토) 14:00"
+ *     packageName="1인 기본 패키지"
+ *   />
+ *
+ * 버튼 이벤트 연결
+ *   <CardReservationHistory
+ *     onLeftButtonClick={handleLeftButtonClick}
+ *     onRightButtonClick={handleRightButtonClick}
+ *   />
+ */
+
+import defaultImage from '@/assets/CardImage1.png'
+import defaultSecondImage from '@/assets/CardImage2.png'
+
+const DEFAULT_IMAGE = defaultImage
+const DEFAULT_SECOND_IMAGE = defaultSecondImage
 
 type ReservationStatusTag = '예약 완료' | '촬영 완료' | '취소'
 
@@ -50,7 +79,7 @@ const getButtonLabels = (statusTag: ReservationStatusTag) => {
 const CardReservationHistory = ({
   className,
   imageSrc = DEFAULT_IMAGE,
-  secondImageSrc = DEFAULT_IMAGE,
+  secondImageSrc = DEFAULT_SECOND_IMAGE,
   statusTag = '예약 완료',
   studioName = '데이지스튜디오',
   dateTime = '2026년 3월 15일 (토) 14:00',
@@ -70,13 +99,7 @@ const CardReservationHistory = ({
       <div className="flex shrink-0 items-center gap-[10px]">
         <div className="relative h-[181px] w-[181px] shrink-0 overflow-hidden rounded-[16px] bg-brand-60">
           {imageSrc ? (
-            <div className="absolute left-0 top-[-19px] h-[271px] w-[181px] overflow-hidden">
-              <img
-                alt={studioName}
-                className="absolute left-0 top-0 h-[726.24%] w-full max-w-none object-fill"
-                src={imageSrc}
-              />
-            </div>
+            <img alt={studioName} className="h-full w-full object-cover" src={imageSrc} />
           ) : (
             <div className="h-full w-full bg-gray-10" />
           )}
@@ -84,13 +107,7 @@ const CardReservationHistory = ({
 
         <div className="relative h-[181px] w-[149px] shrink-0 overflow-hidden rounded-[16px] bg-brand-60">
           {secondImageSrc ? (
-            <div className="absolute left-0 top-[-19px] h-[269px] w-[180px] overflow-hidden">
-              <img
-                alt={studioName}
-                className="absolute left-[-7.19%] top-[-260.61%] h-[726.24%] w-full max-w-none object-fill"
-                src={secondImageSrc}
-              />
-            </div>
+            <img alt={studioName} className="h-full w-full object-cover" src={secondImageSrc} />
           ) : (
             <div className="h-full w-full bg-gray-10" />
           )}

@@ -1,3 +1,22 @@
+/**
+ * StudioCompareItem 사용법
+ *
+ * 기본 비교 정보
+ *   <StudioCompareItem />
+ *
+ * 가격 및 정보 변경
+ *   <StudioCompareItem
+ *     price="₩55,000"
+ *     description="보정 3장 · 의상 2벌"
+ *     badgeLabel="원본 제공"
+ *   />
+ *
+ * 작은 사이즈 사용
+ *   <StudioCompareItem
+ *     size="compact"
+ *   />
+ */
+
 interface Props {
   className?: string
   size?: 'default' | 'compact'

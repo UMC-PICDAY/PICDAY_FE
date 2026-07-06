@@ -1,3 +1,25 @@
+/**
+ * CompareActionBar 사용법
+ *
+ * 기본 비교 바
+ *   <CompareActionBar />
+ *
+ * 선택된 스튜디오 전달
+ *   <CompareActionBar
+ *     selectedLabels={['데이지', '타임']}
+ *   />
+ *
+ * 최대 슬롯 개수 변경
+ *   <CompareActionBar
+ *     maxSlots={4}
+ *   />
+ *
+ * 비교하기 버튼 이벤트
+ *   <CompareActionBar
+ *     onCompare={handleCompare}
+ *   />
+ */
+
 import ButtonCompareSlot from '@/components/common/ButtonCompareSlot'
 
 interface Props {

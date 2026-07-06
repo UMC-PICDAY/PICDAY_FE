@@ -1,8 +1,32 @@
+/**
+ * CardStudioCompare 사용법
+ *
+ * 기본 비교 카드
+ *   <CardStudioCompare />
+ *
+ * 큰 사이즈 카드
+ *   <CardStudioCompare
+ *     size="default"
+ *   />
+ *
+ * 스튜디오 정보 전달
+ *   <CardStudioCompare
+ *     name="데이지 스튜디오"
+ *     rating={4.9}
+ *     reviewCount={128}
+ *   />
+ *
+ * 삭제 버튼 이벤트
+ *   <CardStudioCompare
+ *     onDelete={handleDelete}
+ *   />
+ */
+
 import { IcStar } from '@/components/icons'
-
 import ButtonDelete from '@/components/common/ButtonDelete'
+import defaultImage from '@/assets/CardImage3.png'
 
-const DEFAULT_IMAGE = 'https://www.figma.com/api/mcp/asset/1b424195-e27c-499f-9868-11720dde0dda'
+const DEFAULT_IMAGE = defaultImage
 
 type CardStudioCompareSize = 'default' | 'compact'
 
@@ -46,19 +70,7 @@ const CardStudioCompare = ({
         }
       >
         {imageSrc ? (
-          <div
-            className={
-              isCompact
-                ? 'absolute left-0 top-[-17.13px] h-[197.096px] w-[131.747px] overflow-hidden'
-                : 'absolute left-0 top-[-26px] h-[299px] w-[200px] overflow-hidden'
-            }
-          >
-            <img
-              alt={name}
-              className="absolute left-[0.19%] top-[-363.2%] h-[726.24%] w-full max-w-none object-fill"
-              src={imageSrc}
-            />
-          </div>
+          <img alt={name} className="h-full w-full object-cover" src={imageSrc} />
         ) : (
           <div className="absolute inset-0 bg-gray-10" />
         )}

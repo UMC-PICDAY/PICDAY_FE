@@ -1,6 +1,39 @@
-import { IcStar } from '@/components/icons'
+/**
+ * CardStudio 사용법
+ *
+ * 기본 스튜디오 카드
+ *   <CardStudio />
+ *
+ * 카드 타입 변경
+ *   <CardStudio
+ *     variant="2"
+ *   />
+ *
+ * 상세 정보 카드
+ *   <CardStudio
+ *     variant="3"
+ *   />
+ *
+ * 스튜디오 정보 전달
+ *   <CardStudio
+ *     name="데이지 스튜디오"
+ *     location="홍대"
+ *     category="프로필"
+ *     price="₩55,000~"
+ *     rating="4.9"
+ *   />
+ *
+ * 연계 서비스 변경
+ *   <CardStudio
+ *     variant="Variant5"
+ *     services={['헤어·메이크업', '주차']}
+ *   />
+ */
 
-const DEFAULT_IMAGE = 'https://www.figma.com/api/mcp/asset/1db05c60-d240-4865-9868-f14ba5bb54d6'
+import { IcStar } from '@/components/icons'
+import defaultImage from '@/assets/CardImage1.png'
+
+const DEFAULT_IMAGE = defaultImage
 const DEFAULT_SERVICES = ['헤어·메이크업', '주차']
 
 type CardStudioVariant = 'Default' | '2' | '3' | 'Variant5'
@@ -35,7 +68,6 @@ const CardStudio = ({
   const isVariantTwo = variant === '2'
   const isDetailed = variant === '3' || variant === 'Variant5'
   const extraCategory = secondaryCategory ?? category
-  const imagePositionClass = isVariantTwo ? 'left-[0.388px] top-[-1085.971px]' : 'left-0 top-0'
 
   return (
     <div
@@ -46,13 +78,7 @@ const CardStudio = ({
     >
       <div className="relative h-[180px] w-full shrink-0 overflow-hidden bg-white">
         {imageSrc ? (
-          <div className="absolute left-0 top-[-26px] h-[299px] w-[200px] overflow-hidden">
-            <img
-              alt={name}
-              className={`absolute ${imagePositionClass} h-[726.24%] w-full max-w-none object-fill`}
-              src={imageSrc}
-            />
-          </div>
+          <img alt={name} className="h-full w-full object-cover" src={imageSrc} />
         ) : (
           <div className="absolute inset-0 bg-gray-10" />
         )}

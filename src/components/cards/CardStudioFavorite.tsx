@@ -1,6 +1,33 @@
+/**
+ * CardStudioFavorite 사용법
+ *
+ * 기본 즐겨찾기 카드
+ *   <CardStudioFavorite />
+ *
+ * 즐겨찾기 활성화
+ *   <CardStudioFavorite
+ *     variant="active"
+ *   />
+ *
+ * 스튜디오 정보 전달
+ *   <CardStudioFavorite
+ *     name="데이지 스튜디오"
+ *     location="홍대"
+ *     category="개인화보"
+ *     price="₩30,000~"
+ *   />
+ *
+ * 즐겨찾기 버튼 이벤트
+ *   <CardStudioFavorite
+ *     onFavoriteClick={handleFavoriteClick}
+ *   />
+ */
+
 import FavoriteButton from '@/components/common/FavoriteButton'
 
-const DEFAULT_IMAGE = 'https://www.figma.com/api/mcp/asset/6ab21597-3266-4c4c-8324-117971bd26ad'
+import defaultImage from '@/assets/CardImage3.png'
+
+const DEFAULT_IMAGE = defaultImage
 
 type CardStudioFavoriteVariant = 'default' | 'active'
 
@@ -36,13 +63,11 @@ const CardStudioFavorite = ({
     >
       <div className="relative h-[173px] w-full shrink-0 overflow-hidden bg-white">
         {imageSrc ? (
-          <div className="absolute left-0 top-[-26px] h-[299px] w-[200px] overflow-hidden">
-            <img
-              alt={name}
-              className="absolute left-[0.19%] top-[-363.2%] h-[726.24%] w-full max-w-none object-fill"
-              src={imageSrc}
-            />
-          </div>
+          <img
+            alt={name}
+            className="h-full w-full object-cover"
+            src={imageSrc}
+          />
         ) : (
           <div className="h-full w-full bg-gray-10" />
         )}

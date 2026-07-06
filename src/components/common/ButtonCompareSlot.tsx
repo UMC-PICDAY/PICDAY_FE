@@ -1,3 +1,16 @@
+/**
+ * ButtonCompareSlot 사용법
+ *
+ * 선택된 슬롯
+ *   <ButtonCompareSlot />
+ *
+ * 라벨 변경
+ *   <ButtonCompareSlot label="스튜디오명" />
+ *
+ * 추가 버튼 표시
+ *   <ButtonCompareSlot state="add" />
+ */
+
 import { IcAdd, IcClose } from '@/components/icons'
 
 interface Props {

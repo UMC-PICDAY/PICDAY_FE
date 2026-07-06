@@ -1,6 +1,35 @@
-import ButtonDelete from '@/components/common/ButtonDelete'
+/**
+ * CardStudioLarge 사용법
+ *
+ * 기본 스튜디오 카드 목록
+ *   <CardStudioLarge />
+ *
+ * 카드 데이터 전달
+ *   <CardStudioLarge items={studioItems} />
+ *
+ * 가운데 카드 강조
+ *   <CardStudioLarge
+ *     items={[
+ *       {
+ *         variant: 'center',
+ *       },
+ *     ]}
+ *   />
+ *
+ * 삭제 버튼 표시
+ *   <CardStudioLarge
+ *     items={[
+ *       {
+ *         onDelete: handleDelete,
+ *       },
+ *     ]}
+ *   />
+ */
 
-const DEFAULT_IMAGE = 'https://www.figma.com/api/mcp/asset/b9a8ed1e-23b2-4bbc-b573-be4a4c1dac03'
+import ButtonDelete from '@/components/common/ButtonDelete'
+import defaultImage from '@/assets/CardImage1.png'
+
+const DEFAULT_IMAGE = defaultImage
 
 type LargeCardVariant = 'default' | 'center'
 
@@ -90,11 +119,7 @@ const LargeCard = ({
     >
       <div className="relative w-full min-h-px flex-[1_0_0] overflow-hidden bg-white">
         {imageSrc ? (
-          <img
-            alt={name}
-            className="absolute left-0 top-[-10.5px] h-[419px] w-[280px] max-w-none object-cover"
-            src={imageSrc}
-          />
+          <img alt={name} className="h-full w-full object-cover" src={imageSrc} />
         ) : (
           <div className="absolute inset-0 bg-gray-10" />
         )}
