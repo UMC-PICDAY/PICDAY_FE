@@ -1,3 +1,16 @@
+/**
+ * FavoriteButton 사용법
+ *
+ * 기본 (회색 빈 하트)
+ *   <FavoriteButton onClick={handleClick} />
+ *
+ * 찜 활성화 (핑크 채워진 하트)
+ *   <FavoriteButton active={true} onClick={handleClick} />
+ *
+ * 상태 관리 예시
+ *   const [isFavorited, setIsFavorited] = useState(false)
+ *   <FavoriteButton active={isFavorited} onClick={() => setIsFavorited(prev => !prev)} />
+ */
 import { IcFavorite, IcFavoriteFill } from '@/components/icons'
 
 interface Props {

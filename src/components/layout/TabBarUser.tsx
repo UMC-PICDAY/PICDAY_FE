@@ -1,8 +1,18 @@
-import { IcSearch, IcWishlist, IcChat, IcUser } from '@/components/icons'
+/**
+ * TabBarUser 사용법
+ *
+ * 로그인 탭바 (검색 / 위시리스트 / 마이페이지)
+ *   <TabBarUser />
+ *
+ * 탭 상태 관리
+ *   const [tab, setTab] = useState<'search' | 'wishlist' | 'mypage'>('search')
+ *   <TabBarUser activeTab={tab} onTabChange={setTab} />
+ */
+import { IcSearch, IcWishlist, IcUser } from '@/components/icons'
 import Tap from '@/components/layout/Tap'
 import HomeBar from '@/components/layout/HomeBar'
 
-type TabItem = 'search' | 'wishlist' | 'chat' | 'mypage'
+type TabItem = 'search' | 'wishlist' | 'mypage'
 
 interface Props {
   activeTab?: TabItem
@@ -12,7 +22,6 @@ interface Props {
 const tabs: { key: TabItem; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
   { key: 'search', label: '검색', icon: IcSearch },
   { key: 'wishlist', label: '위시리스트', icon: IcWishlist },
-  { key: 'chat', label: '메세지', icon: IcChat },
   { key: 'mypage', label: '마이페이지', icon: IcUser },
 ]
 

@@ -1,3 +1,9 @@
+/**
+ * Tap 사용법
+ *
+ * TabBarUser / TabBarGuest 내부에서만 사용하는 탭 아이템
+ *   <Tap icon={IcSearch} label="검색" active={true} onClick={handleClick} />
+ */
 import type { FC, SVGProps } from 'react'
 
 interface Props {

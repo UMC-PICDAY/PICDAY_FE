@@ -1,3 +1,12 @@
+/**
+ * NavigationBarTransparent 사용법
+ *
+ * 이미지 위에 올라가는 투명 네비게이션 (뒤로가기 / 공유 + 찜)
+ *   <NavigationBarTransparent onBack={handleBack} onShare={handleShare} onFavorite={handleFavorite} />
+ *
+ * 찜 활성화 상태
+ *   <NavigationBarTransparent isFavorited={true} onBack={handleBack} onShare={handleShare} onFavorite={handleFavorite} />
+ */
 import { IcBack, IcShare, IcFavorite, IcFavoriteFill } from '@/components/icons'
 
 interface Props {

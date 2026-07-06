@@ -1,3 +1,9 @@
+/**
+ * StatusBar 사용법
+ *
+ * iOS 상태바 (시간 + Dynamic Island + 신호/배터리)
+ *   <StatusBar />
+ */
 const StatusBarIcons = () => (
   <svg width="84" height="15" viewBox="0 0 84.1017 14.44" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g>

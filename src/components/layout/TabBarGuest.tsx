@@ -1,3 +1,13 @@
+/**
+ * TabBarGuest 사용법
+ *
+ * 비로그인 탭바 (검색 / 위시리스트 / 로그인)
+ *   <TabBarGuest />
+ *
+ * 탭 상태 관리
+ *   const [tab, setTab] = useState<'search' | 'wishlist' | 'login'>('search')
+ *   <TabBarGuest activeTab={tab} onTabChange={setTab} />
+ */
 import { IcSearch, IcWishlist, IcUser } from '@/components/icons'
 import Tap from '@/components/layout/Tap'
 import HomeBar from '@/components/layout/HomeBar'

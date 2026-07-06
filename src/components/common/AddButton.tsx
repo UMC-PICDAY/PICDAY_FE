@@ -1,3 +1,12 @@
+/**
+ * AddButton 사용법
+ *
+ * 기본 (label, subLabel 기본값 사용)
+ *   <AddButton onClick={handleClick} />
+ *
+ * 커스텀 텍스트
+ *   <AddButton label="스튜디오 추가" subLabel="최대 3개까지" onClick={handleClick} />
+ */
 import { IcAdd } from '@/components/icons'
 
 interface Props {
@@ -12,7 +21,7 @@ const AddButton = ({
   onClick,
 }: Props) => (
   <button
-    className="flex flex-col items-center justify-center gap-0.5 w-full py-3 px-5 rounded-lg border border-brand-20 bg-[rgba(254,228,235,0.3)] cursor-pointer"
+    className="flex flex-col items-center justify-center gap-0.5 w-full py-3 px-5 rounded-xl border border-brand-20 bg-[rgba(254,228,235,0.3)] cursor-pointer"
     onClick={onClick}
   >
     <div className="flex items-center gap-0.5 text-brand-100">
