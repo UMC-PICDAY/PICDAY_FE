@@ -10,13 +10,11 @@
 
 import type { ButtonHTMLAttributes, MouseEvent } from "react";
 
-export type ToggleProps = Omit<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  "onChange"
-> & {
+export interface ToggleProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> {
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
-};
+}
 
 /** 44×24px 규격의 controlled toggle switch입니다. */
 const Toggle = ({

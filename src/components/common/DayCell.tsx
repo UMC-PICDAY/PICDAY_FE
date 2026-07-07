@@ -13,13 +13,11 @@
 
 import type { ButtonHTMLAttributes } from "react";
 
-export type DayCellProps = Omit<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  "children"
-> & {
+export interface DayCellProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   day: number | string;
   selected?: boolean;
-};
+}
 
 /** Calendar에서 사용하는 28×28px 날짜 셀입니다. */
 const DayCell = ({

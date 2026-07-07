@@ -10,10 +10,10 @@
 
 import type { HTMLAttributes } from "react";
 
-export type CategoryChipProps = HTMLAttributes<HTMLSpanElement> & {
+export interface CategoryChipProps extends HTMLAttributes<HTMLSpanElement> {
   label: string;
   size?: "compact" | "large";
-};
+}
 
 /** 사진관의 부가 카테고리를 표시하는 읽기 전용 칩입니다. */
 const CategoryChip = ({
