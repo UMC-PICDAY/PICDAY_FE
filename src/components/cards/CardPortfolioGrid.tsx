@@ -24,7 +24,7 @@
  *   />
  */
 
-import defaultImage from '@/assets/CardImage4.png'
+import defaultImage from '@/assets/images/CardImage4.png'
 
 const DEFAULT_IMAGE = defaultImage
 

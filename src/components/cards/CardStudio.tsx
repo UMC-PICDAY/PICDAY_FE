@@ -31,7 +31,7 @@
  */
 
 import { IcStar } from '@/components/icons'
-import defaultImage from '@/assets/CardImage1.png'
+import defaultImage from '@/assets/images/CardImage1.png'
 
 const DEFAULT_IMAGE = defaultImage
 const DEFAULT_SERVICES = ['헤어·메이크업', '주차']
