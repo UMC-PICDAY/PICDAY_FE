@@ -26,8 +26,8 @@
  */
 
 import { IcStar } from '@/components/icons'
-import firstImage from '@/assets/CardImage1.png'
-import secondImage from '@/assets/CardImage2.png'
+import firstImage from '@/assets/images/CardImage1.png'
+import secondImage from '@/assets/images/CardImage2.png'
 
 
 const DEFAULT_FIRST_IMAGE = firstImage

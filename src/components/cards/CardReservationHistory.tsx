@@ -23,8 +23,8 @@
  *   />
  */
 
-import defaultImage from '@/assets/CardImage1.png'
-import defaultSecondImage from '@/assets/CardImage2.png'
+import defaultImage from '@/assets/images/CardImage1.png'
+import defaultSecondImage from '@/assets/images/CardImage2.png'
 
 const DEFAULT_IMAGE = defaultImage
 const DEFAULT_SECOND_IMAGE = defaultSecondImage

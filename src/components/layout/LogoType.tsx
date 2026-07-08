@@ -7,8 +7,8 @@
  * 앱 아이콘 (스플래시 등)
  *   <LogoType variant="icon" />
  */
-import logoText from '@/assets/logo-text.svg'
-import logoIcon from '@/assets/logo-icon.png'
+import logoText from '@/assets/images/logo-text.svg'
+import logoIcon from '@/assets/images/logo-icon.png'
 
 interface Props {
   variant?: 'text' | 'icon'

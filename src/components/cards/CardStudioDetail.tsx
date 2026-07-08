@@ -26,7 +26,7 @@
  */
 
 import { IcCheck, IcRight } from '@/components/icons'
-import defaultImage from '@/assets/CardImage1.png'
+import defaultImage from '@/assets/images/CardImage1.png'
 
 const DEFAULT_IMAGE = defaultImage
 

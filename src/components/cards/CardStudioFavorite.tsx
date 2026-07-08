@@ -25,7 +25,7 @@
 
 import FavoriteButton from '@/components/common/FavoriteButton'
 
-import defaultImage from '@/assets/CardImage3.png'
+import defaultImage from '@/assets/images/CardImage3.png'
 
 const DEFAULT_IMAGE = defaultImage
 

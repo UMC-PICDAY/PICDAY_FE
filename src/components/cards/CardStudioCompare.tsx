@@ -24,7 +24,7 @@
 
 import { IcStar } from '@/components/icons'
 import ButtonDelete from '@/components/common/ButtonDelete'
-import defaultImage from '@/assets/CardImage3.png'
+import defaultImage from '@/assets/images/CardImage3.png'
 
 const DEFAULT_IMAGE = defaultImage
 
