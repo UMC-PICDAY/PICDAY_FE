@@ -61,6 +61,59 @@ src/
 
 <br>
 
+## 🧩 공통 컴포넌트 범위 및 사용 기준
+
+### Figma 기준
+
+공통 컴포넌트 구현 범위는 PICDAY Figma의 공통 컴포넌트 섹션 전체를 기준으로 합니다.
+
+- Figma 파일: `PICDAY`
+- 기준 노드: `1996:16986`
+- 링크: https://www.figma.com/design/KGcQqwHfsRwy4IG3Spxk4M/PICDAY?node-id=1996-16986&t=oPJNCxbjyRe7BrSi-0
+
+위 노드까지 포함된 디자인 요소 중 여러 화면에서 반복 사용되는 UI를 공통 컴포넌트 대상으로 봅니다.
+
+### 공통 컴포넌트로 분리하는 기준
+
+다음 조건 중 하나 이상에 해당하면 `src/components/common` 또는 `src/components/layout`으로 분리합니다.
+
+| 기준 | 설명 |
+|------|------|
+| 반복 사용성 | 2개 이상 화면에서 동일하거나 유사한 UI가 반복되는 경우 |
+| 독립성 | 특정 페이지의 API 응답, 라우팅, 도메인 상태에 직접 의존하지 않는 경우 |
+| 변형 가능성 | `variant`, `size`, `state`, `disabled`, `selected` 등 props로 상태나 형태를 제어할 수 있는 경우 |
+| 디자인 일관성 | 색상, 폰트, 간격, radius 등이 디자인 토큰 또는 CSS variable 기준으로 관리되어야 하는 경우 |
+
+### 공통 컴포넌트 사용 범위
+
+| 경로 | 사용 범위 |
+|------|----------|
+| `src/components/common` | Button, Chip, Input, Card, BottomSheet, Modal, Tab 등 페이지와 무관하게 재사용 가능한 기본 UI |
+| `src/components/layout` | TopBar, BottomNav, StatusBar, PageLayout 등 여러 화면에서 공통으로 쓰는 레이아웃 UI |
+| `src/components/icons` | SVG 아이콘 컴포넌트 또는 아이콘 래퍼 |
+| `src/pages/**/components` | 특정 페이지에서만 사용하는 섹션, 리스트 아이템, 도메인 결합 UI |
+
+### 페이지 전용 컴포넌트로 유지하는 기준
+
+다음에 해당하면 공통 컴포넌트로 올리지 않고 해당 페이지 폴더 내부에 둡니다.
+
+- 특정 화면에서만 사용되고 재사용 가능성이 낮은 경우
+- 예약, 검색, 사진관 상세 등 특정 도메인 데이터에 강하게 결합된 경우
+- API 호출 결과, 페이지 라우팅, 전역 상태에 직접 의존하는 경우
+- 공통 컴포넌트를 조합한 화면 단위 섹션인 경우
+
+예를 들어 `Button`, `Chip`, `BottomSheet`는 공통 컴포넌트가 될 수 있지만, `StudioFilterBottomSheet`, `ReservationSummaryCard`, `SearchResultItem`처럼 특정 도메인 의미가 강한 컴포넌트는 페이지 전용 컴포넌트로 관리합니다.
+
+### 구현 원칙
+
+- 공통 컴포넌트는 기본적으로 controlled/uncontrolled 사용 가능성을 고려합니다.
+- 스타일은 Figma 기준을 우선하며, 가능한 경우 CSS variable 또는 디자인 토큰을 사용합니다.
+- 컴포넌트 외부에서 간격을 제어할 수 있도록 `className` 또는 wrapper props는 필요한 경우에만 제공합니다.
+- 공통 컴포넌트 내부에 페이지 전용 문구, API 호출, 라우팅 로직을 넣지 않습니다.
+- 접근성이 필요한 요소는 `aria-label`, `aria-expanded`, `role`, keyboard interaction을 함께 고려합니다.
+
+<br>
+
 ## 🌿 브랜치 컨벤션
 
 ### 브랜치 구성
@@ -212,7 +265,7 @@ npm run dev
 | C-1 지도+리스트 | 지도와 리스트 통합 뷰 |
 | C-2 지도 전체뷰 | 지도 전체 화면 |
 | C-3 결과 없음 | 검색 결과 없음 |
-| C-3 리스트 전체뷰 | 리스트 전체 화면 |
+| C-3 리스트 전체뷰 | 리스트 전체뷰 |
 | C-4 필터 | 필터 설정 (가격, 스타일 등) |
 | C-5 사진관 상세 | 사진관 상세 정보 |
 | C-6 리뷰 상세 | 리뷰 목록 및 상세 |
