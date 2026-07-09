@@ -20,15 +20,16 @@
 import { useId } from "react";
 import type { InputHTMLAttributes } from "react";
 
-export type InputFieldProps = Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  "size" | "placeholder"
-> & {
+export interface InputFieldProps
+  extends Omit<
+    InputHTMLAttributes<HTMLInputElement>,
+    "size" | "placeholder"
+  > {
   label: string;
   placeholder: string;
   prefix?: string;
   wrapperClassName?: string;
-};
+}
 
 /** label과 선택적 prefix 영역을 포함하는 48px 높이의 입력 필드입니다. */
 const InputField = ({

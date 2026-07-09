@@ -16,24 +16,24 @@
 
 import type { ChangeEvent, CSSProperties } from "react";
 
-type RangeSliderBaseProps = {
+interface RangeSliderBaseProps {
   min: number;
   max: number;
   className?: string;
   formatValue?: (value: number) => string;
-};
+}
 
-export type RangeSliderDefaultProps = RangeSliderBaseProps & {
+export interface RangeSliderDefaultProps extends RangeSliderBaseProps {
   variant?: "default";
-};
+}
 
-export type RangeSliderActiveProps = RangeSliderBaseProps & {
+export interface RangeSliderActiveProps extends RangeSliderBaseProps {
   variant: "active";
   step?: number;
   value: readonly [number, number];
   disabled?: boolean;
   onValueChange: (value: [number, number]) => void;
-};
+}
 
 export type RangeSliderProps = RangeSliderDefaultProps | RangeSliderActiveProps;
 

@@ -18,16 +18,14 @@ import type { ButtonHTMLAttributes } from "react";
 
 export type FilterChipSize = "compact" | "medium" | "large";
 
-export type FilterChipProps = Omit<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  "children"
-> & {
+export interface FilterChipProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   label: string;
   count?: number;
   selected?: boolean;
   highlighted?: boolean;
   size?: FilterChipSize;
-};
+}
 
 const sizeStyles: Record<FilterChipSize, string> = {
   compact: "h-[27px] py-1",

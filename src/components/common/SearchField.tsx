@@ -29,12 +29,12 @@ import { IcClose, IcSearch } from "@/components/icons";
 
 export type SearchFieldPosition = "standalone" | "top" | "middle" | "bottom";
 
-type SearchFieldBaseProps = {
+interface SearchFieldBaseProps {
   disabled?: boolean;
   className?: string;
-};
+}
 
-export type SearchFieldInputProps = SearchFieldBaseProps & {
+export interface SearchFieldInputProps extends SearchFieldBaseProps {
   variant?: "input";
   value: string;
   placeholder: string;
@@ -42,16 +42,16 @@ export type SearchFieldInputProps = SearchFieldBaseProps & {
   onChange?: ChangeEventHandler<HTMLInputElement>;
   onSearch?: FormEventHandler<HTMLFormElement>;
   onClear?: MouseEventHandler<HTMLButtonElement>;
-};
+}
 
-export type SearchFieldResultProps = SearchFieldBaseProps & {
+export interface SearchFieldResultProps extends SearchFieldBaseProps {
   variant: "result";
   selected?: boolean;
   position?: SearchFieldPosition;
   resultLabel: string;
   resultMeta: string;
   onResultClick?: MouseEventHandler<HTMLButtonElement>;
-};
+}
 
 export type SearchFieldProps = SearchFieldInputProps | SearchFieldResultProps;
 

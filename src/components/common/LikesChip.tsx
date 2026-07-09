@@ -14,14 +14,15 @@
 import type { ButtonHTMLAttributes } from "react";
 import { IcThumbsUp } from "@/components/icons";
 
-export type LikesChipProps = Omit<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  "children" | "onClick"
-> & {
+export interface LikesChipProps
+  extends Omit<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    "children" | "onClick"
+  > {
   count: number;
   liked: boolean;
   onLikedChange: (liked: boolean) => void;
-};
+}
 
 /** 좋아요 수와 선택 상태를 표시하고, 선택 변경을 부모에 전달하는 칩 버튼입니다. */
 const LikesChip = ({
