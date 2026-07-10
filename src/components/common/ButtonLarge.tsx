@@ -9,6 +9,8 @@
  *   <ButtonLarge variant="price" price="₩70,000" primaryLabel="예약하기" />
  *   <ButtonLarge variant="price" price="₩70,000" primaryLabel="문의" />
  */
+import Button from '@/components/common/Button'
+
 interface Props {
   variant?: 'pair' | 'price'
   primaryLabel?: string
@@ -19,8 +21,6 @@ interface Props {
   onSecondaryClick?: () => void
 }
 
-const btn = 'flex items-center justify-center py-3 px-5 rounded-[12px] border-none cursor-pointer text-[var(--font-b3-size)] font-[var(--font-b3-weight)] leading-[var(--font-b3-line-height)] whitespace-nowrap'
-
 const ButtonLarge = ({
   variant = 'pair',
   primaryLabel = '예약하기',
@@ -30,28 +30,28 @@ const ButtonLarge = ({
   onPrimaryClick,
   onSecondaryClick,
 }: Props) => (
-  <div className="flex gap-5 items-center w-full p-5">
+  <div className="flex w-full items-center gap-5 p-5">
     {variant === 'price' && price ? (
       <>
-        <span className="flex-1 text-[var(--font-b3-size)] font-[var(--font-b3-weight)] text-[#3d1a24] whitespace-nowrap">
+        <span className="flex-1 whitespace-nowrap text-[var(--font-b3-size)] font-[var(--font-b3-weight)] text-[#3d1a24]">
           {price}
         </span>
-        <button className={`${btn} bg-brand-100 text-white`} onClick={onPrimaryClick}>
+        <Button variant="primary" fullWidth={false} onClick={onPrimaryClick}>
           {primaryLabel}
-        </button>
+        </Button>
       </>
     ) : (
       <>
-        <button
-          className={`${btn} bg-gray-10 text-gray-80 shrink-0`}
-          style={{ width: secondaryWidth }}
-          onClick={onSecondaryClick}
-        >
-          {secondaryLabel}
-        </button>
-        <button className={`${btn} bg-brand-100 text-white flex-1`} onClick={onPrimaryClick}>
-          {primaryLabel}
-        </button>
+        <div className="shrink-0" style={{ width: secondaryWidth }}>
+          <Button variant="secondary" onClick={onSecondaryClick}>
+            {secondaryLabel}
+          </Button>
+        </div>
+        <div className="flex-1">
+          <Button variant="primary" onClick={onPrimaryClick}>
+            {primaryLabel}
+          </Button>
+        </div>
       </>
     )}
   </div>
