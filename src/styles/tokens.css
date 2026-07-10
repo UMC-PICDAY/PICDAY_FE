@@ -26,6 +26,9 @@
   --color-gray-10: #eeeeee;
   --color-white: #fcfcfc;
 
+  /* Status */
+  --color-error: #ff3b5b;
+
   /* Font */
   --font-family-sans: 'Pretendard', sans-serif;
 }

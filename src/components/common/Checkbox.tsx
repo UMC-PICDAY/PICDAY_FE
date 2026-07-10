@@ -9,6 +9,9 @@
  *
  * [disabled] 비활성화
  *   <Checkbox checked={false} disabled />
+ *
+ * [strong] 전체 동의처럼 더 진한 테두리가 필요할 때
+ *   <Checkbox checked={checked} onChange={handleChange} strong />
  */
 
 import type { InputHTMLAttributes } from "react";
@@ -20,6 +23,7 @@ export type CheckboxProps = Omit<
 > & {
   checked?: boolean;
   className?: string;
+  strong?: boolean;
 };
 
 /** Figma의 on/off 아이콘을 사용하는 접근 가능한 체크박스입니다. */
@@ -28,6 +32,7 @@ const Checkbox = ({
   disabled = false,
   onChange,
   className = "",
+  strong = false,
   "aria-label": ariaLabel = "선택",
   ...inputProps
 }: CheckboxProps) => (
@@ -46,7 +51,11 @@ const Checkbox = ({
       aria-label={ariaLabel}
       {...inputProps}
     />
-    <span className="inline-flex size-6 items-center justify-center rounded-sm text-[var(--color-gray-10)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-brand-100)] peer-checked:text-[var(--color-brand-100)]">
+    <span
+      className={`inline-flex size-6 items-center justify-center rounded-sm ${
+        strong ? "text-[var(--color-gray-20)]" : "text-[var(--color-gray-10)]"
+      } peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-brand-100)] peer-checked:text-[var(--color-brand-100)]`}
+    >
       {checked ? <IcCheckBoxFill /> : <IcCheckBox />}
     </span>
   </label>

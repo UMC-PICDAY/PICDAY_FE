@@ -15,6 +15,13 @@
  *     placeholder="휴대폰 번호를 입력해 주세요"
  *     prefix="+82"
  *   />
+ *
+ * [error] 유효성 오류 메시지 표시
+ *   <InputField
+ *     label="아이디"
+ *     placeholder="영문 소문자, 숫자를 포함하여 4~12자로 작성"
+ *     error="이미 사용 중인 아이디에요"
+ *   />
  */
 
 import { useId } from "react";
@@ -27,6 +34,7 @@ export type InputFieldProps = Omit<
   label: string;
   placeholder: string;
   prefix?: string;
+  error?: string;
   wrapperClassName?: string;
 };
 
@@ -35,6 +43,7 @@ const InputField = ({
   label,
   prefix,
   placeholder,
+  error,
   wrapperClassName = "",
   className = "",
   id,
@@ -45,6 +54,9 @@ const InputField = ({
   const inputId = id ?? generatedId;
   const inputStyle =
     "min-w-0 bg-[var(--color-white)] px-5 py-3 font-b6 text-[var(--color-black)] outline-none disabled:cursor-not-allowed disabled:bg-[var(--color-gray-10)] disabled:text-[var(--color-gray-40)]";
+  const borderStyle = error
+    ? "border-[var(--color-error)]"
+    : "border-[var(--color-gray-10)] focus:border-[var(--color-gray-60)]";
 
   return (
     <div className={`flex w-full flex-col gap-1 px-5 pb-3 ${wrapperClassName}`}>
@@ -52,7 +64,9 @@ const InputField = ({
         {label}
       </label>
       {prefix ? (
-        <div className="flex h-12 w-full items-stretch overflow-hidden rounded-lg border border-[var(--color-gray-10)] bg-[var(--color-white)] focus-within:border-[var(--color-gray-60)]">
+        <div
+          className={`flex h-12 w-full items-stretch overflow-hidden rounded-lg border bg-[var(--color-white)] focus-within:border-[var(--color-gray-60)] ${borderStyle}`}
+        >
           <span className="inline-flex h-full shrink-0 items-center border-r border-[var(--color-gray-10)] px-5 font-b6 text-[var(--color-gray-40)]">
             {prefix}
           </span>
@@ -61,18 +75,21 @@ const InputField = ({
             className={`${inputStyle} h-full flex-1 border-0 placeholder:text-[var(--color-gray-40)] ${className}`}
             placeholder={placeholder}
             disabled={disabled}
+            aria-invalid={error ? true : undefined}
             {...inputProps}
           />
         </div>
       ) : (
         <input
           id={inputId}
-          className={`${inputStyle} h-12 w-full rounded-lg border border-[var(--color-gray-10)] placeholder:text-[var(--color-gray-40)] focus:border-[var(--color-gray-60)] ${className}`}
+          className={`${inputStyle} h-12 w-full rounded-lg border placeholder:text-[var(--color-gray-40)] ${borderStyle} ${className}`}
           placeholder={placeholder}
           disabled={disabled}
+          aria-invalid={error ? true : undefined}
           {...inputProps}
         />
       )}
+      {error && <p className="font-cap3 text-[var(--color-error)]">{error}</p>}
     </div>
   );
 };
