@@ -42,38 +42,49 @@ const Profile = ({
   studioImageSrc,
 }: Props) => (
   <div className="flex w-[402px] flex-col items-start gap-5 px-5 py-[10px]">
-    <div className="flex w-full items-center gap-[15px]">
+    {/*userinfo*/}
+    <div className="flex w-full items-center px-5 py-[10px] gap-[15px]">
+      {/*원형 이미지*/}
       {userImageSrc ? (
         <img
           src={userImageSrc}
           alt=""
-          className="h-[40px] w-[40px] rounded-[1000px] object-cover"
+          className="h-[40px] w-[40px] shrink-0 rounded-[1000px] object-cover"
         />
       ) : (
-        <div className="h-[40px] w-[40px] rounded-[1000px] bg-brand-100" />
+        <div className="h-[40px] w-[40px] shrink-0 rounded-[1000px] bg-brand-100" />
       )}
 
+      {/*이름/계정 텍스트 묶음*/}
       <div className="flex flex-col">
-        <span className="font-b5 text-[#222]">{userName}</span>
-        <span className="font-b10 text-[#888]">{accountText}</span>
+        <span className="font-b5 text-black">{userName}</span>
+        <span className="font-b10 text-gray-40">{accountText}</span>
       </div>
     </div>
 
-    <div className="flex w-full items-start gap-[10px] px-5 py-[10px]">
+    {/*bookinginfo*/}
+    <div className="flex w-full items-start px-5 py-[10px] gap-[15px]">
+      {/*사각형 이미지*/}
       {studioImageSrc ? (
         <img
           src={studioImageSrc}
           alt=""
-          className="h-[67px] w-[67px] rounded-[15px] object-cover"
+          className="h-[65px] w-[65px] shrink-0 rounded-[16px] object-cover"
         />
       ) : (
-        <div className="h-[67px] w-[67px] rounded-[15px] bg-brand-100" />
+        <div className="h-[65px] w-[65px] shrink-0 rounded-[16px] bg-brand-100" />
       )}
 
-      <div className="flex flex-col items-start">
-        <span className="font-b5 text-[#222]">{studioName}</span>
-        <span className="font-b10 text-[#888]">{reservationDate}</span>
-        <StatusTag label={statusLabel} />
+      {/*스튜디오 이름/날짜/태그 묶음*/}
+      <div className="flex min-w-0 flex-col items-start">
+        <div className="flex flex-col">
+          <span className="font-b5 text-black">{studioName}</span>
+          <span className="font-b10 text-gray-40">{reservationDate}</span>
+        </div>
+
+        <div className="mt-[5px]">
+          <StatusTag label={statusLabel} />
+        </div>
       </div>
     </div>
   </div>
