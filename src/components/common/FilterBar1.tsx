@@ -21,12 +21,12 @@ export type CountFilterItem = {
   disabled?: boolean;
 };
 
-export type FilterBar1Props = {
+export interface FilterBar1Props {
   items: readonly CountFilterItem[];
   value?: string;
   className?: string;
   onChange?: (value: string) => void;
-};
+}
 
 /** 예약 상태와 건수를 FilterChip으로 선택하는 필터 바입니다. */
 const FilterBar1 = ({

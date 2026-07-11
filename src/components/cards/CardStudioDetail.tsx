@@ -26,6 +26,8 @@
  */
 
 import { IcCheck, IcRight } from '@/components/icons'
+import ButtonLarge from '@/components/common/ButtonLarge'
+
 import defaultImage from '@/assets/images/CardImage1.png'
 
 const DEFAULT_IMAGE = defaultImage
@@ -85,6 +87,7 @@ const CardStudioDetail = ({
           <p className="h-[21px] w-[321px] truncate text-[var(--font-b5-size)] font-[var(--font-b5-weight)] leading-[var(--font-b5-line-height)] tracking-[var(--font-b5-letter-spacing)] text-black">
             {name}
           </p>
+
           <p className="whitespace-nowrap pr-[4px] text-[var(--font-cap3-size)] font-[400] leading-[var(--font-cap3-line-height)] tracking-[var(--font-cap3-letter-spacing)] text-gray-40">
             {description}
           </p>
@@ -93,6 +96,7 @@ const CardStudioDetail = ({
         <div className="flex w-full shrink-0 flex-col items-start gap-[4px]">
           <div className="flex w-full shrink-0 items-start">
             <IcCheck width={16} height={16} className="shrink-0 text-gray-80" />
+
             <p className="min-w-0 truncate pr-[4px] text-[var(--font-cap1-size)] font-[var(--font-cap1-weight)] leading-[var(--font-cap1-line-height)] tracking-[var(--font-cap1-letter-spacing)] text-gray-80">
               {optionText}
             </p>
@@ -106,26 +110,19 @@ const CardStudioDetail = ({
             <p className="min-w-0 flex-1 text-right text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)]">
               {detailLabel}
             </p>
+
             <IcRight width={20} height={20} className="shrink-0" />
           </button>
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 items-start gap-[20px] border-t border-gray-10 bg-white px-[20px] py-[10px]">
-        <div className="flex min-w-0 flex-1 items-center rounded-[8px] py-[12px]">
-          <p className="shrink-0 whitespace-nowrap text-[var(--font-b3-size)] font-[var(--font-b3-weight)] leading-[var(--font-b3-line-height)] tracking-[var(--font-b3-letter-spacing)] text-[#3d1a24]">
-            {price}
-          </p>
-        </div>
-        <button
-          className="flex shrink-0 cursor-pointer items-center justify-center rounded-[8px] border-none bg-brand-100 px-[20px] py-[12px]"
-          type="button"
-          onClick={onReserveClick}
-        >
-          <p className="shrink-0 whitespace-nowrap text-[var(--font-b3-size)] font-[var(--font-b3-weight)] leading-[var(--font-b3-line-height)] tracking-[var(--font-b3-letter-spacing)] text-white">
-            {buttonLabel}
-          </p>
-        </button>
+      <div className="w-full shrink-0 border-t border-gray-10 bg-white">
+        <ButtonLarge
+          variant="price"
+          price={price}
+          primaryLabel={buttonLabel}
+          onPrimaryClick={onReserveClick}
+        />
       </div>
     </div>
   )
