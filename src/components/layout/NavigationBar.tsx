@@ -70,7 +70,7 @@ const NavigationBar = ({
       )}
     </div>
 
-    <div className="w-9 h-9 flex items-center justify-center overflow-hidden shrink-0">
+    <div className="min-w-9 h-9 flex items-center justify-center shrink-0">
       {showRight && (rightNode ?? <button className="border-none bg-transparent cursor-pointer p-0" onClick={onClose}><IcClose width={24} height={24} /></button>)}
     </div>
   </div>

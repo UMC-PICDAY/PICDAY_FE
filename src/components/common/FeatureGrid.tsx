@@ -1,22 +1,14 @@
 /**
  * FeatureGrid 사용법
  *
- * 사진관 제공 기능 목록
+ * 사진관 제공 기능 목록 (와이파이 / 주차 / 의상비치 / 헤어메이크업 제휴)
  *   <FeatureGrid />
  *
- * 기본 기능
- *   와이파이 / 주차 / 의상비치 / 헤어메이크업 제휴
- *
- * 기능 목록 변경
- *   <FeatureGrid
- *     features={[
- *       { label: '와이파이', icon: 'wifi' },
- *       { label: '주차', icon: 'wishlist' },
- *     ]}
- *   />
+ * 라벨 변경
+ *   <FeatureGrid parkingLabel="발렛 주차" />
  */
 
-import { IcWifi, IcWishlist } from '@/components/icons'
+import { IcWifi, IcParking, IcClothing, IcBeauty } from '@/components/icons'
 
 interface Props {
   wifiLabel?: string
@@ -40,21 +32,21 @@ const FeatureGrid = ({
     </div>
 
     <div className="flex h-[48px] w-[68px] flex-col items-center justify-center gap-1">
-      <IcWishlist width={24} height={24} className="text-brand-100" />
+      <IcParking width={24} height={24} className="text-brand-100" />
       <span className="whitespace-nowrap font-b10 text-gray-60">
         {parkingLabel}
       </span>
     </div>
 
     <div className="flex h-[48px] w-[68px] flex-col items-center justify-center gap-1">
-      <IcWishlist width={24} height={24} className="text-brand-100" />
+      <IcClothing width={24} height={24} className="text-brand-100" />
       <span className="whitespace-nowrap font-b10 text-gray-60">
         {clothesLabel}
       </span>
     </div>
 
     <div className="flex h-[48px] w-[68px] flex-col items-center justify-center gap-1">
-      <IcWishlist width={24} height={24} className="text-brand-100" />
+      <IcBeauty width={24} height={24} className="text-brand-100" />
       <span className="whitespace-nowrap font-b10 text-gray-60">
         {makeupLabel}
       </span>

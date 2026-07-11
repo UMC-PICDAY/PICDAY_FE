@@ -132,10 +132,18 @@ const CardStudioPreview = ({
 
           <div className="flex max-w-full items-start gap-[4px] overflow-hidden text-[var(--font-cap3-size)] font-[400] leading-[var(--font-cap3-line-height)] tracking-[var(--font-cap3-letter-spacing)] text-gray-40">
             <p className="shrink-0 whitespace-nowrap">{location}</p>
-            <p className="shrink-0 whitespace-nowrap">|</p>
-            <p className="min-w-0 truncate">{category}</p>
-            <p className="shrink-0 whitespace-nowrap">·</p>
-            <p className="min-w-0 truncate">{secondaryCategory}</p>
+            {category && (
+              <>
+                <p className="shrink-0 whitespace-nowrap">|</p>
+                <p className="min-w-0 truncate">{category}</p>
+                {secondaryCategory && (
+                  <>
+                    <p className="shrink-0 whitespace-nowrap">·</p>
+                    <p className="min-w-0 truncate">{secondaryCategory}</p>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {services.length > 0 && (
