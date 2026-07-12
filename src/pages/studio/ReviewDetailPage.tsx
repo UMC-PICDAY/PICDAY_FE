@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 
+import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
 import { IcFilter, IcStar, IcStarHalf } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
@@ -28,7 +30,9 @@ const REVIEWS = [
 ]
 
 const ReviewDetailPage = () => {
+  const [searchParams] = useSearchParams()
   const [photoOnly, setPhotoOnly] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(searchParams.get('login') === '1')
 
   return (
     <div className="flex min-h-dvh flex-col bg-white pb-24">
@@ -102,6 +106,17 @@ const ReviewDetailPage = () => {
           모든 컨셉 보기
         </button>
       </div>
+
+      {loginOpen && (
+        <div
+          className="fixed inset-0 z-40 mx-auto flex max-w-[390px] items-center justify-center bg-black/40 px-5"
+          onClick={() => setLoginOpen(false)}
+        >
+          <div className="w-full" onClick={(event) => event.stopPropagation()}>
+            <Alert3 variant="variant3" onHelperClick={() => setLoginOpen(false)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
