@@ -1,3 +1,4 @@
+/** Figma B-4 날짜 선택 (라우트: /search/date) */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 

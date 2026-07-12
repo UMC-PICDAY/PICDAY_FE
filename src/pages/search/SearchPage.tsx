@@ -1,3 +1,7 @@
+/**
+ * Figma B-2 통합검색 (라우트: /search)
+ * 검색 위저드의 허브 화면 — 키워드/날짜/목적 피커는 각자 화면(B-3/B-4/B-5)으로 갔다가 draft 스토어에 값만 남기고 여기로 돌아옴
+ */
 import { useNavigate } from 'react-router'
 
 import NavigationBar from '@/components/layout/NavigationBar'

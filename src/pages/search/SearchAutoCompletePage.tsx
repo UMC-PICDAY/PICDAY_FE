@@ -1,3 +1,4 @@
+/** Figma B-3 지역칩 선택 / 사진관명 텍스트 입력 / 자동완성 노출 (라우트: /search/autocomplete) — 한 화면에서 상태로 분기 */
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 

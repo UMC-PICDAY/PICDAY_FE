@@ -1,3 +1,4 @@
+/** Figma B-5 목적 선택 (라우트: /search/purpose) */
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 

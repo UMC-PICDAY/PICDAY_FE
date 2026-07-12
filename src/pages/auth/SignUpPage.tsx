@@ -1,3 +1,7 @@
+/**
+ * Figma A-3 자체 회원가입 (라우트: /signup)
+ * 약관 상세(서비스/개인정보/만14세/마케팅)는 Agreement의 onItemDetailClick으로 A-3 하위 화면인 /terms/:termType로 이동
+ */
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 

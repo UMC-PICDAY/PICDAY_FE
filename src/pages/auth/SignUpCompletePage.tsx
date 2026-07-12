@@ -1,3 +1,4 @@
+/** Figma A-4 회원가입 완료 (라우트: /signup/complete) */
 import { useNavigate } from 'react-router'
 
 import Button from '@/components/common/Button'
