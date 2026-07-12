@@ -3,10 +3,18 @@ import { useSearchParams } from 'react-router'
 
 import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
+import Dropdown from '@/components/common/Dropdown'
 import { IcFilter, IcStar, IcStarHalf } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import ReviewCard from '@/pages/studio/components/ReviewCard'
+
+const SORT_OPTIONS = [
+  { value: 'recommended', label: '추천순' },
+  { value: 'latest', label: '최신순' },
+  { value: 'rating-high', label: '평점 높은순' },
+  { value: 'rating-low', label: '평점 낮은 순' },
+] as const
 
 const REVIEWS = [
   {
@@ -32,7 +40,12 @@ const REVIEWS = [
 const ReviewDetailPage = () => {
   const [searchParams] = useSearchParams()
   const [photoOnly, setPhotoOnly] = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
+  const [sortValue, setSortValue] = useState('recommended')
   const [loginOpen, setLoginOpen] = useState(searchParams.get('login') === '1')
+
+  const sortLabel =
+    SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? '추천순'
 
   return (
     <div className="flex min-h-dvh flex-col bg-white pb-24">
@@ -70,10 +83,37 @@ const ReviewDetailPage = () => {
           />
           <span className="font-b6 text-gray-60">사진 리뷰만 보기 (198)</span>
         </label>
-        <button type="button" className="flex items-center gap-2.5">
-          <IcFilter width={24} height={24} />
-          <span className="font-b6 text-gray-60">추천순</span>
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setSortOpen((prev) => !prev)}
+            className="flex items-center gap-2.5"
+          >
+            <IcFilter width={24} height={24} />
+            <span className="font-b6 text-gray-60">{sortLabel}</span>
+          </button>
+
+          {sortOpen && (
+            <>
+              <button
+                type="button"
+                aria-label="정렬 닫기"
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setSortOpen(false)}
+              />
+              <div className="absolute right-0 top-full z-50 mt-2">
+                <Dropdown
+                  options={SORT_OPTIONS}
+                  value={sortValue}
+                  onChange={(value) => {
+                    setSortValue(value)
+                    setSortOpen(false)
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* 리뷰 리스트 */}

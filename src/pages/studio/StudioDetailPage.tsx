@@ -1,11 +1,15 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
 import FeatureGrid from '@/components/common/FeatureGrid'
-import { IcPin, IcRight, IcStar } from '@/components/icons'
+import { IcError, IcPin, IcRight, IcStar } from '@/components/icons'
+import NavigationBar from '@/components/layout/NavigationBar'
 import NavigationBarTransparent from '@/components/layout/NavigationBarTransparent'
+import TabBarUser from '@/components/layout/TabBarUser'
 
 import BottomSheet from '@/pages/studio/components/BottomSheet'
+import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import HairMakeupSheet from '@/pages/studio/components/HairMakeupSheet'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
@@ -45,8 +49,24 @@ const Divider = () => <div className="h-1.5 w-full bg-gray-10" />
 const StudioDetailPage = () => {
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
+  const [searchParams] = useSearchParams()
 
   const closeSheet = () => setOpenSheet(null)
+
+  if (searchParams.get('state') === 'error') {
+    return (
+      <div className="flex min-h-dvh flex-col bg-white">
+        <NavigationBar variant="default" showRight={false} />
+        <div className="flex flex-1 items-center justify-center">
+          <ErrorNotice
+            icon={<IcError width={48} height={48} className="text-brand-80" />}
+            title="정보를 불러오지 못했어요"
+          />
+        </div>
+        <TabBarUser activeTab="search" />
+      </div>
+    )
+  }
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-white pb-24">

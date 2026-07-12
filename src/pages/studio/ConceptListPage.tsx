@@ -1,6 +1,11 @@
+import { useState } from 'react'
+import { useSearchParams } from 'react-router'
+
 import CardStudioDetail from '@/components/cards/CardStudioDetail'
 import { IcFavorite } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
+
+import DateChangeSheet from '@/pages/studio/components/DateChangeSheet'
 
 import cardImage1 from '@/assets/images/CardImage1.png'
 import cardImage2 from '@/assets/images/CardImage2.png'
@@ -41,33 +46,49 @@ const GROUPS: ConceptGroup[] = [
   },
 ]
 
-const ConceptListPage = () => (
-  <div className="flex min-h-dvh flex-col bg-white">
-    <NavigationBar
-      variant="subtitle"
-      title="데이지 스튜디오"
-      date="2026.06.18"
-      count="14:00"
-      rightNode={<IcFavorite width={24} height={24} />}
-    />
+const ConceptListPage = () => {
+  const [searchParams] = useSearchParams()
+  const [dateSheetOpen, setDateSheetOpen] = useState(false)
 
-    <main className="flex flex-col px-5 pb-6">
-      {GROUPS.map((group) => (
-        <section key={group.title}>
-          <h2 className="pb-3 pt-5 font-b3 text-black">{group.title}</h2>
-          <div className="flex flex-col items-center gap-3">
-            {group.cards.map((card, index) => (
-              <CardStudioDetail
-                key={`${group.title}-${index}`}
-                description={card.description}
-                imageSrc={card.imageSrc}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-    </main>
-  </div>
-)
+  const noAvailableTime = searchParams.get('noslot') === '1'
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white">
+      <NavigationBar
+        variant="subtitle"
+        title="데이지 스튜디오"
+        date="2026.06.18"
+        count="14:00"
+        rightNode={<IcFavorite width={24} height={24} />}
+        onSubtitleClick={() => setDateSheetOpen(true)}
+      />
+
+      <main className="flex flex-col px-5 pb-6">
+        {GROUPS.map((group) => (
+          <section key={group.title}>
+            <h2 className="pb-3 pt-5 font-b3 text-black">{group.title}</h2>
+            <div className="flex flex-col items-center gap-3">
+              {group.cards.map((card, index) => (
+                <CardStudioDetail
+                  key={`${group.title}-${index}`}
+                  description={card.description}
+                  imageSrc={card.imageSrc}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+      </main>
+
+      {dateSheetOpen && (
+        <DateChangeSheet
+          noAvailableTime={noAvailableTime}
+          onClose={() => setDateSheetOpen(false)}
+          onApply={() => setDateSheetOpen(false)}
+        />
+      )}
+    </div>
+  )
+}
 
 export default ConceptListPage

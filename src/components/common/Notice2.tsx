@@ -4,7 +4,10 @@ import BigIcon from '@/components/common/BigIcon'
 import ResetButton from '@/components/common/ResetButton'
 import { IcSearch } from '@/components/icons'
 
+type Notice2Variant = 'reset' | 'message'
+
 interface Notice2Props {
+  variant?: Notice2Variant
   icon?: ReactNode
   title?: string
   description?: string
@@ -14,23 +17,45 @@ interface Notice2Props {
 }
 
 const Notice2 = ({
-  icon = <IcSearch width={36} height={36} className="text-brand-80" />,
-  title = '조건에 맞는 사진관이 없어요',
-  description = '필터를 조정하거나 다른 검색어로 찾아보세요',
+  variant = 'reset',
+  icon,
+  title,
+  description,
   resetLabel = '필터 초기화',
   onReset,
   className = '',
-}: Notice2Props) => (
-  <div
-    className={`flex flex-col items-center justify-center gap-5 ${className}`}
-  >
-    <BigIcon>{icon}</BigIcon>
-    <div className="flex flex-col items-center gap-1">
-      <p className="font-b3 text-black">{title}</p>
-      {description && <p className="font-b6 text-gray-60">{description}</p>}
+}: Notice2Props) => {
+  const resolvedIcon = icon ?? (
+    <IcSearch width={36} height={36} className="text-brand-80" />
+  )
+
+  if (variant === 'message') {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center gap-5 ${className}`}
+      >
+        <BigIcon>{resolvedIcon}</BigIcon>
+        {title && <p className="font-b4 text-gray-60">{title}</p>}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`flex flex-col items-center justify-center gap-5 ${className}`}
+    >
+      <BigIcon>{resolvedIcon}</BigIcon>
+      <div className="flex flex-col items-center gap-1">
+        <p className="font-b3 text-black">
+          {title ?? '조건에 맞는 사진관이 없어요'}
+        </p>
+        <p className="font-b6 text-gray-60">
+          {description ?? '필터를 조정하거나 다른 검색어로 찾아보세요'}
+        </p>
+      </div>
+      <ResetButton label={resetLabel} onClick={onReset} />
     </div>
-    <ResetButton label={resetLabel} onClick={onReset} />
-  </div>
-)
+  )
+}
 
 export default Notice2
