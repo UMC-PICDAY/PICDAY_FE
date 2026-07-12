@@ -3,6 +3,8 @@ import { Routes, Route } from 'react-router'
 import NonLoggedHomePage from '@/pages/home/NonLoggedHomePage'
 import HomePage from '@/pages/home/HomePage'
 import LoginPage from '@/pages/auth/LoginPage'
+import SignUpPage from '@/pages/auth/SignUpPage'
+import SignUpCompletePage from '@/pages/auth/SignUpCompletePage'
 
 import SearchPage from '@/pages/search/SearchPage'
 import SearchAutoCompletePage from '@/pages/search/SearchAutoCompletePage'
@@ -53,6 +55,8 @@ function App() {
 
       {/* 로그인 */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/signup/complete" element={<SignUpCompletePage />} />
 
       {/* 검색 */}
       <Route path="/search" element={<SearchPage />} />

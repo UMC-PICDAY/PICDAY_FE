@@ -28,6 +28,9 @@
  *     variant="Variant5"
  *     services={['헤어·메이크업', '주차']}
  *   />
+ *
+ * 클릭 시 이동 (예: C-5 사진관 상세로)
+ *   <CardStudio onClick={() => navigate(`/studios/${studioId}`)} />
  */
 
 import { IcStar } from '@/components/icons'
@@ -50,6 +53,7 @@ interface Props {
   rating?: string
   reviewCount?: string | null
   services?: string[]
+  onClick?: () => void
 }
 
 const CardStudio = ({
@@ -64,6 +68,7 @@ const CardStudio = ({
   rating = '4.9',
   reviewCount = '128',
   services = DEFAULT_SERVICES,
+  onClick,
 }: Props) => {
   const isVariantTwo = variant === '2'
   const isDetailed = variant === '3' || variant === 'Variant5'
@@ -73,8 +78,9 @@ const CardStudio = ({
     <div
       className={
         className ||
-        'relative flex w-[200px] flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]'
+        `relative flex w-[200px] flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px] ${onClick ? 'cursor-pointer' : ''}`
       }
+      onClick={onClick}
     >
       <div className="relative h-[180px] w-full shrink-0 overflow-hidden bg-white">
         {imageSrc ? (
