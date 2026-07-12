@@ -44,8 +44,8 @@ const centerItemAt = (container: HTMLDivElement, renderedIndex: number) => {
 }
 
 /**
- * 홈 화면 공통 컨텐츠 (검색창 + 캐러셀 + 사진관 리스트 3종)
- * 로그인/비로그인 홈은 하단 탭바만 다르고 이 영역은 동일해서 공유함
+ * Figma A-1(비로그인 홈)/B-1(로그인 후 홈) 공통 컨텐츠 (검색창 + 캐러셀 + 사진관 리스트 3종)
+ * 두 홈은 하단 탭바만 다르고 이 영역은 동일해서 공유함
  */
 const HomeFeed = () => {
   const navigate = useNavigate()
@@ -63,11 +63,16 @@ const HomeFeed = () => {
     activeRenderedIndexRef.current = activeRenderedIndex
   }, [activeRenderedIndex])
 
-  const largeCardItems = Array.from({ length: PADDED_CARD_COUNT }, (_, renderedIndex) => ({
-    variant: (renderedIndex === activeRenderedIndex ? 'center' : 'default') as 'center' | 'default',
-    countCurrent: String(getRealCardNumber(renderedIndex)).padStart(2, '0'),
-    countTotal: String(LARGE_CARD_COUNT).padStart(2, '0'),
-  }))
+  // 실제 사진관 API가 없어서 studioId도 목업 — 카드 클릭 시 C-5(사진관 상세)로 이동시키는 용도로만 씀
+  const largeCardItems = Array.from({ length: PADDED_CARD_COUNT }, (_, renderedIndex) => {
+    const studioId = `studio-${getRealCardNumber(renderedIndex)}`
+    return {
+      variant: (renderedIndex === activeRenderedIndex ? 'center' : 'default') as 'center' | 'default',
+      countCurrent: String(getRealCardNumber(renderedIndex)).padStart(2, '0'),
+      countTotal: String(LARGE_CARD_COUNT).padStart(2, '0'),
+      onClick: () => navigate(`/studios/${studioId}`),
+    }
+  })
 
   const updateActiveLargeCard = useCallback(() => {
     const container = largeCardScrollRef.current
@@ -152,13 +157,14 @@ const HomeFeed = () => {
         <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
       </div>
 
+      {/* 카드 클릭 시 전부 C-5 사진관 상세로 이동 (studioId는 API 없어서 목업) */}
       {recentLocations.length > 0 && (
         <>
           <Title variant="onlyTitle" title="최근 본 사진관" />
           <div className={HORIZONTAL_SCROLL_CLASS}>
             {recentLocations.map((location, index) => (
               <div className="shrink-0" key={index}>
-                <CardStudio location={location} />
+                <CardStudio location={location} onClick={() => navigate(`/studios/recent-${index + 1}`)} />
               </div>
             ))}
           </div>
@@ -169,7 +175,7 @@ const HomeFeed = () => {
       <div className={HORIZONTAL_SCROLL_CLASS}>
         {popularLocations.map((location, index) => (
           <div className="shrink-0" key={index}>
-            <CardStudio location={location} />
+            <CardStudio location={location} onClick={() => navigate(`/studios/popular-${index + 1}`)} />
           </div>
         ))}
       </div>
@@ -178,7 +184,7 @@ const HomeFeed = () => {
       <div className={HORIZONTAL_SCROLL_CLASS}>
         {regionLocations.map((location, index) => (
           <div className="shrink-0" key={index}>
-            <CardStudio location={location} />
+            <CardStudio location={location} onClick={() => navigate(`/studios/region-${index + 1}`)} />
           </div>
         ))}
       </div>

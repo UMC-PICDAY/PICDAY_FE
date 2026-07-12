@@ -21,6 +21,11 @@
  *   <CardStudioFavorite
  *     onFavoriteClick={handleFavoriteClick}
  *   />
+ *
+ * 카드 클릭 시 이동 (예: C-5 사진관 상세로) — 하트 버튼은 stopPropagation으로 분리되어 있어 onClick과 안 겹침
+ *   <CardStudioFavorite
+ *     onClick={() => navigate(`/studios/${studioId}`)}
+ *   />
  */
 
 import FavoriteButton from '@/components/common/FavoriteButton'
@@ -40,6 +45,7 @@ interface Props {
   category?: string
   price?: string
   onFavoriteClick?: () => void
+  onClick?: () => void
 }
 
 const CardStudioFavorite = ({
@@ -51,6 +57,7 @@ const CardStudioFavorite = ({
   category = '개인화보',
   price = '₩30,000~',
   onFavoriteClick,
+  onClick,
 }: Props) => {
   const isActive = variant === 'active'
 
@@ -58,8 +65,9 @@ const CardStudioFavorite = ({
     <div
       className={
         className ||
-        'relative flex w-[173px] flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]'
+        `relative flex w-[173px] flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px] ${onClick ? 'cursor-pointer' : ''}`
       }
+      onClick={onClick}
     >
       <div className="relative h-[173px] w-full shrink-0 overflow-hidden bg-white">
         {imageSrc ? (
@@ -73,9 +81,8 @@ const CardStudioFavorite = ({
         )}
 
         <div
-          className={`absolute right-[10px] top-[10px] flex h-[28px] w-[28px] items-center justify-center rounded-full ${
-            isActive ? 'bg-brand-20' : 'bg-white'
-          }`}
+          className="absolute right-[10px] top-[10px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[rgba(252,252,252,0.75)]"
+          onClick={(event) => event.stopPropagation()}
         >
           <FavoriteButton active={isActive} onClick={onFavoriteClick} />
         </div>

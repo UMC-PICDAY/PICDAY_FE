@@ -24,6 +24,15 @@
  *       },
  *     ]}
  *   />
+ *
+ * 클릭 시 이동 (예: C-5 사진관 상세로)
+ *   <CardStudioLarge
+ *     items={[
+ *       {
+ *         onClick: () => navigate(`/studios/${studioId}`),
+ *       },
+ *     ]}
+ *   />
  */
 
 import ButtonDelete from '@/components/common/ButtonDelete'
@@ -44,6 +53,7 @@ interface LargeCardItem {
   countTotal?: string
   countText?: string
   onDelete?: () => void
+  onClick?: () => void
 }
 
 interface Props {
@@ -102,6 +112,7 @@ const LargeCard = ({
   countTotal,
   countText,
   onDelete,
+  onClick,
 }: LargeCardItem) => {
   const parsedCount = splitCountText(countText)
   const current = countCurrent ?? parsedCount?.current ?? '01'
@@ -114,8 +125,9 @@ const LargeCard = ({
         className ||
         `relative flex shrink-0 flex-col items-start overflow-hidden rounded-[20px] border border-solid border-[rgba(238,238,238,0.6)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px] ${
           isCenter ? 'h-[315px] w-[280px]' : 'h-[292px] w-[260px]'
-        }`
+        } ${onClick ? 'cursor-pointer' : ''}`
       }
+      onClick={onClick}
     >
       <div className="relative w-full min-h-px flex-[1_0_0] overflow-hidden bg-white">
         {imageSrc ? (
