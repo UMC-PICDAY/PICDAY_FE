@@ -1,3 +1,10 @@
+/**
+ * MapPin 사용법
+ *
+ * 지도 위 선택된 사진관 마커 (카메라 핀 + 이름)
+ *   <MapPin label="데이지스튜디오" />
+ */
+
 import { IcMapPin } from '@/components/icons'
 
 interface MapPinProps {

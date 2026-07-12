@@ -1,3 +1,13 @@
+/**
+ * MapButton 사용법
+ *
+ * 리스트뷰에서 지도로 전환하는 플로팅 버튼 (IcPin 포함)
+ *   <MapButton onClick={goToMap} />
+ *
+ * [텍스트 변경]
+ *   <MapButton label="지도로 보기" onClick={goToMap} />
+ */
+
 import { IcPin } from '@/components/icons'
 
 interface MapButtonProps {

@@ -1,3 +1,10 @@
+/**
+ * PinFavorite 사용법
+ *
+ * 지도 위 즐겨찾기 사진관 마커
+ *   <PinFavorite />
+ */
+
 import { IcPinFavorite } from '@/components/icons'
 
 interface PinFavoriteProps {

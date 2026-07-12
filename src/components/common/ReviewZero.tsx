@@ -1,3 +1,13 @@
+/**
+ * ReviewZero 사용법
+ *
+ * 리뷰가 없을 때 리뷰 영역의 진입점을 표시
+ *   <ReviewZero onClick={goToReview} />
+ *
+ * [텍스트 변경]
+ *   <ReviewZero label="리뷰가 아직 없습니다" onClick={goToReview} />
+ */
+
 import { IcRight, IcStar } from '@/components/icons'
 
 interface ReviewZeroProps {
@@ -6,7 +16,6 @@ interface ReviewZeroProps {
   className?: string
 }
 
-/** 리뷰가 없을 때 리뷰 영역의 진입점을 표시합니다. */
 const ReviewZero = ({
   label = '리뷰가 아직 없습니다',
   onClick,

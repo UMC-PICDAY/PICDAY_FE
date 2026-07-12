@@ -1,3 +1,13 @@
+/**
+ * ResetButton 사용법
+ *
+ * [gray] 필터 초기화 (기본)
+ *   <ResetButton onClick={handleReset} />
+ *
+ * [pink] 새로고침 등 강조 톤
+ *   <ResetButton label="새로고침" tone="pink" onClick={handleRetry} />
+ */
+
 type ResetButtonTone = 'gray' | 'pink'
 
 interface ResetButtonProps {

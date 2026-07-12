@@ -1,3 +1,13 @@
+/**
+ * Dropdown 사용법
+ *
+ * 정렬 기준처럼 하나의 값을 선택하는 옵션 목록
+ *   <Dropdown value={sortValue} onChange={setSortValue} />
+ *
+ * [옵션 지정] 커스텀 옵션 전달
+ *   <Dropdown options={SORT_OPTIONS} value={value} onChange={setValue} />
+ */
+
 import { IcCheck } from '@/components/icons'
 
 export interface DropdownOption {
@@ -19,7 +29,6 @@ const DEFAULT_OPTIONS: readonly DropdownOption[] = [
   { value: 'rating-low', label: '평점 낮은 순' },
 ]
 
-/** 정렬 기준처럼 하나의 값을 선택하는 드롭다운 옵션 목록입니다. */
 const Dropdown = ({
   options = DEFAULT_OPTIONS,
   value = 'recommended',

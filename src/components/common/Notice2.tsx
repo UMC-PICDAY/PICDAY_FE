@@ -1,3 +1,14 @@
+/**
+ * Notice2 사용법
+ *
+ * [reset] 결과없음 안내 + 초기화 버튼 (기본)
+ *   <Notice2 onReset={handleReset} />
+ *   <Notice2 title="조건에 맞는 사진관이 없어요" description="필터를 조정해 보세요" onReset={handleReset} />
+ *
+ * [message] 아이콘 + 단일 문구 (예: 사진 없음)
+ *   <Notice2 variant="message" icon={<IcPicture width={36} height={36} />} title="아직 등록된 사진이 없어요" />
+ */
+
 import type { ReactNode } from 'react'
 
 import BigIcon from '@/components/common/BigIcon'

@@ -1,3 +1,16 @@
+/**
+ * TimeChip 사용법
+ *
+ * [기본] 선택 가능한 시간대 칩
+ *   <TimeChip label="14:00" onClick={handleSelect} />
+ *
+ * [선택]
+ *   <TimeChip label="14:00" selected onClick={handleSelect} />
+ *
+ * [disabled] 예약 불가 시간대
+ *   <TimeChip label="14:00" disabled />
+ */
+
 interface TimeChipProps {
   label: string
   selected?: boolean
