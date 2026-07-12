@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import CardStudioSmall from '@/components/cards/CardStudioSmall'
 import CompareActionBar from '@/components/common/CompareActionBar'
@@ -48,6 +48,7 @@ const isSheetSnap = (value: string | null): value is SheetSnap =>
   value === 'collapsed' || value === 'half' || value === 'expanded'
 
 const StudioSearchPage = () => {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const status = resolveStatus(searchParams.get('state'))
   const snapParam = searchParams.get('snap')
@@ -81,7 +82,15 @@ const StudioSearchPage = () => {
       <NavigationBar
         variant="chip"
         chipLabel="프로필·홍대·6월25일"
-        rightNode={<IcFilter width={24} height={24} />}
+        rightNode={
+          <button
+            type="button"
+            aria-label="필터"
+            onClick={() => navigate('/studios/filter')}
+          >
+            <IcFilter width={24} height={24} />
+          </button>
+        }
       />
       <FilterBar2 items={SORT_ITEMS} />
 
@@ -108,7 +117,7 @@ const StudioSearchPage = () => {
               <section>
                 <h2 className="pb-3 font-b5 text-black">이런 사진관은 어때요?</h2>
                 <div className="flex gap-3 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {RECOMMENDATIONS.map((studio) => (
+                  {RECOMMENDATIONS.map((studio, index) => (
                     <CardStudioSmall
                       key={studio.name}
                       name={studio.name}
@@ -116,6 +125,7 @@ const StudioSearchPage = () => {
                       location="홍대"
                       category="프로필"
                       secondaryCategory="프로필"
+                      onClick={() => navigate(`/studios/${index + 1}`)}
                     />
                   ))}
                 </div>
@@ -142,7 +152,10 @@ const StudioSearchPage = () => {
               </div>
             }
           >
-            <StudioResultsList showCompareButton={snap === 'expanded'} />
+            <StudioResultsList
+              showCompareButton={snap === 'expanded'}
+              onSelect={(id) => navigate(`/studios/${id}`)}
+            />
           </StudioResultsBottomSheet>
         )}
       </div>

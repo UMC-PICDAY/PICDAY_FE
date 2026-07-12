@@ -7,6 +7,7 @@ interface CardStudioSmallProps {
   secondaryCategory?: string
   price?: string
   rating?: string
+  onClick?: () => void
 }
 
 const CardStudioSmall = ({
@@ -18,9 +19,14 @@ const CardStudioSmall = ({
   secondaryCategory,
   price = '₩55,000~',
   rating = '★4.9',
+  onClick,
 }: CardStudioSmallProps) => (
   <div
-    className={`flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-10/60 shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] ${className}`}
+    role={onClick ? 'button' : undefined}
+    onClick={onClick}
+    className={`flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-10/60 shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] ${
+      onClick ? 'cursor-pointer ' : ''
+    }${className}`}
   >
     <div className="h-[180px] w-full bg-gray-10">
       {imageSrc && (

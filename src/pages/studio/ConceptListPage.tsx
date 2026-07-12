@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardStudioDetail from '@/components/cards/CardStudioDetail'
 import Toast from '@/components/common/Toast'
@@ -48,6 +48,8 @@ const GROUPS: ConceptGroup[] = [
 ]
 
 const ConceptListPage = () => {
+  const navigate = useNavigate()
+  const { studioId } = useParams()
   const [searchParams] = useSearchParams()
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
 
@@ -75,6 +77,7 @@ const ConceptListPage = () => {
         date={subtitleDate}
         count={subtitleTime}
         rightNode={<IcFavorite width={24} height={24} />}
+        onBack={() => navigate(-1)}
         onSubtitleClick={() => setDateSheetOpen(true)}
       />
 
@@ -88,7 +91,7 @@ const ConceptListPage = () => {
       )}
 
       <main className="flex flex-col px-5 pb-6">
-        {GROUPS.map((group) => (
+        {GROUPS.map((group, groupIndex) => (
           <section key={group.title}>
             <h2 className="pb-3 pt-5 font-b3 text-black">{group.title}</h2>
             <div className="flex flex-col items-center gap-3">
@@ -97,6 +100,11 @@ const ConceptListPage = () => {
                   key={`${group.title}-${index}`}
                   description={card.description}
                   imageSrc={card.imageSrc}
+                  onDetailClick={() =>
+                    navigate(
+                      `/studios/${studioId}/concepts/${groupIndex}-${index}`,
+                    )
+                  }
                 />
               ))}
             </div>

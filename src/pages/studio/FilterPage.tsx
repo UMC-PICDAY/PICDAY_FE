@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 
 import FilterChip from '@/components/common/FilterChip'
 import RangeSlider from '@/components/common/RangeSlider'
@@ -19,6 +20,7 @@ const toggle = (list: string[], value: string) =>
     : [...list, value]
 
 const FilterPage = () => {
+  const navigate = useNavigate()
   const [purposes, setPurposes] = useState<string[]>(['증명'])
   const [services, setServices] = useState<string[]>(['헤어·메이크업 연계'])
   const [rating, setRating] = useState('전체')
@@ -114,6 +116,7 @@ const FilterPage = () => {
         </button>
         <button
           type="button"
+          onClick={() => navigate('/studios')}
           className="flex h-12 items-center justify-center rounded-lg bg-brand-100 px-8 font-b5 text-white"
         >
           사진관 24곳 보기

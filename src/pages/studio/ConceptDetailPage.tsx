@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import Notice2 from '@/components/common/Notice2'
 import { IcPicture } from '@/components/icons'
@@ -11,12 +11,18 @@ import cardImage3 from '@/assets/images/CardImage3.png'
 const IMAGES = [cardImage1, cardImage2, cardImage3]
 
 const ConceptDetailPage = () => {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const isEmpty = searchParams.get('empty') === '1'
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <NavigationBar variant="default" title="체리베리벌쓰데이" showLeft={false} />
+      <NavigationBar
+        variant="default"
+        title="체리베리벌쓰데이"
+        showLeft={false}
+        onClose={() => navigate(-1)}
+      />
 
       {isEmpty ? (
         <div className="flex flex-1 flex-col items-center justify-center">

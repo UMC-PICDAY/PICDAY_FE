@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
@@ -38,6 +38,8 @@ const REVIEWS = [
 ]
 
 const ReviewDetailPage = () => {
+  const navigate = useNavigate()
+  const { studioId } = useParams()
   const [searchParams] = useSearchParams()
   const [photoOnly, setPhotoOnly] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
@@ -52,6 +54,7 @@ const ReviewDetailPage = () => {
       <NavigationBar
         variant="default"
         title="리얼리뷰"
+        onBack={() => navigate(-1)}
         rightNode={
           <button type="button" className="whitespace-nowrap font-b11 text-gray-60">
             운영정책
@@ -141,6 +144,7 @@ const ReviewDetailPage = () => {
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[390px] justify-center bg-white p-5">
         <button
           type="button"
+          onClick={() => navigate(`/studios/${studioId}/concepts`)}
           className="flex h-12 w-full items-center justify-center rounded-lg bg-brand-100 font-b5 text-white"
         >
           모든 컨셉 보기

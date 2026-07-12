@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
 import FeatureGrid from '@/components/common/FeatureGrid'
@@ -47,11 +47,15 @@ const Bullet = ({ text }: { text: string }) => (
 const Divider = () => <div className="h-1.5 w-full bg-gray-10" />
 
 const StudioDetailPage = () => {
+  const navigate = useNavigate()
+  const { studioId } = useParams()
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
   const [searchParams] = useSearchParams()
 
   const closeSheet = () => setOpenSheet(null)
+  const goToReviews = () => navigate(`/studios/${studioId}/reviews`)
+  const goToConcepts = () => navigate(`/studios/${studioId}/concepts`)
 
   if (searchParams.get('state') === 'error') {
     return (
@@ -76,6 +80,7 @@ const StudioDetailPage = () => {
         <div className="absolute inset-x-0 top-0">
           <NavigationBarTransparent
             isFavorited={favorited}
+            onBack={() => navigate(-1)}
             onFavorite={() => setFavorited((prev) => !prev)}
           />
         </div>
@@ -90,7 +95,7 @@ const StudioDetailPage = () => {
           <span className="px-1">|</span>
           <span>서울 마포구</span>
         </div>
-        <button type="button" className="flex items-center pb-2">
+        <button type="button" onClick={goToReviews} className="flex items-center pb-2">
           <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
           <span className="pl-0.5 font-b7 text-black">4.9</span>
           <span className="pl-0.5 font-b7 text-gray-40">(721개 평가)</span>
@@ -106,6 +111,7 @@ const StudioDetailPage = () => {
         <CardPortfolioGrid className="flex w-full items-center justify-center gap-2" />
         <button
           type="button"
+          onClick={goToConcepts}
           className="mt-5 flex w-full items-center justify-center rounded-lg border border-brand-100 px-5 py-3"
         >
           <span className="flex-1 text-center font-b3 text-brand-100">모든 컨셉 보기</span>
@@ -223,14 +229,18 @@ const StudioDetailPage = () => {
 
       {/* 리뷰 요약 */}
       <section className="px-5 py-5">
-        <div className="flex items-center pb-4">
+        <button
+          type="button"
+          onClick={goToReviews}
+          className="flex w-full items-center pb-4"
+        >
           <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
-          <span className="flex-1 pl-1">
+          <span className="flex-1 pl-1 text-left">
             <span className="font-b3 text-black">4.9</span>
             <span className="pl-1 font-b6 text-gray-60">(721개 평가)</span>
           </span>
           <IcRight width={24} height={24} className="text-gray-40" />
-        </div>
+        </button>
         <ReviewCard
           reviewerName="조**"
           isBest
@@ -259,6 +269,7 @@ const StudioDetailPage = () => {
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[390px] justify-center bg-white p-5">
         <button
           type="button"
+          onClick={goToConcepts}
           className="flex h-12 w-full items-center justify-center rounded-lg bg-brand-100 font-b5 text-white"
         >
           모든 컨셉 보기
