@@ -1,3 +1,4 @@
+/** Figma A-2 로그인 화면 (라우트: /login) */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -91,12 +92,30 @@ const LoginPage = () => {
             />
           </svg>
         </button>
+        {/* 구글 공식 브랜드 4색을 손으로 그린 인라인 SVG (다운로드된 스톡 에셋 대신 사용, 다른 소셜 버튼과 동일 패턴) */}
         <button
           type="button"
-          className="flex size-[52px] cursor-pointer items-center justify-center rounded-full border-none bg-[#03c75a]"
-          aria-label="네이버로 로그인"
+          className="flex size-[52px] cursor-pointer items-center justify-center rounded-full border border-gray-10 bg-white"
+          aria-label="구글로 로그인"
         >
-          <span className="font-h2 text-white">N</span>
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden>
+            <path
+              d="M25.48 13.27c0-.84-.07-1.68-.22-2.5H13.5v4.74h6.72a5.75 5.75 0 0 1-2.49 3.77v3.13h4.02c2.36-2.17 3.73-5.37 3.73-9.14Z"
+              fill="#4285F4"
+            />
+            <path
+              d="M13.5 26c3.37 0 6.2-1.11 8.26-3.02l-4.02-3.13c-1.12.75-2.56 1.19-4.24 1.19-3.26 0-6.02-2.2-7-5.16H2.35v3.24A13 13 0 0 0 13.5 26Z"
+              fill="#34A853"
+            />
+            <path
+              d="M6.5 15.88a7.8 7.8 0 0 1 0-4.98V7.66H2.35a13 13 0 0 0 0 11.46l4.15-3.24Z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M13.5 5.74c1.83 0 3.48.63 4.77 1.86l3.58-3.58C19.7 1.9 16.87.7 13.5.7A13 13 0 0 0 2.35 7.66l4.15 3.24c.98-2.96 3.74-5.16 7-5.16Z"
+              fill="#EA4335"
+            />
+          </svg>
         </button>
       </div>
 
