@@ -14,6 +14,8 @@
  *   onReserve={handleReserve}
  * />
  */
+import Button from '@/components/common/Button'
+
 interface StudioItem {
   id: string
   name: string
@@ -49,12 +51,9 @@ const ButtonSelect = ({ studios, onSelect, onReserve }: Props) => {
         ))}
       </div>
       <div className="pt-[10px] px-5 pb-5">
-        <button
-          className="w-full py-3 px-5 rounded-[12px] border-none bg-brand-100 text-white text-[var(--font-b3-size)] font-[var(--font-b3-weight)] leading-[var(--font-b3-line-height)] cursor-pointer"
-          onClick={onReserve}
-        >
+        <Button variant="primary" onClick={onReserve}>
           예약하기
-        </button>
+        </Button>
       </div>
     </div>
   )

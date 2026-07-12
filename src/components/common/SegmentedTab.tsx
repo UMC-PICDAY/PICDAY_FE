@@ -20,7 +20,7 @@ export type SegmentedTabItem = {
   disabled?: boolean;
 };
 
-export type SegmentedTabProps = {
+export interface SegmentedTabProps {
   items: readonly SegmentedTabItem[];
   value?: string;
   className?: string;
@@ -29,7 +29,7 @@ export type SegmentedTabProps = {
     ButtonHTMLAttributes<HTMLButtonElement>,
     "children" | "value" | "onChange"
   >;
-};
+}
 
 /** 동일한 너비의 항목으로 구성된 controlled segmented tab입니다. */
 const SegmentedTab = ({

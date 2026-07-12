@@ -14,15 +14,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { IcCheck, IcEvent } from "@/components/icons";
 
-export type SelectFieldProps = Omit<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  "children"
-> & {
+export interface SelectFieldProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   variant: "date" | "purpose";
   value?: string;
   placeholder?: string;
   icon?: ReactNode;
-};
+}
 
 /** 날짜 또는 촬영 목적 선택 화면을 여는 field trigger입니다. */
 const SelectField = ({

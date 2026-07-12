@@ -23,6 +23,9 @@
  *   />
  */
 
+import ButtonPair from '@/components/common/ButtonPair'
+import StatusTag from '@/components/common/StatusTag'
+
 import defaultImage from '@/assets/images/CardImage1.png'
 import defaultSecondImage from '@/assets/images/CardImage2.png'
 
@@ -30,6 +33,7 @@ const DEFAULT_IMAGE = defaultImage
 const DEFAULT_SECOND_IMAGE = defaultSecondImage
 
 type ReservationStatusTag = '예약 완료' | '촬영 완료' | '취소'
+type StatusTagVariant = 'reservation' | 'shooting' | 'canceled'
 
 interface Props {
   className?: string
@@ -43,16 +47,18 @@ interface Props {
   onRightButtonClick?: () => void
 }
 
-const getStatusTagClassName = (statusTag: ReservationStatusTag) => {
+const getStatusTagVariant = (
+  statusTag: ReservationStatusTag,
+): StatusTagVariant => {
   if (statusTag === '촬영 완료') {
-    return 'border-brand-100 bg-brand-80 text-white'
+    return 'shooting'
   }
 
   if (statusTag === '취소') {
-    return 'border-[#D1D0D1] bg-[#EEE] text-gray-80'
+    return 'canceled'
   }
 
-  return 'border-brand-40 bg-brand-20 text-gray-80'
+  return 'reservation'
 }
 
 const getButtonLabels = (statusTag: ReservationStatusTag) => {
@@ -87,6 +93,7 @@ const CardReservationHistory = ({
   onLeftButtonClick,
   onRightButtonClick,
 }: Props) => {
+  const statusTagVariant = getStatusTagVariant(statusTag)
   const { leftButtonLabel, rightButtonLabel } = getButtonLabels(statusTag)
 
   return (
@@ -99,7 +106,11 @@ const CardReservationHistory = ({
       <div className="flex shrink-0 items-center gap-[10px]">
         <div className="relative h-[181px] w-[181px] shrink-0 overflow-hidden rounded-[16px] bg-brand-60">
           {imageSrc ? (
-            <img alt={studioName} className="h-full w-full object-cover" src={imageSrc} />
+            <img
+              alt={studioName}
+              className="h-full w-full object-cover"
+              src={imageSrc}
+            />
           ) : (
             <div className="h-full w-full bg-gray-10" />
           )}
@@ -107,7 +118,11 @@ const CardReservationHistory = ({
 
         <div className="relative h-[181px] w-[149px] shrink-0 overflow-hidden rounded-[16px] bg-brand-60">
           {secondImageSrc ? (
-            <img alt={studioName} className="h-full w-full object-cover" src={secondImageSrc} />
+            <img
+              alt={studioName}
+              className="h-full w-full object-cover"
+              src={secondImageSrc}
+            />
           ) : (
             <div className="h-full w-full bg-gray-10" />
           )}
@@ -117,15 +132,7 @@ const CardReservationHistory = ({
       <div className="flex w-full shrink-0 flex-col items-start gap-[10px] rounded-[12px] px-[12px] py-[8px]">
         <div className="flex shrink-0 flex-col items-start gap-[5px]">
           <div className="flex w-[338px] shrink-0 items-center gap-[5px]">
-            <div
-              className={`flex h-[22px] shrink-0 items-center justify-center gap-[10px] rounded-[32px] border px-[16px] py-[4px] ${getStatusTagClassName(
-                statusTag,
-              )}`}
-            >
-              <p className="shrink-0 whitespace-nowrap text-[var(--font-cap2-size)] font-[var(--font-cap2-weight)] leading-[var(--font-cap2-line-height)] tracking-[var(--font-cap2-letter-spacing)]">
-                {statusTag}
-              </p>
-            </div>
+            <StatusTag variant={statusTagVariant} />
 
             <p className="min-w-0 flex-1 truncate text-[var(--font-b5-size)] font-[var(--font-b5-weight)] leading-[var(--font-b5-line-height)] tracking-[var(--font-b5-letter-spacing)] text-black">
               {studioName}
@@ -138,23 +145,12 @@ const CardReservationHistory = ({
           </div>
         </div>
 
-        <div className="flex w-full shrink-0 items-center gap-[8px]">
-          <button
-            className="flex h-[40px] min-w-0 flex-1 cursor-pointer items-center justify-center rounded-[8px] border border-gray-20 bg-white p-px text-center text-[var(--font-b8-size)] font-[var(--font-b8-weight)] leading-[var(--font-b8-line-height)] tracking-[var(--font-b8-letter-spacing)] text-gray-60"
-            type="button"
-            onClick={onLeftButtonClick}
-          >
-            <span className="shrink-0 whitespace-nowrap">{leftButtonLabel}</span>
-          </button>
-
-          <button
-            className="flex h-[40px] min-w-0 flex-1 cursor-pointer items-center justify-center rounded-[8px] border-none bg-brand-100 text-center text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)] text-white"
-            type="button"
-            onClick={onRightButtonClick}
-          >
-            <span className="shrink-0 whitespace-nowrap">{rightButtonLabel}</span>
-          </button>
-        </div>
+        <ButtonPair
+          leftLabel={leftButtonLabel}
+          rightLabel={rightButtonLabel}
+          onLeftClick={onLeftButtonClick}
+          onRightClick={onRightButtonClick}
+        />
       </div>
     </div>
   )

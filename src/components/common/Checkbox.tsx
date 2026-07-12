@@ -17,14 +17,12 @@
 import type { InputHTMLAttributes } from "react";
 import { IcCheckBox, IcCheckBoxFill } from "@/components/icons";
 
-export type CheckboxProps = Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  "type" | "size"
-> & {
+export interface CheckboxProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
   checked?: boolean;
   className?: string;
   strong?: boolean;
-};
+}
 
 /** Figma의 on/off 아이콘을 사용하는 접근 가능한 체크박스입니다. */
 const Checkbox = ({

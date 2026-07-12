@@ -1,0 +1,16 @@
+import type { SVGProps } from 'react'
+
+const IcStarHalf = ({ width = 24, height = 24, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M11.4004 18.1307L6.98926 20.9256C6.62196 21.1582 6.16826 20.8123 6.26562 20.3738L7.46289 14.99C7.54469 14.622 7.42546 14.2365 7.15332 13.9891L3.16797 10.366C2.84376 10.0712 3.01706 9.51177 3.44434 9.47344L8.69141 9.00664C9.04978 8.97465 9.36154 8.73697 9.50195 8.38945L11.4004 3.69023V18.1307Z" fill="currentColor" />
+  </svg>
+)
+
+export default IcStarHalf

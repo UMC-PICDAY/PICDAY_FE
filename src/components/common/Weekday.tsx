@@ -7,9 +7,9 @@
 
 import type { HTMLAttributes } from "react";
 
-export type WeekdayProps = HTMLAttributes<HTMLSpanElement> & {
+export interface WeekdayProps extends HTMLAttributes<HTMLSpanElement> {
   label: string;
-};
+}
 
 /** Calendar 헤더에서 사용하는 28×28px 요일 표시입니다. */
 const Weekday = ({ label, className = "", ...spanProps }: WeekdayProps) => (

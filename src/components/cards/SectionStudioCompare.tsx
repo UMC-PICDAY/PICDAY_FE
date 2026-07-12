@@ -22,6 +22,7 @@
  */
 
 import AddButton from '@/components/common/AddButton'
+import NoticeBanner from '@/components/common/NoticeBanner'
 import StudioCompareItem from '@/components/cards/StudioCompareItem'
 
 interface CompareItem {
@@ -72,23 +73,33 @@ const SectionStudioCompare = ({
   const isThreeCompare = compareItems.length >= 3
   const resolvedFooterMode =
     footerMode === 'auto' ? (isThreeCompare ? 'notice' : 'add') : footerMode
-  const displayItems = compareItems.length > 0 ? compareItems : DEFAULT_COMPARE_ITEMS
+  const displayItems =
+    compareItems.length > 0 ? compareItems : DEFAULT_COMPARE_ITEMS
   const columnSize = isThreeCompare ? 'compact' : 'default'
   const columnWidthClass = isThreeCompare ? 'w-[114px]' : 'w-[173px]'
   const rowGapClass = isThreeCompare ? 'gap-[16px]' : 'gap-[10px]'
 
   return (
-    <div className={className || 'content-stretch flex w-[402px] flex-col items-start gap-[12px] relative'}>
-      <div className="backdrop-blur-[10px] bg-[rgba(252,252,252,0.75)] content-stretch flex flex-col items-start relative shrink-0 shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] w-full">
-        <div className="[word-break:break-word] content-stretch flex flex-col items-start not-italic px-[20px] py-[10px] relative shrink-0 w-full whitespace-nowrap">
+    <div
+      className={
+        className ||
+        'relative flex w-[402px] flex-col items-start gap-[12px]'
+      }
+    >
+      <div className="relative flex w-full shrink-0 flex-col items-start bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+        <div className="relative flex w-full shrink-0 flex-col items-start px-[20px] py-[10px] whitespace-nowrap [word-break:break-word]">
           <p className="relative shrink-0 text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)] text-brand-100">
             촬영일 기준 가격
           </p>
+
           <p className="relative shrink-0 text-[var(--font-b10-size)] font-[var(--font-b10-weight)] leading-[var(--font-cap3-line-height)] tracking-normal text-gray-40">
             프로필 기본 패키지
           </p>
         </div>
-        <div className={`content-stretch flex items-center pb-[10px] px-[20px] relative shrink-0 w-full ${rowGapClass}`}>
+
+        <div
+          className={`relative flex w-full shrink-0 items-center px-[20px] pb-[10px] ${rowGapClass}`}
+        >
           {displayItems.map((item, index) => (
             <StudioCompareItem
               key={`${item.price ?? 'price'}-${index}`}
@@ -96,30 +107,39 @@ const SectionStudioCompare = ({
               price={item.price}
               description={item.description}
               badgeLabel={item.badgeLabel}
-              className={`content-stretch flex flex-col gap-[4px] items-start relative shrink-0 ${columnWidthClass}`}
+              className={`relative flex shrink-0 flex-col items-start gap-[4px] ${columnWidthClass}`}
             />
           ))}
         </div>
       </div>
 
-      <div className="backdrop-blur-[10px] bg-[rgba(252,252,252,0.75)] content-stretch flex flex-col items-start py-[5px] relative shrink-0 shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] w-full">
-        <div className="content-stretch flex flex-col items-start px-[20px] py-[5px] relative shrink-0 w-full">
+      <div className="relative flex w-full shrink-0 flex-col items-start bg-[rgba(252,252,252,0.75)] py-[5px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+        <div className="relative flex w-full shrink-0 flex-col items-start px-[20px] py-[5px]">
           <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)] text-brand-100">
             연계 서비스
           </p>
         </div>
-        <div className={`content-stretch flex px-[20px] py-[5px] relative shrink-0 w-full ${isThreeCompare ? 'items-center gap-[16px]' : 'items-start gap-[10px]'}`}>
+
+        <div
+          className={`relative flex w-full shrink-0 px-[20px] py-[5px] ${
+            isThreeCompare
+              ? 'items-center gap-[16px]'
+              : 'items-start gap-[10px]'
+          }`}
+        >
           {displayItems.map((item, index) => (
             <div
               key={`services-${item.price ?? 'price'}-${index}`}
-              className={`flex gap-[5px] items-center relative shrink-0 ${
-                isThreeCompare ? 'content-stretch flex-wrap w-[114px]' : 'content-center w-[173px]'
+              className={`relative flex shrink-0 items-center gap-[5px] ${
+                isThreeCompare
+                  ? 'w-[114px] flex-wrap'
+                  : 'w-[173px] content-center'
               }`}
             >
               {(item.services ?? []).map((service) => (
                 <div
                   key={service}
-                  className="bg-white border border-gray-10 content-stretch flex h-[22px] shrink-0 items-center justify-center rounded-[100px] px-[8px] py-[2px]"
+                  className="flex h-[22px] shrink-0 items-center justify-center rounded-[100px] border border-gray-10 bg-white px-[8px] py-[2px]"
                 >
                   <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b10-size)] font-[var(--font-b10-weight)] leading-[var(--font-cap3-line-height)] tracking-normal text-gray-80">
                     {service}
@@ -131,55 +151,61 @@ const SectionStudioCompare = ({
         </div>
       </div>
 
-      <div className="backdrop-blur-[10px] bg-[rgba(252,252,252,0.75)] content-stretch flex flex-col items-start py-[5px] relative shrink-0 shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] w-full">
-        <div className="content-stretch flex flex-col items-start px-[20px] py-[5px] relative shrink-0 w-full">
+      <div className="relative flex w-full shrink-0 flex-col items-start bg-[rgba(252,252,252,0.75)] py-[5px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+        <div className="relative flex w-full shrink-0 flex-col items-start px-[20px] py-[5px]">
           <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)] text-brand-100">
             위치
           </p>
         </div>
-        <div className={`content-stretch flex items-center px-[20px] py-[5px] relative shrink-0 w-full ${rowGapClass}`}>
+
+        <div
+          className={`relative flex w-full shrink-0 items-center px-[20px] py-[5px] ${rowGapClass}`}
+        >
           {displayItems.map((item, index) => (
-            <div key={`location-${item.price ?? 'price'}-${index}`} className={`content-stretch flex items-center relative shrink-0 ${columnWidthClass}`}>
-              <div className="content-stretch flex items-start relative shrink-0">
-                <div className="[word-break:break-word] content-stretch flex items-center gap-[2px] font-[var(--font-b8-weight)] leading-[var(--font-b8-line-height)] not-italic relative shrink-0 whitespace-nowrap text-[var(--font-b8-size)] tracking-[var(--font-b8-letter-spacing)] text-gray-60">
-                  <p className="relative shrink-0">{item.location}</p>
-                </div>
-              </div>
+            <div
+              key={`location-${item.price ?? 'price'}-${index}`}
+              className={`relative flex shrink-0 items-center ${columnWidthClass}`}
+            >
+              <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b8-size)] font-[var(--font-b8-weight)] leading-[var(--font-b8-line-height)] tracking-[var(--font-b8-letter-spacing)] text-gray-60">
+                {item.location}
+              </p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="backdrop-blur-[10px] bg-[rgba(252,252,252,0.75)] content-stretch flex flex-col items-start py-[5px] relative shrink-0 shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] w-full">
-        <div className="content-stretch flex flex-col items-start px-[20px] py-[5px] relative shrink-0 w-full">
+      <div className="relative flex w-full shrink-0 flex-col items-start bg-[rgba(252,252,252,0.75)] py-[5px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+        <div className="relative flex w-full shrink-0 flex-col items-start px-[20px] py-[5px]">
           <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)] text-brand-100">
             가장 빠른 예약일
           </p>
         </div>
-        <div className={`content-stretch flex items-center px-[20px] py-[5px] relative shrink-0 w-full ${rowGapClass}`}>
+
+        <div
+          className={`relative flex w-full shrink-0 items-center px-[20px] py-[5px] ${rowGapClass}`}
+        >
           {displayItems.map((item, index) => (
-            <div key={`reservation-${item.price ?? 'price'}-${index}`} className={`content-stretch flex items-center relative shrink-0 ${columnWidthClass}`}>
-              <div className="content-stretch flex items-start relative shrink-0">
-                <div className="content-stretch flex items-center relative shrink-0">
-                  <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b8-size)] font-[var(--font-b8-weight)] leading-[var(--font-b8-line-height)] tracking-[var(--font-b8-letter-spacing)] text-gray-60">
-                    {item.reservationDate}
-                  </p>
-                </div>
-              </div>
+            <div
+              key={`reservation-${item.price ?? 'price'}-${index}`}
+              className={`relative flex shrink-0 items-center ${columnWidthClass}`}
+            >
+              <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b8-size)] font-[var(--font-b8-weight)] leading-[var(--font-b8-line-height)] tracking-[var(--font-b8-letter-spacing)] text-gray-60">
+                {item.reservationDate}
+              </p>
             </div>
           ))}
         </div>
       </div>
 
       {resolvedFooterMode === 'add' && (
-        <AddButton label={addButtonLabel} subLabel={addButtonSubLabel} />
+        <AddButton
+          label={addButtonLabel}
+          subLabel={addButtonSubLabel}
+        />
       )}
+
       {resolvedFooterMode === 'notice' && (
-        <div className="bg-brand-20 content-stretch flex min-h-[44px] items-center justify-center rounded-[8px] px-[20px] py-[12px]">
-          <p className="relative shrink-0 whitespace-nowrap text-[var(--font-b8-size)] font-[var(--font-b8-weight)] leading-[var(--font-b8-line-height)] tracking-[var(--font-b8-letter-spacing)] text-brand-100">
-            {noticeText}
-          </p>
-        </div>
+        <NoticeBanner label={noticeText} />
       )}
     </div>
   )

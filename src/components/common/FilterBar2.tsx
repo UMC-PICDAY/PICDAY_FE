@@ -20,12 +20,12 @@ export type FilterItem = {
   disabled?: boolean;
 };
 
-export type FilterBar2Props = {
+export interface FilterBar2Props {
   items: readonly FilterItem[];
   value?: string;
   className?: string;
   onChange?: (value: string) => void;
-};
+}
 
 /** 사진관 정렬·편의 조건을 가로로 선택하는 필터 바입니다. */
 const FilterBar2 = ({

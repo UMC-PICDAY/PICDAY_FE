@@ -29,7 +29,7 @@ export type CalendarDate = {
 
 export type CalendarMonth = Omit<CalendarDate, "day">;
 
-export type CalendarProps = {
+export interface CalendarProps {
   startMonth: CalendarMonth;
   monthCount?: number;
   selectedDate?: CalendarDate;
@@ -38,7 +38,7 @@ export type CalendarProps = {
   className?: string;
   onDateSelect?: (date: CalendarDate) => void;
   isDateDisabled?: (date: CalendarDate) => boolean;
-};
+}
 
 const defaultWeekdays = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
