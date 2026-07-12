@@ -1,7 +1,16 @@
 /**
  * Figma F-3 프로필 설정 (라우트: /mypage/profile)
+ *
  * 닉네임, 연결 계정, 알림 설정을 관리하고 회원탈퇴 팝업 플로우를 처리함
+ *
+ * 화면 상태 확인:
+ * - loginType = 'social' → 카카오 계정 연결 상태
+ * - loginType = 'local'  → 자체 로그인, 연동된 외부 계정 없음 상태
+ * - isNicknameDuplicate = true → 닉네임 중복 에러 상태
+ *
+ * TODO: API 연결 후 로그인 방식과 닉네임 중복 여부를 서버 응답값으로 대체 예정
  */
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -15,12 +24,23 @@ import SegmentedTab from '@/components/common/SegmentedTab'
 import Toggle from '@/components/common/Toggle'
 import TabBarUser from '@/components/layout/TabBarUser'
 
+type LoginType = 'social' | 'local'
+
+const loginType: LoginType = 'social'
+const isNicknameDuplicate = false
+
 const ProfileSettingPage = () => {
   const navigate = useNavigate()
   const [nickname, setNickname] = useState('고요한순간0409')
   const [reservationAlarm, setReservationAlarm] = useState(true)
   const [marketingAlarm, setMarketingAlarm] = useState(false)
   const [withdrawStep, setWithdrawStep] = useState<'none' | 'confirm' | 'delete'>('none')
+
+  const isSocialLogin = loginType === 'social'
+
+  const accountText = isSocialLogin ? '카카오 계정 연결' : '자체 로그인'
+  const connectedAccountText = isSocialLogin ? '카카오계정' : '-'
+  const connectionLabel = isSocialLogin ? '연결됨' : '연동된 외부 계정 없음'
 
   const handleTabChange = (value: string) => {
     if (value === 'reservation') {
@@ -36,11 +56,11 @@ const ProfileSettingPage = () => {
   }
 
   return (
-    <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-white pb-[108px]">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
       <Profile
         variant="userInfo"
         userName="이수현"
-        accountText="자체 로그인"
+        accountText={accountText}
         userImageSrc={logoIcon}
       />
 
@@ -57,16 +77,21 @@ const ProfileSettingPage = () => {
         <InputField2
           label="닉네임"
           value={nickname}
-          helperText="2~10자, 한글·영문·숫자 사용 가능"
+          helperText={
+            isNicknameDuplicate
+              ? '이미 사용 중인 닉네임이에요'
+              : '2~10자, 한글·영문·숫자 사용 가능'
+          }
+          isError={isNicknameDuplicate}
           onChange={setNickname}
         />
 
         <div className="mt-5">
           <p className="font-cap1 text-gray-80">연결된 계정</p>
 
-          <div className="mt-2 flex h-10 w-full items-center justify-between rounded-[8px] bg-brand-20 px-[10px]">
-            <span className="font-b8 text-gray-80">-</span>
-            <ConnectionTag label="연동된 외부 계정 없음" />
+          <div className="mt-2 flex h-10 w-full items-center justify-between rounded-[8px] bg-[rgba(254,228,235,0.3)] px-[10px]">
+            <span className="font-b8 text-gray-80">{connectedAccountText}</span>
+            <ConnectionTag label={connectionLabel} />
           </div>
         </div>
 
@@ -98,12 +123,19 @@ const ProfileSettingPage = () => {
         </div>
       </section>
 
-      <div className="fixed bottom-0 left-1/2 w-full max-w-[402px] -translate-x-1/2">
-        <TabBarUser activeTab="mypage" />
+      <div className="sticky bottom-0 mt-auto w-full">
+        <TabBarUser
+          activeTab="mypage"
+          onTabChange={(tab) => {
+            if (tab === 'search') navigate('/home')
+            if (tab === 'wishlist') navigate('/wishlist')
+            if (tab === 'mypage') navigate('/mypage')
+          }}
+        />
       </div>
 
       {withdrawStep !== 'none' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#464545]/90 px-5">
+        <div className="fixed left-1/2 top-0 z-50 flex h-dvh w-full max-w-[402px] -translate-x-1/2 items-center justify-center bg-[#464545]/90 px-5">
           {withdrawStep === 'confirm' && (
             <Alert2
               variant="default"

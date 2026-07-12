@@ -1,11 +1,11 @@
 /**
  * Alert 사용법
  *
- * [default] 우측 버튼이 5글자 이상일때, 버튼 2개  
+ * [default] 우측 버튼이 5글자 이상일때, 버튼 2개
  *   <Alert />
  *   <Alert onCancel={handleCancel} onConfirm={handleConfirm} />
  *
- * [variant2] 우측 버튼이 4글자 이하일때, 버튼 2개
+ * [variant2] 좌우 버튼이 동일 너비 151px일때, 버튼 2개
  *   <Alert variant="variant2" />
  *   <Alert variant="variant2" onCancel={handleCancel} onConfirm={handleConfirm} />
  *
@@ -65,6 +65,7 @@ const Alert = ({
 }: Props) => {
   const content = alertContent[variant]
   const isSingleButton = variant === 'variant3'
+  const isSameWidthPair = variant === 'variant2'
 
   return (
     <div className="flex w-[362px] flex-col items-center rounded-[12px] bg-white">
@@ -78,6 +79,20 @@ const Alert = ({
           <Button variant="primary" onClick={onConfirm}>
             {confirmText ?? content.confirmText}
           </Button>
+        </div>
+      ) : isSameWidthPair ? (
+        <div className="flex w-full items-center gap-5 px-5 py-5">
+          <div className="w-[151px]">
+            <Button variant="secondary" onClick={onCancel}>
+              {cancelText ?? content.cancelText}
+            </Button>
+          </div>
+
+          <div className="w-[151px]">
+            <Button variant="primary" onClick={onConfirm}>
+              {confirmText ?? content.confirmText}
+            </Button>
+          </div>
         </div>
       ) : (
         <ButtonLarge

@@ -15,44 +15,43 @@
  */
 
 interface Props {
-  label: string
-  value: string
-  helperText?: string
-  placeholder?: string
-  isError?: boolean
-  onChange?: (value: string) => void
+    label: string
+    value: string
+    helperText?: string
+    placeholder?: string
+    isError?: boolean
+    onChange?: (value: string) => void
 }
 
 const InputField2 = ({
-  label,
-  value,
-  helperText,
-  placeholder,
-  isError = false,
-  onChange,
+    label,
+    value,
+    helperText,
+    placeholder,
+    isError = false,
+    onChange,
 }: Props) => {
-  return (
-    <div className="inline-flex w-full flex-col items-start gap-[5px]">
-      <label className="font-cap3 text-gray-80">{label}</label>
+    return (
+        <div className="inline-flex w-full flex-col items-start gap-[5px]">
+            <label className="font-cap3 text-gray-80">{label}</label>
 
-      <input
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange?.(event.target.value)}
-        className={`flex h-[41px] w-full rounded-[8px] px-3 py-[10px] font-b7 text-gray-80 outline-none placeholder:text-gray-40 ${
-          isError
-            ? 'border border-[#FF3B5B] bg-white'
-            : 'border border-transparent bg-brand-20'
-        }`}
-      />
+            <input
+                value={value}
+                placeholder={placeholder}
+                onChange={(event) => onChange?.(event.target.value)}
+                className={`flex h-[41px] w-full rounded-[8px] px-3 py-[10px] font-b7 text-gray-80 outline-none placeholder:text-gray-40 ${isError
+                        ? 'border border-[#FF3B5B] bg-white'
+                        : 'border border-transparent bg-[rgba(254,228,235,0.3)]'
+                    }`}
+            />
 
-      {helperText && (
-        <p className={`font-cap3 ${isError ? 'text-[#FF3B5B]' : 'text-gray-40'}`}>
-          {helperText}
-        </p>
-      )}
-    </div>
-  )
+            {helperText && (
+                <p className={`font-cap3 ${isError ? 'text-[#FF3B5B]' : 'text-gray-40'}`}>
+                    {helperText}
+                </p>
+            )}
+        </div>
+    )
 }
 
 export default InputField2

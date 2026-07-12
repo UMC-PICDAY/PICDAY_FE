@@ -139,9 +139,9 @@ const CardReservationHistory = ({
             </p>
           </div>
 
-          <div className="flex shrink-0 flex-col items-start py-[2px] text-[var(--font-cap3-size)] font-[400] leading-[var(--font-cap3-line-height)] tracking-[var(--font-cap3-letter-spacing)] text-gray-40">
-            <p className="shrink-0 whitespace-nowrap">{dateTime}</p>
-            <p className="shrink-0 whitespace-nowrap">{packageName}</p>
+          <div className="flex shrink-0 flex-col items-start py-[2px]">
+            <p className="shrink-0 whitespace-nowrap font-cap3 text-gray-40">{dateTime}</p>
+            <p className="shrink-0 whitespace-nowrap font-cap3 text-gray-40">{packageName}</p>
           </div>
         </div>
 
