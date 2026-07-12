@@ -11,10 +11,7 @@ import SearchAutoCompletePage from '@/pages/search/SearchAutoCompletePage'
 import DateSelectPage from '@/pages/search/DateSelectPage'
 import PurposeSelectPage from '@/pages/search/PurposeSelectPage'
 
-import StudioListPage from '@/pages/studio/StudioListPage'
-import StudioMapPage from '@/pages/studio/StudioMapPage'
-import StudioEmptyPage from '@/pages/studio/StudioEmptyPage'
-import StudioListFullPage from '@/pages/studio/StudioListFullPage'
+import StudioSearchPage from '@/pages/studio/StudioSearchPage'
 import FilterPage from '@/pages/studio/FilterPage'
 import StudioDetailPage from '@/pages/studio/StudioDetailPage'
 import StudioInfoPage from '@/pages/studio/StudioInfoPage'
@@ -65,10 +62,7 @@ function App() {
       <Route path="/search/purpose" element={<PurposeSelectPage />} />
 
       {/* 사진관 */}
-      <Route path="/studios" element={<StudioListPage />} />
-      <Route path="/studios/map" element={<StudioMapPage />} />
-      <Route path="/studios/empty" element={<StudioEmptyPage />} />
-      <Route path="/studios/list" element={<StudioListFullPage />} />
+      <Route path="/studios" element={<StudioSearchPage />} />
       <Route path="/studios/filter" element={<FilterPage />} />
       <Route path="/studios/:studioId" element={<StudioDetailPage />} />
       <Route path="/studios/:studioId/info" element={<StudioInfoPage />} />
