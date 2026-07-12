@@ -1,4 +1,4 @@
-import pinFavorite from '@/assets/images/studio/pin-favorite.svg'
+import { IcPinFavorite } from '@/components/icons'
 
 interface PinFavoriteProps {
   className?: string
@@ -6,10 +6,10 @@ interface PinFavoriteProps {
 
 const PinFavorite = ({ className = '' }: PinFavoriteProps) => (
   <div className={`relative size-[52px] ${className}`}>
-    <img
-      src={pinFavorite}
-      alt=""
-      className="absolute left-[10.5px] top-[11px] size-[30px]"
+    <IcPinFavorite
+      width={30}
+      height={30}
+      className="absolute left-[10.5px] top-[11px]"
     />
   </div>
 )

@@ -1,4 +1,4 @@
-import mapPinIcon from '@/assets/images/studio/map-pin.svg'
+import { IcMapPin } from '@/components/icons'
 
 interface MapPinProps {
   label?: string
@@ -7,7 +7,7 @@ interface MapPinProps {
 
 const MapPin = ({ label = '데이지스튜디오', className = '' }: MapPinProps) => (
   <div className={`flex w-[73px] flex-col items-center gap-[5px] ${className}`}>
-    <img src={mapPinIcon} alt="" className="size-[52px] shrink-0" />
+    <IcMapPin width={52} height={52} className="shrink-0" />
     <span className="text-center font-cap2 text-gray-80">{label}</span>
   </div>
 )
