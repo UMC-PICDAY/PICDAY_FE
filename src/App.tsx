@@ -26,8 +26,8 @@ import CompareTwoPage from '@/pages/compare/CompareTwoPage'
 import CompareThreePage from '@/pages/compare/CompareThreePage'
 
 import ReservationPage from '@/pages/reservation/ReservationPage'
-import PartnerShopSelectPage from '@/pages/reservation/PartnerShopSelectPage'
 import ReservationCompletePage from '@/pages/reservation/ReservationCompletePage'
+import AgreementDetailPage from '@/pages/reservation/AgreementDetailPage'
 
 import MyReservationPage from '@/pages/mypage/MyReservationPage'
 import ReservationDetailPage from '@/pages/mypage/ReservationDetailPage'
@@ -80,8 +80,9 @@ function App() {
 
       {/* 예약 */}
       <Route path="/reservation" element={<ReservationPage />} />
-      <Route path="/reservation/partner-shop" element={<PartnerShopSelectPage />} />
       <Route path="/reservation/complete" element={<ReservationCompletePage />} />
+      <Route path="/reservation/terms/:key" element={<AgreementDetailPage />}
+/>
 
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyReservationPage />} />

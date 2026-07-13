@@ -1,3 +1,26 @@
+/**
+ * CompareTwoPage 사용법
+ *
+ * 사진관 2개의 가격, 서비스, 위치, 예약 가능일을 비교하는 페이지
+ *
+ * 진입 시 navigation state로 촬영 목적과 사진관 목록 전달
+ *   {
+ *     purpose?: string
+ *     studios?: NavigationStudio[]
+ *   }
+ *
+ * 주요 기능
+ *   - 사진관 카드 클릭 시 상세 페이지 이동
+ *   - X 버튼 클릭 시 해당 사진관 삭제
+ *   - 사진관 추가 시 현재 비교 목록과 촬영 목적 전달
+ *   - 하단에서 사진관 선택 후 컨셉 목록 이동
+ *
+ * 전달 데이터가 없으면 테스트용 fallback 데이터 사용
+ *
+ * TODO
+ *   API 연결 후 DEFAULT_COMPARE_DATA와 FALLBACK_STUDIOS 제거
+ */
+
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'

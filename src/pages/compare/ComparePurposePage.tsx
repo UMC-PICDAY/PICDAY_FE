@@ -1,3 +1,54 @@
+/**
+ * ComparePurposePage 사용법
+ *
+ * 사진관 비교 전 촬영 목적을 선택하는 페이지
+ *
+ * 기본 진입
+ *   navigate('/compare')
+ *
+ * 선택된 사진관 목록
+ *   selectedStudios 상태로 최대 3개까지 관리
+ *
+ * 촬영 목적 선택
+ *   증명 / 프로필 / 개인화보 / 취업 / 가족 / 우정 중 하나를 선택
+ *
+ * 사진관 삭제
+ *   하단 선택 슬롯의 X 버튼 클릭 시 해당 사진관 삭제
+ *   선택된 사진관이 3개 미만이면 사진관 추가 버튼 표시
+ *
+ * 사진관 추가
+ *   추가 슬롯 클릭 시 사진관 목록 페이지로 이동
+ *   navigate('/studios/list', {
+ *     state: {
+ *       selectedStudios,
+ *       purpose: selectedPurpose,
+ *     },
+ *   })
+ *
+ * 비교 시작
+ *   선택된 사진관이 2개이면 /compare/two로 이동
+ *   선택된 사진관이 3개이면 /compare/three로 이동
+ *
+ * 비교 페이지 전달 데이터
+ *   {
+ *     purpose: selectedPurpose,
+ *     studios: selectedStudios,
+ *   }
+ *
+ * 촬영 목적 미지원 예외 처리
+ *   3개 중 1개만 미지원:
+ *     해당 사진관을 제외하고 비교할지 Alert2 표시
+ *
+ *   비교 가능한 사진관이 1개 이하:
+ *     다른 촬영 목적을 선택하도록 Alert2 표시
+ *
+ * 비교 버튼 비활성화
+ *   선택된 사진관이 1개 이하이면 비교 시작 버튼 비활성화
+ *
+ * TODO
+ *   API 연결 후 MOCK_SELECTED_STUDIOS를 실제 비교 선택 데이터로 교체
+ */
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -65,14 +116,19 @@ const ComparePurposePage = () => {
 
   const [selectedPurpose, setSelectedPurpose] =
     useState<PurposeType>('프로필')
+
+  const [selectedStudios, setSelectedStudios] = useState<Studio[]>(
+    MOCK_SELECTED_STUDIOS,
+  )
+
   const [alertType, setAlertType] = useState<AlertType>(null)
   const [unavailableStudios, setUnavailableStudios] = useState<Studio[]>([])
 
-  const selectedStudioCount = MOCK_SELECTED_STUDIOS.length
+  const selectedStudioCount = selectedStudios.length
   const isCompareDisabled = selectedStudioCount <= 1
 
   const getAvailableStudios = () =>
-    MOCK_SELECTED_STUDIOS.filter((studio) =>
+    selectedStudios.filter((studio) =>
       studio.availablePurposes.includes(selectedPurpose),
     )
 
@@ -96,10 +152,16 @@ const ComparePurposePage = () => {
     }
   }
 
+  const handleDeleteStudio = (studioId: number) => {
+    setSelectedStudios((prevStudios) =>
+      prevStudios.filter((studio) => studio.id !== studioId),
+    )
+  }
+
   const handleAddStudio = () => {
     navigate(STUDIO_LIST_PATH, {
       state: {
-        selectedStudios: MOCK_SELECTED_STUDIOS,
+        selectedStudios,
         purpose: selectedPurpose,
       },
     })
@@ -112,7 +174,7 @@ const ComparePurposePage = () => {
 
     const availableStudios = getAvailableStudios()
 
-    const unavailableStudioList = MOCK_SELECTED_STUDIOS.filter(
+    const unavailableStudioList = selectedStudios.filter(
       (studio) => !studio.availablePurposes.includes(selectedPurpose),
     )
 
@@ -201,8 +263,12 @@ const ComparePurposePage = () => {
       <footer className="absolute inset-x-0 bottom-0 bg-white">
         <div className="flex items-center justify-between px-5 pb-4">
           <div className="flex items-center gap-[5px]">
-            {MOCK_SELECTED_STUDIOS.map((studio) => (
-              <ButtonCompareSlot key={studio.id} label={studio.name} />
+            {selectedStudios.map((studio) => (
+              <ButtonCompareSlot
+                key={studio.id}
+                label={studio.name}
+                onDelete={() => handleDeleteStudio(studio.id)}
+              />
             ))}
 
             {selectedStudioCount < 3 && (

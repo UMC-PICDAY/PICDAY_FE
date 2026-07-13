@@ -7,15 +7,23 @@
  * 라벨 변경
  *   <ButtonCompareSlot label="스튜디오명" />
  *
+ * 선택된 슬롯 삭제
+ *   <ButtonCompareSlot
+ *     label="스튜디오명"
+ *     onDelete={handleDeleteStudio}
+ *   />
+ *
  * 추가 버튼 표시
  *   <ButtonCompareSlot state="add" />
  *
- * 클릭 동작 연결
+ * 추가 버튼 클릭 동작 연결
  *   <ButtonCompareSlot
  *     state="add"
  *     onClick={handleAddStudio}
  *   />
  */
+
+import type { KeyboardEvent, MouseEvent } from 'react'
 
 import { IcAdd, IcClose } from '@/components/icons'
 
@@ -24,6 +32,7 @@ interface Props {
   state?: 'selected' | 'add'
   label?: string
   onClick?: () => void
+  onDelete?: () => void
 }
 
 const ButtonCompareSlot = ({
@@ -31,10 +40,11 @@ const ButtonCompareSlot = ({
   state = 'selected',
   label = '데이지',
   onClick,
+  onDelete,
 }: Props) => {
   const isAdd = state === 'add'
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!onClick) {
       return
     }
@@ -43,6 +53,11 @@ const ButtonCompareSlot = ({
       event.preventDefault()
       onClick()
     }
+  }
+
+  const handleDeleteClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    onDelete?.()
   }
 
   return (
@@ -70,16 +85,20 @@ const ButtonCompareSlot = ({
             {label}
           </p>
 
-          <div
-            className="absolute right-[5px] top-[5px] size-[8px]"
-            data-node-id="890:5990"
-          >
-            <IcClose
-              className="block size-full text-brand-100"
-              width={8}
-              height={8}
-            />
-          </div>
+          {onDelete && (
+            <button
+              type="button"
+              aria-label={`${label} 삭제`}
+              className="absolute top-[5px] right-[5px] flex size-[8px] items-center justify-center border-none bg-transparent p-0"
+              onClick={handleDeleteClick}
+            >
+              <IcClose
+                className="block size-full text-brand-100"
+                width={8}
+                height={8}
+              />
+            </button>
+          )}
         </>
       )}
 
