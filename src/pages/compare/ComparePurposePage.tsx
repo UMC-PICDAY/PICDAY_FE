@@ -59,8 +59,6 @@ import ButtonCompareSlot from '@/components/common/ButtonCompareSlot'
 import CategoryButton from '@/components/common/CategoryButton'
 import Title from '@/components/common/Title'
 import { IcBack } from '@/components/icons'
-import HomeBar from '@/components/layout/HomeBar'
-import StatusBar from '@/components/layout/StatusBar'
 
 type PurposeType = '증명' | '프로필' | '개인화보' | '취업' | '가족' | '우정'
 
@@ -219,7 +217,6 @@ const ComparePurposePage = () => {
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-white text-black">
-      <StatusBar />
 
       <header className="flex w-full items-center justify-between px-5 py-3">
         <button
@@ -292,8 +289,6 @@ const ComparePurposePage = () => {
             비교 시작
           </Button>
         </div>
-
-        <HomeBar />
       </footer>
 
       {alertType && (

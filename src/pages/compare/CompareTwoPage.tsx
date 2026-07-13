@@ -28,9 +28,7 @@ import { useLocation, useNavigate } from 'react-router'
 import CardStudioCompare from '@/components/cards/CardStudioCompare'
 import AddButton from '@/components/common/AddButton'
 import Button from '@/components/common/Button'
-import HomeBar from '@/components/layout/HomeBar'
 import NavigationBar from '@/components/layout/NavigationBar'
-import StatusBar from '@/components/layout/StatusBar'
 
 interface CompareData {
   price: string
@@ -191,7 +189,6 @@ const CompareTwoPage = () => {
   return (
     <div className="relative mx-auto min-h-dvh w-full max-w-[402px] overflow-x-hidden bg-white">
       <div className="sticky top-0 z-20 bg-white">
-        <StatusBar />
 
         <NavigationBar
           title="사진관 비교"
@@ -338,7 +335,6 @@ const CompareTwoPage = () => {
           </div>
         </div>
 
-        <HomeBar />
       </footer>
     </div>
   )

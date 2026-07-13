@@ -39,9 +39,7 @@ import Alert from '@/components/common/Alert'
 import Alert3 from '@/components/common/Alert3'
 import Button from '@/components/common/Button'
 import MiniTitle from '@/components/common/MiniTitle'
-import HomeBar from '@/components/layout/HomeBar'
 import NavigationBar from '@/components/layout/NavigationBar'
-import StatusBar from '@/components/layout/StatusBar'
 
 interface InfoFieldProps {
   label: string
@@ -245,7 +243,6 @@ const ReservationPage = () => {
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
       <div className="sticky top-0 z-20 bg-white">
-        <StatusBar />
 
         <NavigationBar
           title="예약"
@@ -405,7 +402,6 @@ const ReservationPage = () => {
         </div>
       </main>
 
-      <HomeBar />
 
       {import.meta.env.DEV && (
         // TODO: UI 확인 후 제거

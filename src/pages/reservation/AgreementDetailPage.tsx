@@ -23,10 +23,7 @@
  */
 
 import { useNavigate, useParams } from 'react-router'
-
-import HomeBar from '@/components/layout/HomeBar'
 import NavigationBar from '@/components/layout/NavigationBar'
-import StatusBar from '@/components/layout/StatusBar'
 
 interface AgreementSection {
   title: string
@@ -198,8 +195,6 @@ const AgreementDetailPage = () => {
     return (
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
         <div className="sticky top-0 z-20 bg-white">
-          <StatusBar />
-
           <NavigationBar
             title=""
             showRight={false}
@@ -213,7 +208,6 @@ const AgreementDetailPage = () => {
           </p>
         </main>
 
-        <HomeBar />
       </div>
     )
   }
@@ -221,7 +215,6 @@ const AgreementDetailPage = () => {
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
       <div className="sticky top-0 z-20 bg-white">
-        <StatusBar />
 
         <NavigationBar
           title=""
@@ -246,8 +239,6 @@ const AgreementDetailPage = () => {
           />
         ))}
       </main>
-
-      <HomeBar />
     </div>
   )
 }

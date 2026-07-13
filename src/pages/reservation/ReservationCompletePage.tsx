@@ -35,9 +35,7 @@ import ReservationDetail from '@/components/cards/ReservationDetail'
 import Button from '@/components/common/Button'
 import NoticeBanner from '@/components/common/NoticeBanner'
 import { IcCheck } from '@/components/icons'
-import HomeBar from '@/components/layout/HomeBar'
 import NavigationBar from '@/components/layout/NavigationBar'
-import StatusBar from '@/components/layout/StatusBar'
 
 interface ReservationCompleteData {
   studioName: string
@@ -69,7 +67,6 @@ const ReservationCompletePage = () => {
     return (
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
         <div className="sticky top-0 z-20 shrink-0 bg-white">
-          <StatusBar />
 
           <NavigationBar
             title="PICDAY"
@@ -97,9 +94,6 @@ const ReservationCompletePage = () => {
           </Button>
         </footer>
 
-        <div className="shrink-0">
-          <HomeBar />
-        </div>
       </div>
     )
   }
@@ -125,7 +119,6 @@ const ReservationCompletePage = () => {
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
       <div className="sticky top-0 z-20 shrink-0 bg-white">
-        <StatusBar />
 
         <NavigationBar
           title="PICDAY"
@@ -180,9 +173,6 @@ const ReservationCompletePage = () => {
         </Button>
       </footer>
 
-      <div className="shrink-0">
-        <HomeBar />
-      </div>
     </div>
   )
 }
