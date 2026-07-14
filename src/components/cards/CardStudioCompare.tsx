@@ -16,15 +16,22 @@
  *     reviewCount={128}
  *   />
  *
+ * 카드 클릭 동작 연결
+ *   <CardStudioCompare
+ *     onClick={handleStudioClick}
+ *   />
+ *
  * 삭제 버튼 이벤트
  *   <CardStudioCompare
  *     onDelete={handleDelete}
  *   />
  */
 
-import { IcStar } from '@/components/icons'
-import ButtonDelete from '@/components/common/ButtonDelete'
+import type { KeyboardEvent, MouseEvent } from 'react'
+
 import defaultImage from '@/assets/images/CardImage3.png'
+import ButtonDelete from '@/components/common/ButtonDelete'
+import { IcStar } from '@/components/icons'
 
 const DEFAULT_IMAGE = defaultImage
 
@@ -37,30 +44,49 @@ interface Props {
   name?: string
   rating?: number
   reviewCount?: number
+  onClick?: () => void
   onDelete?: () => void
 }
 
 const CardStudioCompare = ({
-  className,
+  className = '',
   size = 'compact',
   imageSrc = DEFAULT_IMAGE,
   name = '데이지 스튜디오',
   rating = 4.9,
   reviewCount = 128,
+  onClick,
   onDelete,
 }: Props) => {
   const isCompact = size === 'compact'
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || !onClick) {
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onClick()
+    }
+  }
+
+  const handleDelete = (event: MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+    onDelete?.()
+  }
+
   return (
     <div
-      className={
-        className ||
-        `relative flex flex-col items-start overflow-hidden rounded-[12px] border-[0.659px] border-[rgba(238,238,238,0.6)] ${
-          isCompact
-            ? 'w-[114px] shadow-[0px_9.884px_31.63px_0px_rgba(252,200,215,0.1)] backdrop-blur-[6.59px]'
-            : 'w-[173px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]'
-        }`
-      }
+      className={`relative flex flex-col items-start overflow-hidden rounded-[12px] border-[0.659px] border-[rgba(238,238,238,0.6)] ${
+        isCompact
+          ? 'w-[114px] shadow-[0px_9.884px_31.63px_0px_rgba(252,200,215,0.1)] backdrop-blur-[6.59px]'
+          : 'w-[173px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]'
+      } ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
     >
       <div
         className={
@@ -70,13 +96,24 @@ const CardStudioCompare = ({
         }
       >
         {imageSrc ? (
-          <img alt={name} className="h-full w-full object-cover" src={imageSrc} />
+          <img
+            src={imageSrc}
+            alt={name}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="absolute inset-0 bg-gray-10" />
         )}
 
-        <div className={`absolute ${isCompact ? 'left-[93px] top-[7px]' : 'left-[143px] top-[10px]'}`}>
-          <ButtonDelete size={isCompact ? 'mini' : 'default'} onClick={onDelete} />
+        <div
+          className={`absolute ${
+            isCompact
+              ? 'left-[93px] top-[7px]'
+              : 'left-[143px] top-[10px]'
+          }`}
+          onClick={handleDelete}
+        >
+          <ButtonDelete size={isCompact ? 'mini' : 'default'} />
         </div>
       </div>
 
@@ -97,12 +134,17 @@ const CardStudioCompare = ({
           {name}
         </p>
 
-        <div className={`flex shrink-0 items-center ${isCompact ? 'gap-[1.318px]' : 'gap-[2px]'}`}>
+        <div
+          className={`flex shrink-0 items-center ${
+            isCompact ? 'gap-[1.318px]' : 'gap-[2px]'
+          }`}
+        >
           <IcStar
             className="shrink-0 text-gray-40"
             width={isCompact ? 12 : 14}
             height={isCompact ? 12 : 14}
           />
+
           <p
             className={
               isCompact
@@ -112,6 +154,7 @@ const CardStudioCompare = ({
           >
             {rating}
           </p>
+
           <p
             className={
               isCompact
