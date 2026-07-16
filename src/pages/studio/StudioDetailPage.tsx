@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
 import FeatureGrid from '@/components/common/FeatureGrid'
+import Toast from '@/components/common/Toast'
 import { IcError, IcPin, IcRight, IcStar } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 import NavigationBarTransparent from '@/components/layout/NavigationBarTransparent'
@@ -17,6 +18,11 @@ import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import heroImage from '@/assets/images/CardImage1.png'
 
 type OpenSheet = 'info' | 'hairmakeup' | null
+
+const STUDIO_ADDRESS = '서울 마포구 동교동 (홍대입구)'
+
+const STUDIO_INTRO =
+  '홍대 감성의 자연광 셀프/개인화보 전문 스튜디오입니다. 넓은 촬영 공간과 다양한 컨셉존을 갖추고 있어 원하는 분위기의 사진을 남길 수 있습니다. 프로필, 개인화보, 우정사진 등 목적에 맞춘 컨셉을 제안해 드리며, 전문 작가가 촬영 내내 자연스러운 포즈를 세심하게 가이드합니다. 의상과 소품 대여, 헤어메이크업 제휴샵 연계도 가능하여 별도의 준비물 없이 편하게 방문하실 수 있습니다. 보정본은 촬영 후 7일 이내에 전달됩니다.'
 
 const USAGE_PREVIEW = [
   {
@@ -51,11 +57,23 @@ const StudioDetailPage = () => {
   const { studioId } = useParams()
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
+  const [addressCopied, setAddressCopied] = useState(false)
+  const [introExpanded, setIntroExpanded] = useState(false)
   const [searchParams] = useSearchParams()
 
   const closeSheet = () => setOpenSheet(null)
   const goToReviews = () => navigate(`/studios/${studioId}/reviews`)
   const goToConcepts = () => navigate(`/studios/${studioId}/concepts`)
+
+  const handleCopyAddress = () => {
+    navigator.clipboard
+      ?.writeText(STUDIO_ADDRESS)
+      .then(() => {
+        setAddressCopied(true)
+        setTimeout(() => setAddressCopied(false), 2000)
+      })
+      .catch(() => {})
+  }
 
   if (searchParams.get('state') === 'error') {
     return (
@@ -143,9 +161,13 @@ const StudioDetailPage = () => {
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center">
             <IcPin width={20} height={20} className="shrink-0" />
-            <span className="font-b4 text-black">서울 마포구 동교동 (홍대입구)</span>
+            <span className="font-b4 text-black">{STUDIO_ADDRESS}</span>
           </div>
-          <button type="button" className="shrink-0 font-b8 text-brand-100">
+          <button
+            type="button"
+            onClick={handleCopyAddress}
+            className="shrink-0 font-b8 text-brand-100"
+          >
             주소 복사
           </button>
         </div>
@@ -160,16 +182,18 @@ const StudioDetailPage = () => {
       {/* 사진관 소개 */}
       <section className="px-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">사진관 소개</h2>
-        <p className="font-b6 text-gray-80">
-          홍대 감성의 자연광 셀프/개인화보 전문 스튜디오입니다. 넓은 촬영 공간과 다양한 컨셉존을
-          갖추고 있어 원하는 분위기의 사진을 남길 수 있습니다....
+        <p className={`font-b6 text-gray-80${introExpanded ? '' : ' line-clamp-3'}`}>
+          {STUDIO_INTRO}
         </p>
-        <button
-          type="button"
-          className="mt-5 flex w-full items-center justify-center rounded-lg border border-brand-100 px-5 py-3 font-b3 text-brand-100"
-        >
-          더보기
-        </button>
+        {!introExpanded && (
+          <button
+            type="button"
+            onClick={() => setIntroExpanded(true)}
+            className="mt-5 flex w-full items-center justify-center rounded-lg border border-brand-100 px-5 py-3 font-b3 text-brand-100"
+          >
+            더보기
+          </button>
+        )}
       </section>
 
       <Divider />
@@ -275,6 +299,12 @@ const StudioDetailPage = () => {
           모든 컨셉 보기
         </button>
       </div>
+
+      {addressCopied && (
+        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
+          <Toast message="주소가 복사되었어요" />
+        </div>
+      )}
 
       {openSheet === 'info' && (
         <BottomSheet dim onClose={closeSheet}>

@@ -56,7 +56,11 @@ const ReviewDetailPage = () => {
         title="리얼리뷰"
         onBack={() => navigate(-1)}
         rightNode={
-          <button type="button" className="whitespace-nowrap font-b11 text-gray-60">
+          <button
+            type="button"
+            onClick={() => navigate(`/studios/${studioId}/reviews/policy`)}
+            className="whitespace-nowrap font-b11 text-gray-60"
+          >
             운영정책
           </button>
         }
