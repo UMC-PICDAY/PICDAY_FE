@@ -35,17 +35,17 @@ const InputReview = ({
         placeholder={placeholder}
         maxLength={maxLength}
         onChange={(event) => onChange(event.target.value)}
-        className={`h-[112px] w-full resize-none rounded-[8px] border px-4 py-3 font-b8 text-gray-80 outline-none placeholder:text-gray-40 ${
+        className={`h-[112px] w-full resize-none rounded-[8px] border p-3 font-b8 text-gray-80 outline-none placeholder:text-gray-40 ${
           showError ? 'border-[#FF3B5B]' : 'border-gray-10'
         }`}
       />
 
       <div className="mt-1 flex w-full items-center justify-between">
-        <p className={`font-cap3 ${showError ? 'text-[#FF3B5B]' : 'text-transparent'}`}>
+        <p className={`font-cap1 ${showError ? 'text-[#FF3B5B]' : 'text-transparent'}`}>
           {showError ? 'ⓘ 10자 이상 입력해 주세요' : ' '}
         </p>
 
-        <p className={`font-cap3 ${showError ? 'text-[#FF3B5B]' : 'text-gray-40'}`}>
+        <p className={`font-cap1 ${showError ? 'text-[#FF3B5B]' : 'text-gray-40'}`}>
           {value.length}/{maxLength}
         </p>
       </div>

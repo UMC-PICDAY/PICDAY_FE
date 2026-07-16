@@ -1,16 +1,26 @@
 /**
  * Figma F-1D 예약 상세 (라우트: /mypage/reservations/:reservationId)
  * 예약완료/촬영완료/취소 상태에 따라 예약 상세 화면을 분기해서 표시함
+ *
+ * TODO: API 연결 후 reservationId로 예약 상세 데이터를 조회하도록 대체 예정
  */
 
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
+import NavigationBar from '@/components/layout/NavigationBar'
 import Button from '@/components/common/Button'
 import Profile from '@/components/common/Profile'
 import ReservationDetail from '@/components/cards/ReservationDetail'
-import { IcBack, IcCheck, IcCheckBox } from '@/components/icons'
+import { IcCheck, IcCheckBox, IcCheckBoxFill } from '@/components/icons'
 
 type ReservationDetailType = 'reserved' | 'shooting' | 'canceled'
+
+interface ChecklistItem {
+  id: string
+  label: string
+  checked: boolean
+}
 
 const getReservationType = (reservationId?: string): ReservationDetailType => {
   if (reservationId === '2') {
@@ -45,11 +55,27 @@ const reservationInfo = {
   },
 } as const
 
-const checklistItems = [
-  '촬영 컨셉 및 의상 (컨셉·의상) 준비 확인',
-  '헤어·메이크업 예약 시간 확인',
-  '스튜디오 위치 및 오시는 길 확인',
-  '촬영 당일 소품·의상 챙기기',
+const INITIAL_CHECKLIST_ITEMS: ChecklistItem[] = [
+  {
+    id: 'concept',
+    label: '촬영 컨셉 및 의상 (컨셉·의상) 준비 확인',
+    checked: false,
+  },
+  {
+    id: 'hair-makeup',
+    label: '헤어·메이크업 예약 시간 확인',
+    checked: false,
+  },
+  {
+    id: 'location',
+    label: '스튜디오 위치 및 오시는 길 확인',
+    checked: false,
+  },
+  {
+    id: 'props',
+    label: '촬영 당일 소품·의상 챙기기',
+    checked: false,
+  },
 ]
 
 const CancelDetailCard = () => {
@@ -89,7 +115,12 @@ const CancelDetailCard = () => {
   )
 }
 
-const ChecklistCard = () => {
+interface ChecklistCardProps {
+  items: ChecklistItem[]
+  onToggleItem: (id: string) => void
+}
+
+const ChecklistCard = ({ items, onToggleItem }: ChecklistCardProps) => {
   return (
     <section className="flex h-[267px] w-full flex-col items-start gap-5 px-5 py-[10px]">
       <div className="flex w-full flex-col items-start justify-center gap-5 rounded-[8px] border border-gray-10 bg-white p-5">
@@ -99,23 +130,24 @@ const ChecklistCard = () => {
         </div>
 
         <div className="flex w-full flex-col items-start">
-          {checklistItems.map((item, index) => {
-            const isLast = index === checklistItems.length - 1
+          {items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="flex w-full items-center gap-[10px] py-[10px] text-left"
+              onClick={() => onToggleItem(item.id)}
+            >
+              {item.checked ? (
+                <IcCheckBoxFill width={20} height={20} className="text-brand-100" />
+              ) : (
+                <IcCheckBox width={20} height={20} className="text-gray-20" />
+              )}
 
-            return (
-              <div
-                key={item}
-                className={`flex w-full flex-col items-start gap-[10px] px-[5px] py-[10px] ${
-                  isLast ? '' : 'border-b border-gray-10'
-                }`}
-              >
-                <div className="flex w-full items-center gap-[5px]">
-                  <IcCheckBox width={24} height={24} className="shrink-0 text-gray-10" />
-                  <p className="font-b8 text-gray-60">{item}</p>
-                </div>
-              </div>
-            )
-          })}
+              <span className={`font-b8 ${item.checked ? 'text-gray-80' : 'text-gray-40'}`}>
+                {item.label}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
     </section>
@@ -124,7 +156,9 @@ const ChecklistCard = () => {
 
 const ReservationDetailPage = () => {
   const navigate = useNavigate()
-  const { reservationId } = useParams()
+  const { reservationId = '1' } = useParams()
+
+  const [checklistItems, setChecklistItems] = useState(INITIAL_CHECKLIST_ITEMS)
 
   const reservationType = getReservationType(reservationId)
   const info = reservationInfo[reservationType]
@@ -133,24 +167,15 @@ const ReservationDetailPage = () => {
   const isShooting = reservationType === 'shooting'
   const isCanceled = reservationType === 'canceled'
 
+  const handleChecklistItemClick = (id: string) => {
+    setChecklistItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item)),
+    )
+  }
+
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-[402px] flex-col bg-white pb-[120px]">
-      <header className="flex w-full items-center justify-between border-b border-gray-10 bg-white px-5 py-3">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          className="flex h-9 w-9 items-center justify-start"
-          onClick={() => navigate(-1)}
-        >
-          <IcBack width={24} height={24} />
-        </button>
-
-        <div className="flex flex-1 items-center justify-center">
-          <h1 className="font-h6 text-black">예약 상세</h1>
-        </div>
-
-        <div className="h-9 w-9" />
-      </header>
+    <div className="flex min-h-dvh w-full flex-col bg-white">
+      <NavigationBar title="예약 상세" showRight={false} onBack={() => navigate(-1)} />
 
       <Profile
         variant="bookingInfo"
@@ -165,7 +190,10 @@ const ReservationDetailPage = () => {
           totalAmount="₩70,000"
         />
 
-        {isReserved && <ChecklistCard />}
+        {isReserved && (
+          <ChecklistCard items={checklistItems} onToggleItem={handleChecklistItemClick} />
+        )}
+
         {isCanceled && <CancelDetailCard />}
       </div>
 
@@ -173,7 +201,10 @@ const ReservationDetailPage = () => {
         {isReserved && <Button variant="disabled">예약 취소</Button>}
 
         {isShooting && (
-          <Button variant="primary" onClick={() => navigate('/mypage/reservations/2/review')}>
+          <Button
+            variant="primary"
+            onClick={() => navigate(`/mypage/reservations/${reservationId}/review`)}
+          >
             리뷰 작성
           </Button>
         )}
@@ -184,7 +215,7 @@ const ReservationDetailPage = () => {
           </Button>
         )}
       </div>
-    </main>
+    </div>
   )
 }
 

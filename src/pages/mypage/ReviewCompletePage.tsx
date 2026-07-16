@@ -5,6 +5,7 @@
 
 import { useNavigate } from 'react-router'
 
+import NavigationBar from '@/components/layout/NavigationBar'
 import Button from '@/components/common/Button'
 import Review from '@/components/common/Review'
 import { IcCheck } from '@/components/icons'
@@ -13,16 +14,8 @@ const ReviewCompletePage = () => {
   const navigate = useNavigate()
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-[402px] flex-col bg-white">
-      <header className="flex w-full items-center justify-between border-b border-gray-10 px-5 py-3">
-        <div className="h-9 w-9" />
-
-        <div className="flex flex-1 items-center justify-center">
-          <h1 className="font-h6 text-black">PICDAY</h1>
-        </div>
-
-        <div className="h-9 w-9" />
-      </header>
+    <div className="relative flex min-h-dvh w-full flex-col bg-white">
+      <NavigationBar title="위시리스트" showLeft={false} showRight={false} />
 
       <section className="flex h-[633px] w-full shrink-0 flex-col items-center justify-center">
         <div className="flex w-full flex-col items-start gap-4 p-5">
@@ -59,7 +52,7 @@ const ReviewCompletePage = () => {
           마이페이지로
         </Button>
       </div>
-    </main>
+    </div>
   )
 }
 

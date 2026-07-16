@@ -6,11 +6,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
+import NavigationBar from '@/components/layout/NavigationBar'
 import Alert2 from '@/components/common/Alert2'
 import Button from '@/components/common/Button'
 import ReservationDetail from '@/components/cards/ReservationDetail'
-import { IcBack } from '@/components/icons'
-
 const refundNoticeItems = [
   '환불 정책은 사진관마다 다를 수 있습니다.',
   '촬영 당일 취소는 불가합니다.',
@@ -22,23 +21,8 @@ const ReservationCancelPage = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
 
   return (
-    <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-white pb-[120px]">
-      <header className="flex w-full items-center justify-between border-b border-gray-10 bg-white px-5 py-3">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          className="flex h-9 w-9 items-center justify-start"
-          onClick={() => navigate(-1)}
-        >
-          <IcBack width={24} height={24} />
-        </button>
-
-        <div className="flex flex-1 items-center justify-center">
-          <h1 className="font-h6 text-black">예약 취소</h1>
-        </div>
-
-        <div className="h-9 w-9" />
-      </header>
+    <main className="className=flex min-h-dvh w-full flex-col bg-white">
+      <NavigationBar title="예약 취소" showRight={false} onBack={() => navigate(-1)} />
 
       <div className="pt-[10px]">
         <ReservationDetail
