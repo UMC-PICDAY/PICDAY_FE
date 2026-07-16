@@ -26,7 +26,7 @@ const FavoriteButton = ({ active = false, onClick }: Props) => (
     onClick={onClick}
     aria-label={active ? '찜 해제' : '찜하기'}
   >
-    {active ? <IcFavoriteFill width={28} height={28} /> : <IcFavorite width={28} height={28} />}
+    {active ? <IcFavoriteFill width={20} height={20} /> : <IcFavorite width={20} height={20} />}
   </button>
 )
 

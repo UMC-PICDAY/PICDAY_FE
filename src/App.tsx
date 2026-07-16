@@ -3,6 +3,8 @@ import { Routes, Route } from 'react-router'
 import NonLoggedHomePage from '@/pages/home/NonLoggedHomePage'
 import HomePage from '@/pages/home/HomePage'
 import LoginPage from '@/pages/auth/LoginPage'
+import SignUpPage from '@/pages/auth/SignUpPage'
+import SignUpCompletePage from '@/pages/auth/SignUpCompletePage'
 
 import SearchPage from '@/pages/search/SearchPage'
 import SearchAutoCompletePage from '@/pages/search/SearchAutoCompletePage'
@@ -26,8 +28,8 @@ import CompareTwoPage from '@/pages/compare/CompareTwoPage'
 import CompareThreePage from '@/pages/compare/CompareThreePage'
 
 import ReservationPage from '@/pages/reservation/ReservationPage'
-import PartnerShopSelectPage from '@/pages/reservation/PartnerShopSelectPage'
 import ReservationCompletePage from '@/pages/reservation/ReservationCompletePage'
+import AgreementDetailPage from '@/pages/reservation/AgreementDetailPage'
 
 import MyReservationPage from '@/pages/mypage/MyReservationPage'
 import ReservationDetailPage from '@/pages/mypage/ReservationDetailPage'
@@ -55,6 +57,8 @@ function App() {
 
       {/* 로그인 */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/signup/complete" element={<SignUpCompletePage />} />
 
       {/* 검색 */}
       <Route path="/search" element={<SearchPage />} />
@@ -82,8 +86,9 @@ function App() {
 
       {/* 예약 */}
       <Route path="/reservation" element={<ReservationPage />} />
-      <Route path="/reservation/partner-shop" element={<PartnerShopSelectPage />} />
       <Route path="/reservation/complete" element={<ReservationCompletePage />} />
+      <Route path="/reservation/terms/:key" element={<AgreementDetailPage />}
+/>
 
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyReservationPage />} />

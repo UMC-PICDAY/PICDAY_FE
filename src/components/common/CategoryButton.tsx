@@ -4,52 +4,54 @@
  * 사진 촬영 카테고리 선택 버튼
  *   <CategoryButton />
  *
+ * 촬영 목적 변경
+ *   <CategoryButton type="프로필" />
+ *
  * 선택 상태 표시
- *   <CategoryButton label="증명" active />
+ *   <CategoryButton type="증명" active />
  *
  * 클릭 동작 연결
  *   <CategoryButton
- *     label="프로필"
- *     active={selectedCategory === 'profile'}
- *     onClick={() => setSelectedCategory('profile')}
+ *     type="프로필"
+ *     active={selectedCategory === '프로필'}
+ *     onClick={() => setSelectedCategory('프로필')}
  *   />
  */
+
+import PurposeIcon from '@/components/common/PurposeIcon'
+
+type PurposeType = '증명' | '프로필' | '개인화보' | '취업' | '가족' | '우정'
+
 interface Props {
-  label?: string
-  imageSrc?: string
+  type?: PurposeType
   active?: boolean
   onClick?: () => void
+  className?: string
 }
 
 const CategoryButton = ({
-  label = '증명',
-  imageSrc,
+  type = '증명',
   active = false,
   onClick,
+  className,
 }: Props) => (
   <button
     type="button"
     aria-pressed={active}
-    className={`flex w-[173px] flex-col items-center justify-center gap-[10px] rounded-[16px] border px-[10px] py-[15px] ${
+    className={`flex w-[173px] flex-col items-center justify-center rounded-[16px] border border-brand-40 px-[10px] py-[15px] ${
       active
-        ? 'border-brand-40 bg-brand-20 shadow-[0_0_4px_0_#FEE4EB]'
-        : 'border-brand-40 bg-[rgba(252,252,252,0.75)]'
-    }`}
+        ? 'bg-brand-20 shadow-[0_0_4px_0_#FEE4EB]'
+        : 'bg-[rgba(252,252,252,0.75)]'
+    } ${className ?? ''}`}
     onClick={onClick}
   >
-    {imageSrc ? (
-      <img
-        src={imageSrc}
-        alt=""
-        className="h-10 w-10 object-cover"
-      />
-    ) : (
-      <div className="h-10 w-10 bg-[#D9D9D9]" />
-    )}
+    <div className={`flex flex-col items-center ${active ? 'gap-[5px]' : 'gap-[2px]'}`}>
+      <PurposeIcon type={type} selected={active} />
 
-    <span className={`${active ? 'font-b5' : 'font-b6'} text-black`}>
-      {label}
-    </span>
+      <span className={`${active ? 'font-b5' : 'font-b6'} text-black`}>
+        {type}
+      </span>
+    </div>
   </button>
 )
 
