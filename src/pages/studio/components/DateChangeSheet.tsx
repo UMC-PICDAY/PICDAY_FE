@@ -71,8 +71,13 @@ const DateChangeSheet = ({
               <TimeChip
                 key={time}
                 label={time}
-                selected={!noAvailableTime && selectedTime === time}
-                disabled={noAvailableTime}
+                property1={
+                  noAvailableTime
+                    ? 'disabled'
+                    : selectedTime === time
+                      ? 'selected'
+                      : 'default'
+                }
                 onClick={() => setSelectedTime(time)}
                 className="w-full"
               />

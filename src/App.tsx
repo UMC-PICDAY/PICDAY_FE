@@ -26,8 +26,8 @@ import CompareTwoPage from '@/pages/compare/CompareTwoPage'
 import CompareThreePage from '@/pages/compare/CompareThreePage'
 
 import ReservationPage from '@/pages/reservation/ReservationPage'
-import PartnerShopSelectPage from '@/pages/reservation/PartnerShopSelectPage'
 import ReservationCompletePage from '@/pages/reservation/ReservationCompletePage'
+import AgreementDetailPage from '@/pages/reservation/AgreementDetailPage'
 
 import MyReservationPage from '@/pages/mypage/MyReservationPage'
 import ReservationDetailPage from '@/pages/mypage/ReservationDetailPage'
@@ -35,6 +35,8 @@ import ReservationCancelPage from '@/pages/mypage/ReservationCancelPage'
 import CancelCompletePage from '@/pages/mypage/CancelCompletePage'
 import ProfileSettingPage from '@/pages/mypage/ProfileSettingPage'
 import WithdrawCompletePage from '@/pages/mypage/WithdrawCompletePage'
+import ReviewWritePage from '@/pages/mypage/ReviewWritePage'
+import ReviewCompletePage from '@/pages/mypage/ReviewCompletePage'
 
 import WishlistPage from '@/pages/wishlist/WishlistPage'
 import ChatListPage from '@/pages/chat/ChatListPage'
@@ -80,8 +82,9 @@ function App() {
 
       {/* 예약 */}
       <Route path="/reservation" element={<ReservationPage />} />
-      <Route path="/reservation/partner-shop" element={<PartnerShopSelectPage />} />
       <Route path="/reservation/complete" element={<ReservationCompletePage />} />
+      <Route path="/reservation/terms/:key" element={<AgreementDetailPage />}
+/>
 
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyReservationPage />} />
@@ -90,6 +93,8 @@ function App() {
       <Route path="/mypage/reservations/:reservationId/cancel/complete" element={<CancelCompletePage />} />
       <Route path="/mypage/profile" element={<ProfileSettingPage />} />
       <Route path="/mypage/withdraw/complete" element={<WithdrawCompletePage />} />
+      <Route path="/mypage/reservations/:reservationId/review" element={<ReviewWritePage />} />
+      <Route path="/mypage/reservations/:reservationId/review/complete" element={<ReviewCompletePage />} />
 
       {/* 위시리스트 */}
       <Route path="/wishlist" element={<WishlistPage />} />
