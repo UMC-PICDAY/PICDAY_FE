@@ -18,7 +18,6 @@ const NonLoggedHomePage = () => {
         <TabBarGuest
           activeTab="search"
           onTabChange={(tab) => {
-            if (tab === 'search') navigate('/search')
             if (tab === 'wishlist') navigate('/wishlist')
             if (tab === 'login') navigate('/login')
           }}

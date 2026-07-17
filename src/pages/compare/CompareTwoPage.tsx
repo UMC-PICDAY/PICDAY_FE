@@ -144,7 +144,7 @@ const CompareTwoPage = () => {
   }
 
   const handleClose = () => {
-    navigate('/studios/list')
+    navigate('/studios')
   }
 
   const handleStudioDetail = (studioId: number) => {
@@ -170,7 +170,7 @@ const CompareTwoPage = () => {
   }
 
   const handleAddStudio = () => {
-    navigate('/studios/list', {
+    navigate('/studios', {
       state: {
         selectedStudios,
         purpose: navigationState?.purpose,

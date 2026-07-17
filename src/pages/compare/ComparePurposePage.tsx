@@ -18,7 +18,7 @@
  *
  * 사진관 추가
  *   추가 슬롯 클릭 시 사진관 목록 페이지로 이동
- *   navigate('/studios/list', {
+ *   navigate('/studios', {
  *     state: {
  *       selectedStudios,
  *       purpose: selectedPurpose,
@@ -82,7 +82,7 @@ const PURPOSES: PurposeType[] = [
   '우정',
 ]
 
-const STUDIO_LIST_PATH = '/studios/list'
+const STUDIO_LIST_PATH = '/studios'
 
 const MOCK_SELECTED_STUDIOS: Studio[] = [
   {

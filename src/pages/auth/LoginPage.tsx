@@ -84,6 +84,7 @@ const LoginPage = () => {
           type="button"
           className="flex size-[52px] cursor-pointer items-center justify-center rounded-full border-none bg-[#fee500]"
           aria-label="카카오로 로그인"
+          onClick={handleLogin}
         >
           <svg width="26" height="24" viewBox="0 0 26 24" fill="none" aria-hidden>
             <path
@@ -97,6 +98,7 @@ const LoginPage = () => {
           type="button"
           className="flex size-[52px] cursor-pointer items-center justify-center rounded-full border border-gray-10 bg-white"
           aria-label="구글로 로그인"
+          onClick={handleLogin}
         >
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden>
             <path

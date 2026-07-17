@@ -161,7 +161,7 @@ const CompareThreePage = () => {
   }
 
   const handleClose = () => {
-    navigate('/studios/list')
+    navigate('/studios')
   }
 
   const handleStudioDetail = (studioId: number) => {
@@ -187,7 +187,7 @@ const CompareThreePage = () => {
   }
 
   const handleAddStudio = () => {
-    navigate('/studios/list', {
+    navigate('/studios', {
       state: {
         selectedStudios,
         purpose: navigationState?.purpose,
