@@ -1,14 +1,36 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+interface LoginTokens {
+  accessToken: string
+  refreshToken?: string
+}
 
 interface AuthState {
   isLoggedIn: boolean
-  login: () => void
+  accessToken: string | null
+  refreshToken: string | null
+  login: (tokens?: LoginTokens) => void
   logout: () => void
+  setAccessToken: (accessToken: string) => void
 }
 
-// 실제 로그인 API가 아직 없어서, 로그인/비로그인 홈 라우트 진입을 기준으로 임시 관리
-export const useAuthStore = create<AuthState>((set) => ({
-  isLoggedIn: false,
-  login: () => set({ isLoggedIn: true }),
-  logout: () => set({ isLoggedIn: false }),
-}))
+// refreshToken은 Body로 내려주는 방식으로 확정 (백엔드 확인 완료) -> store에 보관 후 갱신 요청 시 직접 전송
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      isLoggedIn: false,
+      accessToken: null,
+      refreshToken: null,
+      login: (tokens) =>
+        set({
+          isLoggedIn: true,
+          accessToken: tokens?.accessToken ?? null,
+          refreshToken: tokens?.refreshToken ?? null,
+        }),
+      logout: () => set({ isLoggedIn: false, accessToken: null, refreshToken: null }),
+      setAccessToken: (accessToken) => set({ accessToken }),
+    }),
+    { name: 'auth-storage' },
+  ),
+)
