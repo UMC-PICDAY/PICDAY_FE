@@ -10,7 +10,6 @@
  */
 import { IcSearch, IcWishlist, IcUser } from '@/components/icons'
 import Tap from '@/components/layout/Tap'
-import HomeBar from '@/components/layout/HomeBar'
 
 type TabItem = 'search' | 'wishlist' | 'mypage'
 
@@ -38,7 +37,6 @@ const TabBarUser = ({ activeTab = 'search', onTabChange }: Props) => (
         />
       ))}
     </div>
-    <HomeBar />
   </div>
 )
 

@@ -63,6 +63,7 @@ interface Props {
   isFavorite?: boolean
   showCompareButton?: boolean
   compareButtonLabel?: string
+  onClick?: () => void
   onFavoriteClick?: () => void
   onCompareClick?: () => void
 }
@@ -82,15 +83,18 @@ const CardStudioPreview = ({
   isFavorite = true,
   showCompareButton = false,
   compareButtonLabel = '비교추가',
+  onClick,
   onFavoriteClick,
   onCompareClick,
 }: Props) => {
   return (
     <div
-      className={
+      role={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className={`${
         className ||
         'relative w-[362px] rounded-[20px] border border-[rgba(254,228,235,0.4)] bg-[rgba(252,252,252,0.75)] p-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]'
-      }
+      }${onClick ? ' cursor-pointer' : ''}`}
     >
       <div className="flex w-full flex-col items-start gap-[10px]">
         <div className="flex h-[180px] w-full items-center gap-[10px]">
@@ -109,7 +113,10 @@ const CardStudioPreview = ({
               <div className="h-full w-full bg-gray-10" />
             )}
 
-            <div className="absolute top-[10px] right-[10px]">
+            <div
+              className="absolute top-[10px] right-[10px]"
+              onClick={(event) => event.stopPropagation()}
+            >
               <FavoriteButton active={isFavorite} onClick={onFavoriteClick} />
             </div>
           </div>
@@ -132,10 +139,18 @@ const CardStudioPreview = ({
 
           <div className="flex max-w-full items-start gap-[4px] overflow-hidden text-[var(--font-cap3-size)] font-[400] leading-[var(--font-cap3-line-height)] tracking-[var(--font-cap3-letter-spacing)] text-gray-40">
             <p className="shrink-0 whitespace-nowrap">{location}</p>
-            <p className="shrink-0 whitespace-nowrap">|</p>
-            <p className="min-w-0 truncate">{category}</p>
-            <p className="shrink-0 whitespace-nowrap">·</p>
-            <p className="min-w-0 truncate">{secondaryCategory}</p>
+            {category && (
+              <>
+                <p className="shrink-0 whitespace-nowrap">|</p>
+                <p className="min-w-0 truncate">{category}</p>
+                {secondaryCategory && (
+                  <>
+                    <p className="shrink-0 whitespace-nowrap">·</p>
+                    <p className="min-w-0 truncate">{secondaryCategory}</p>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {services.length > 0 && (
@@ -159,7 +174,10 @@ const CardStudioPreview = ({
             </p>
 
             {showCompareButton && (
-              <div className="w-[92px] [&>button]:h-[40px] [&>button]:border [&>button]:border-gray-20 [&>button]:bg-white [&>button]:px-[16px] [&>button]:py-0 [&>button]:text-gray-40">
+              <div
+                className="w-[92px] [&>button]:h-[40px] [&>button]:border [&>button]:border-gray-20 [&>button]:bg-white [&>button]:px-[16px] [&>button]:py-0 [&>button]:text-gray-40"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <Button variant="secondary" onClick={onCompareClick}>
                   {compareButtonLabel}
                 </Button>

@@ -25,6 +25,7 @@ interface Props {
   rightNode?: ReactNode
   onBack?: () => void
   onClose?: () => void
+  onSubtitleClick?: () => void
 }
 
 const NavigationBar = ({
@@ -39,6 +40,7 @@ const NavigationBar = ({
   rightNode,
   onBack,
   onClose,
+  onSubtitleClick,
 }: Props) => (
   <div
     className={`flex items-center justify-between w-full px-5 border-b border-gray-10 ${
@@ -61,16 +63,16 @@ const NavigationBar = ({
       {variant === 'subtitle' && (
         <>
           <span className="text-[18px] font-semibold text-black whitespace-nowrap">{title}</span>
-          <div className="flex items-center gap-1">
+          <button type="button" className="flex items-center gap-1 border-none bg-transparent p-0" onClick={onSubtitleClick}>
             <span className="text-[11px] font-normal text-gray-60 tracking-[-0.22px] whitespace-nowrap">{date}</span>
             <span className="text-[11px] font-normal text-gray-60 tracking-[-0.22px] whitespace-nowrap">{count}</span>
             <IcDown width={20} height={20} className="text-gray-60" />
-          </div>
+          </button>
         </>
       )}
     </div>
 
-    <div className="w-9 h-9 flex items-center justify-center overflow-hidden shrink-0">
+    <div className="min-w-9 h-9 flex items-center justify-center shrink-0">
       {showRight && (rightNode ?? <button className="border-none bg-transparent cursor-pointer p-0" onClick={onClose}><IcClose width={24} height={24} /></button>)}
     </div>
   </div>

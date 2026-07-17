@@ -16,13 +16,14 @@
  * 텍스트 변경
  *   <Alert3 title="제목" description="설명" buttonText="확인" helperText="닫기" />
  *
- * TODO: IcLock 아이콘 추가 시 variant3 아이콘 교체 필요 (IcError -> IcLock)
+ * helperText(닫기 등) 클릭
+ *   <Alert3 variant="variant3" onClick={handleLogin} onHelperClick={handleClose} />
  */
 
     import type { ReactNode } from 'react'
 
     import Button from '@/components/common/Button'
-    import { IcError, IcEvent2 } from '@/components/icons' 
+    import { IcError, IcEvent2, IcLock } from '@/components/icons'
 
     interface Props {
     variant?: 'default' | 'variant2' | 'variant3'
@@ -31,6 +32,7 @@
     buttonText?: string
     helperText?: string
     onClick?: () => void
+    onHelperClick?: () => void
     }
 
     const alertContent = {
@@ -61,7 +63,7 @@
         helperText: '',
     },
     variant3: {
-        icon: <IcError width={36} height={36} className="text-brand-100" />, 
+        icon: <IcLock width={36} height={36} className="text-brand-100" />,
         title: '로그인이 필요해요',
         description: '로그인하고 이용해 보세요',
         buttonText: '로그인',
@@ -76,11 +78,12 @@
     buttonText,
     helperText,
     onClick,
+    onHelperClick,
     }: Props) => {
     const content = alertContent[variant]
 
     return (
-        <div className="flex w-[402px] flex-col items-center rounded-[12px] bg-white">
+        <div className="flex w-full flex-col items-center rounded-[12px] bg-white">
         <div className="flex w-full flex-col items-center">
             <div className="w-full flex justify-center pt-5">
                 <div className="p-2 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-brand-20 text-brand-100">
@@ -99,8 +102,15 @@
             </Button>
             </div>
 
-            {variant === 'default' || variant === 'variant3' ? (
-            <p className="mb-5 font-b8 text-gray-40">{helperText ?? content.helperText}</p>
+            {(variant === 'default' || variant === 'variant3') &&
+            (helperText ?? content.helperText) ? (
+            <button
+                type="button"
+                className="mb-5 font-b8 text-gray-40"
+                onClick={onHelperClick}
+            >
+                {helperText ?? content.helperText}
+            </button>
             ) : null}
         </div>
         </div>

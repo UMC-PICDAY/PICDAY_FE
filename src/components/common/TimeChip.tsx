@@ -7,7 +7,7 @@
  * [property2] 기본 칩 / 흰 배경 + 회색 테두리
  *   <TimeChip label="시간 엄수" />
  *
- * [variant3] 비활성 칩 / 회색 배경 + 회색 테두리
+ * [property1] 비활성 칩 / 회색 배경 + 회색 테두리
  *   <TimeChip label="11:00" property1="disabled" />
  */
 
@@ -15,9 +15,10 @@ interface Props {
   label: string
   property1?: 'default' | 'selected' | 'disabled'
   onClick?: () => void
+  className?: string
 }
 
-const TimeChip = ({ label, property1 = 'default', onClick }: Props) => {
+const TimeChip = ({ label, property1 = 'default', onClick, className = '' }: Props) => {
   const chipClass = {
     selected:
       'border-brand-80 bg-brand-20 text-brand-80 font-b9',
@@ -30,9 +31,10 @@ const TimeChip = ({ label, property1 = 'default', onClick }: Props) => {
   return (
     <button
       type="button"
-      className={`flex h-8 items-center justify-center rounded-[32px] border px-4 shadow-[0_15px_40px_0_rgba(206,206,206,0.08)] backdrop-blur-[10px] ${chipClass[property1]}`}
+      className={`flex h-8 items-center justify-center whitespace-nowrap rounded-[32px] border px-4 shadow-[0_15px_40px_0_rgba(206,206,206,0.08)] backdrop-blur-[10px] disabled:cursor-not-allowed ${chipClass[property1]} ${className}`}
       onClick={onClick}
       disabled={property1 === 'disabled'}
+      aria-pressed={property1 === 'selected'}
     >
       {label}
     </button>
