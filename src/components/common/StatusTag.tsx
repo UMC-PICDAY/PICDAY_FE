@@ -38,7 +38,7 @@ const StatusTag = ({ variant = 'reservation', label }: Props) => {
 
   return (
     <span
-      className={`flex w-fit items-center justify-center rounded-[100px] border px-4 py-2 font-cap2 ${status.className}`}
+      className={`flex w-fit items-center justify-center rounded-[100px] border px-2 py-1 font-cap2 ${status.className}`}
     >
       {label ?? status.label}
     </span>
