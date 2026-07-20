@@ -14,6 +14,7 @@ import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import HairMakeupSheet from '@/pages/studio/components/HairMakeupSheet'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
+import { addWishlist, removeWishlist } from '@/services/wishlist'
 
 import heroImage from '@/assets/images/CardImage1.png'
 
@@ -65,6 +66,22 @@ const StudioDetailPage = () => {
   const goToReviews = () => navigate(`/studios/${studioId}/reviews`)
   const goToConcepts = () => navigate(`/studios/${studioId}/concepts`)
 
+  const handleToggleFavorite = async () => {
+    if (!studioId) return
+
+    const next = !favorited
+    setFavorited(next)
+    try {
+      if (next) {
+        await addWishlist(Number(studioId))
+      } else {
+        await removeWishlist(Number(studioId))
+      }
+    } catch {
+      setFavorited(!next)
+    }
+  }
+
   const handleCopyAddress = () => {
     navigator.clipboard
       ?.writeText(STUDIO_ADDRESS)
@@ -99,7 +116,7 @@ const StudioDetailPage = () => {
           <NavigationBarTransparent
             isFavorited={favorited}
             onBack={() => navigate(-1)}
-            onFavorite={() => setFavorited((prev) => !prev)}
+            onFavorite={handleToggleFavorite}
           />
         </div>
       </div>

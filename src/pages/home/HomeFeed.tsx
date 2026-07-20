@@ -1,33 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 
 import TopAppBar from '@/components/layout/TopAppBar'
 import SearchField from '@/components/common/SearchField'
 import Title from '@/components/common/Title'
 import CardStudioLarge from '@/components/cards/CardStudioLarge'
 import CardStudio from '@/components/cards/CardStudio'
+import { getHome } from '@/services/studio'
+import type { StudioSummary } from '@/types/studio'
 
 const HORIZONTAL_SCROLL_CLASS =
   'flex w-full gap-3 overflow-x-auto px-5 pb-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
-// API 명세가 아직 없어서 지역은 목업으로 랜덤 노출 (추후 실제 위치 기반 API 연동 시 교체)
-const REGIONS = ['홍대', '연남', '합정', '성수', '건대', '이태원', '강남', '압구정', '신촌', '여의도']
-const RECENT_CARD_COUNT = 3
-const POPULAR_CARD_COUNT = 7
-const REGION_CARD_COUNT = 7
+const formatPrice = (minPrice: number) => `₩${minPrice.toLocaleString()}~`
 
-const pickRandomRegion = () => REGIONS[Math.floor(Math.random() * REGIONS.length)]
-const pickRandomRegions = (count: number) => Array.from({ length: count }, pickRandomRegion)
-
-const LARGE_CARD_COUNT = 5
-// 앞뒤로 마지막/첫 카드를 하나씩 복제해 무한 순환처럼 보이게 함 (index 0 = 복제된 마지막, 1~N = 실제, N+1 = 복제된 1번)
-const PADDED_CARD_COUNT = LARGE_CARD_COUNT + 2
-const FIRST_REAL_INDEX = 1
-const LAST_REAL_INDEX = LARGE_CARD_COUNT
-
-const getRealCardNumber = (renderedIndex: number) => {
-  if (renderedIndex === 0) return LARGE_CARD_COUNT
-  if (renderedIndex === PADDED_CARD_COUNT - 1) return 1
+// 앞뒤로 마지막/첫 배너를 하나씩 복제해 무한 순환처럼 보이게 함 (index 0 = 복제된 마지막, 1~N = 실제, N+1 = 복제된 1번)
+const getRealCardNumber = (renderedIndex: number, bannerCount: number) => {
+  if (renderedIndex === 0) return bannerCount
+  if (renderedIndex === bannerCount + 1) return 1
   return renderedIndex
 }
 
@@ -50,27 +41,36 @@ const centerItemAt = (container: HTMLDivElement, renderedIndex: number) => {
 const HomeFeed = () => {
   const navigate = useNavigate()
   const largeCardScrollRef = useRef<HTMLDivElement>(null)
-  const [activeRenderedIndex, setActiveRenderedIndex] = useState(FIRST_REAL_INDEX)
-  const activeRenderedIndexRef = useRef(FIRST_REAL_INDEX)
+  const [activeRenderedIndex, setActiveRenderedIndex] = useState(1)
+  const activeRenderedIndexRef = useRef(1)
 
-  const regionTitle = useMemo(() => pickRandomRegion(), [])
-  // 최근 본 사진관은 로그인 여부와 무관하게(로컬 방문 기록 기준) 노출됨 — 0개면 섹션 자체를 숨김
-  const recentLocations = useMemo(() => pickRandomRegions(RECENT_CARD_COUNT), [])
-  const popularLocations = useMemo(() => pickRandomRegions(POPULAR_CARD_COUNT), [])
-  const regionLocations = useMemo(() => pickRandomRegions(REGION_CARD_COUNT), [])
+  const { data } = useQuery({ queryKey: ['home'], queryFn: getHome })
+
+  const bannerStudios = data?.bannerStudios ?? []
+  // recentStudios는 로그인 사용자에게만 응답에 포함됨 — 없으면 섹션 자체를 숨김
+  const recentStudios = data?.recentStudios ?? []
+  const popularStudios = data?.popularStudios ?? []
+  const regionalStudios = data?.regionalStudios
+
+  const bannerCount = bannerStudios.length
+  const paddedCount = bannerCount + 2
+  const firstRealIndex = 1
+  const lastRealIndex = bannerCount
 
   useEffect(() => {
     activeRenderedIndexRef.current = activeRenderedIndex
   }, [activeRenderedIndex])
 
-  // 실제 사진관 API가 없어서 studioId도 목업 — 카드 클릭 시 C-5(사진관 상세)로 이동시키는 용도로만 씀
-  const largeCardItems = Array.from({ length: PADDED_CARD_COUNT }, (_, renderedIndex) => {
-    const studioId = `studio-${getRealCardNumber(renderedIndex)}`
+  const largeCardItems = Array.from({ length: paddedCount }, (_, renderedIndex) => {
+    const banner = bannerStudios[getRealCardNumber(renderedIndex, bannerCount) - 1]
     return {
       variant: (renderedIndex === activeRenderedIndex ? 'center' : 'default') as 'center' | 'default',
-      countCurrent: String(getRealCardNumber(renderedIndex)).padStart(2, '0'),
-      countTotal: String(LARGE_CARD_COUNT).padStart(2, '0'),
-      onClick: () => navigate(`/studios/${studioId}`),
+      imageSrc: banner?.thumbnailUrl,
+      name: banner?.studioName,
+      location: banner?.locationCategory,
+      countCurrent: String(getRealCardNumber(renderedIndex, bannerCount)).padStart(2, '0'),
+      countTotal: String(bannerCount).padStart(2, '0'),
+      onClick: banner ? () => navigate(`/studios/${banner.studioId}`) : undefined,
     }
   })
 
@@ -98,7 +98,7 @@ const HomeFeed = () => {
 
   useEffect(() => {
     const container = largeCardScrollRef.current
-    if (!container) return
+    if (!container || bannerCount === 0) return
 
     let frame: number
     let settleTimer: ReturnType<typeof setTimeout>
@@ -113,8 +113,8 @@ const HomeFeed = () => {
         const current = activeRenderedIndexRef.current
         let targetIndex: number | null = null
 
-        if (current === 0) targetIndex = LAST_REAL_INDEX
-        else if (current === PADDED_CARD_COUNT - 1) targetIndex = FIRST_REAL_INDEX
+        if (current === 0) targetIndex = lastRealIndex
+        else if (current === paddedCount - 1) targetIndex = firstRealIndex
 
         if (targetIndex === null) return
 
@@ -130,13 +130,28 @@ const HomeFeed = () => {
       cancelAnimationFrame(frame)
       clearTimeout(settleTimer)
     }
-  }, [updateActiveLargeCard])
+  }, [updateActiveLargeCard, bannerCount, paddedCount, firstRealIndex, lastRealIndex])
 
   useEffect(() => {
     const container = largeCardScrollRef.current
-    if (!container) return
-    centerItemAt(container, FIRST_REAL_INDEX)
-  }, [])
+    if (!container || bannerCount === 0) return
+    centerItemAt(container, firstRealIndex)
+    setActiveRenderedIndex(firstRealIndex)
+  }, [bannerCount, firstRealIndex])
+
+  const renderStudioRow = (studios: StudioSummary[]) =>
+    studios.map((studio) => (
+      <div className="shrink-0" key={studio.studioId}>
+        <CardStudio
+          imageSrc={studio.thumbnailUrl}
+          name={studio.studioName}
+          location={studio.locationCategory}
+          price={formatPrice(studio.minPrice)}
+          rating={studio.rating.toFixed(1)}
+          onClick={() => navigate(`/studios/${studio.studioId}`)}
+        />
+      </div>
+    ))
 
   return (
     <>
@@ -157,37 +172,22 @@ const HomeFeed = () => {
         <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
       </div>
 
-      {/* 카드 클릭 시 전부 C-5 사진관 상세로 이동 (studioId는 API 없어서 목업) */}
-      {recentLocations.length > 0 && (
+      {recentStudios.length > 0 && (
         <>
           <Title variant="onlyTitle" title="최근 본 사진관" />
-          <div className={HORIZONTAL_SCROLL_CLASS}>
-            {recentLocations.map((location, index) => (
-              <div className="shrink-0" key={index}>
-                <CardStudio location={location} onClick={() => navigate(`/studios/recent-${index + 1}`)} />
-              </div>
-            ))}
-          </div>
+          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(recentStudios)}</div>
         </>
       )}
 
       <Title variant="onlyTitle" title="지금 인기 있는 사진관" />
-      <div className={HORIZONTAL_SCROLL_CLASS}>
-        {popularLocations.map((location, index) => (
-          <div className="shrink-0" key={index}>
-            <CardStudio location={location} onClick={() => navigate(`/studios/popular-${index + 1}`)} />
-          </div>
-        ))}
-      </div>
+      <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(popularStudios)}</div>
 
-      <Title variant="onlyTitle" title={`${regionTitle}의 사진관`} />
-      <div className={HORIZONTAL_SCROLL_CLASS}>
-        {regionLocations.map((location, index) => (
-          <div className="shrink-0" key={index}>
-            <CardStudio location={location} onClick={() => navigate(`/studios/region-${index + 1}`)} />
-          </div>
-        ))}
-      </div>
+      {regionalStudios && (
+        <>
+          <Title variant="onlyTitle" title={`${regionalStudios.locationCategory}의 사진관`} />
+          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(regionalStudios.studios)}</div>
+        </>
+      )}
     </>
   )
 }
