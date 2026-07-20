@@ -1,37 +1,96 @@
-// PICDAY_API_1st.pdf(초안) 기준 타입. id 타입(number/uuid)은 명세서에 안 나와 있어서 임시로 string 처리 — 실제 DTO 확정되면 교체
-export type SocialProvider = 'kakao' | 'naver' | 'google'
+// PICDAY_API_Spec.md (확정본) 기준 타입
+export type AuthProvider = 'LOCAL' | 'KAKAO' | 'GOOGLE'
+export type SocialProvider = 'kakao' | 'google'
 
 export interface AuthTokens {
   accessToken: string
   refreshToken: string
+  accessTokenExpiresIn: number
+  refreshTokenExpiresIn: number
 }
 
-export interface AuthUser {
-  id: string
+export interface SignupUser {
+  id: number
+  loginId: string
+  name: string
   nickname: string
   email: string
-  profileImage: string | null
-  provider: SocialProvider | 'self'
-  notification: boolean
+  provider: AuthProvider
 }
 
-export interface SignupResult extends AuthTokens {
-  user: AuthUser
+export interface SignupResult {
+  user: SignupUser
+  token: null
 }
 
-export type SocialLoginResult =
-  | ({ isNewUser: false } & AuthTokens)
-  | { isNewUser: true; signupToken: string; defaultNickname: string }
+export interface LoginUser {
+  id: number
+  loginId: string
+  nickname: string
+  provider: AuthProvider
+}
 
-export interface SocialAuthUrl {
-  authUrl: string
-  state: string
+export interface LoginResult {
+  user: LoginUser
+  token: AuthTokens
+}
+
+export interface RefreshResult {
+  token: AuthTokens
 }
 
 export interface AvailabilityResult {
   available: boolean
 }
 
-export interface MessageResult {
-  message: string
+export interface SocialAuthUrlResult {
+  authUrl: string
+}
+
+export interface SocialLoginUser {
+  id: number
+  nickname: string
+  email: string
+  profileImageUrl: string
+  provider: AuthProvider
+}
+
+export interface SocialInfo {
+  id: string
+  email: string
+  name: string
+  phoneNumber: string
+}
+
+export type SocialLoginResult =
+  | { isNewUser: false; user: SocialLoginUser; token: AuthTokens }
+  | { isNewUser: true; signupToken: string; socialInfo: SocialInfo }
+
+export interface SocialSignupUser {
+  id: number
+  nickname: string
+  provider: AuthProvider
+}
+
+export interface SocialSignupCompleteResult {
+  user: SocialSignupUser
+  token: AuthTokens
+}
+
+export interface MeUser {
+  id: number
+  name: string
+  nickname: string
+  email: string
+  profileImageUrl: string
+  provider: AuthProvider
+  notification: { reservation: boolean; marketing: boolean }
+}
+
+export interface MeResult {
+  user: MeUser
+}
+
+export interface UpdateNicknameResult {
+  user: { id: number; nickname: string }
 }
