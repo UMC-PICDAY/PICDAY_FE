@@ -5,6 +5,8 @@ import HomePage from '@/pages/home/HomePage'
 import LoginPage from '@/pages/auth/LoginPage'
 import SignUpPage from '@/pages/auth/SignUpPage'
 import SignUpCompletePage from '@/pages/auth/SignUpCompletePage'
+import SocialSignUpPage from '@/pages/auth/SocialSignUpPage'
+import OAuthCallbackPage from '@/pages/auth/OAuthCallbackPage'
 
 import SearchPage from '@/pages/search/SearchPage'
 import SearchAutoCompletePage from '@/pages/search/SearchAutoCompletePage'
@@ -57,6 +59,8 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/signup/complete" element={<SignUpCompletePage />} />
+      <Route path="/signup/social" element={<SocialSignUpPage />} />
+      <Route path="/oauth/callback/:provider" element={<OAuthCallbackPage />} />
 
       {/* 검색 */}
       <Route path="/search" element={<SearchPage />} />
