@@ -5,9 +5,8 @@
  * 별점은 0.5점 단위로 선택 가능함
  * 사진은 최대 5장까지 첨부하고 삭제할 수 있음
  */
-
 import type { ChangeEvent, MouseEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Alert from '@/components/common/Alert'
@@ -15,10 +14,24 @@ import Button from '@/components/common/Button'
 import InputImage from '@/components/common/InputImage'
 import InputReview from '@/components/common/InputReview'
 import TimeChip from '@/components/common/TimeChip'
-import NavigationBar from '@/components/layout/NavigationBar'
 import { IcStar, IcStar2, IcStarHalf } from '@/components/icons'
+import NavigationBar from '@/components/layout/NavigationBar'
+import { uploadImage } from '@/services/review'
+
+interface ReviewImage {
+  id: string
+  file: File
+  previewUrl: string
+}
 
 const MAX_IMAGE_COUNT = 5
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]
 
 const reviewTags = [
   '친절한 응대',
@@ -33,24 +46,53 @@ const ReviewWritePage = () => {
   const navigate = useNavigate()
   const { reservationId = '2' } = useParams()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const imageListRef = useRef<ReviewImage[]>([])
 
   const [rating, setRating] = useState(5)
-  const [selectedTags, setSelectedTags] = useState<string[]>(['친절한 응대', '꼼꼼한 보정'])
+  const [selectedTags, setSelectedTags] = useState<string[]>([
+    '친절한 응대',
+    '꼼꼼한 보정',
+  ])
   const [review, setReview] = useState('')
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
-  const [imageList, setImageList] = useState<string[]>([])
+  const [imageList, setImageList] = useState<ReviewImage[]>([])
+  const [isUploading, setIsUploading] = useState(false)
 
-  const isReviewError = review.length > 0 && review.length < 10
-  const canSubmit = review.length >= 10
+  const trimmedReview = review.trim()
+  const isReviewError =
+    review.length > 0 && trimmedReview.length < 10
+
+  const canSubmit =
+    rating >= 1 &&
+    trimmedReview.length >= 10 &&
+    trimmedReview.length <= 500
+
+  useEffect(() => {
+    imageListRef.current = imageList
+  }, [imageList])
+
+  useEffect(() => {
+    return () => {
+      imageListRef.current.forEach((image) => {
+        URL.revokeObjectURL(image.previewUrl)
+      })
+    }
+  }, [])
 
   const handleTagClick = (tag: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag],
+      prev.includes(tag)
+        ? prev.filter((item) => item !== tag)
+        : [...prev, tag],
     )
   }
 
-  const handleStarClick = (event: MouseEvent<HTMLButtonElement>, starIndex: number) => {
-    const { left, width } = event.currentTarget.getBoundingClientRect()
+  const handleStarClick = (
+    event: MouseEvent<HTMLButtonElement>,
+    starIndex: number,
+  ) => {
+    const { left, width } =
+      event.currentTarget.getBoundingClientRect()
     const clickX = event.clientX - left
     const isLeftHalf = clickX <= width / 2
 
@@ -65,26 +107,87 @@ const ReviewWritePage = () => {
     fileInputRef.current?.click()
   }
 
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const remainingCount = MAX_IMAGE_COUNT - imageList.length
-    const files = Array.from(event.target.files ?? []).slice(0, remainingCount)
+  const handleImageChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const selectedFiles = Array.from(
+      event.target.files ?? [],
+    )
+    const remainingCount =
+      MAX_IMAGE_COUNT - imageList.length
 
-    if (files.length === 0) {
+    const validFiles = selectedFiles
+      .filter((file) => {
+        const isAllowedType =
+          ALLOWED_IMAGE_TYPES.includes(file.type)
+        const isAllowedSize =
+          file.size <= MAX_IMAGE_SIZE
+
+        return isAllowedType && isAllowedSize
+      })
+      .slice(0, remainingCount)
+
+    if (validFiles.length === 0) {
+      event.target.value = ''
       return
     }
 
-    const newImageList = files.map((file) => URL.createObjectURL(file))
+    const newImages: ReviewImage[] = validFiles.map(
+      (file) => ({
+        id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }),
+    )
 
-    setImageList((prev) => [...prev, ...newImageList])
-
+    setImageList((prev) => [...prev, ...newImages])
     event.target.value = ''
   }
 
-  const handleImageRemove = (imageSrc: string) => {
-    URL.revokeObjectURL(imageSrc)
-    setImageList((prev) => prev.filter((image) => image !== imageSrc))
+  const handleImageRemove = (imageId: string) => {
+    setImageList((prev) => {
+      const targetImage = prev.find(
+        (image) => image.id === imageId,
+      )
+
+      if (targetImage) {
+        URL.revokeObjectURL(targetImage.previewUrl)
+      }
+
+      return prev.filter(
+        (image) => image.id !== imageId,
+      )
+    })
   }
 
+  const handleSubmit = async () => {
+    if (!canSubmit || isUploading) {
+      return
+    }
+
+    try {
+      setIsUploading(true)
+
+      const uploadResults = await Promise.all(
+        imageList.map((image) =>
+          uploadImage(image.file),
+        ),
+      )
+
+      const uploadedImageUrls = uploadResults.map(
+        (result) => result.imageUrl,
+      )
+
+      console.log(
+        '업로드 완료 URL:',
+        uploadedImageUrls,
+      )
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error)
+    } finally {
+      setIsUploading(false)
+    }
+  }
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white pb-[120px]">
       <NavigationBar title="리뷰 작성" showRight={false} onBack={() => setIsCancelModalOpen(true)} />
@@ -182,12 +285,12 @@ const ReviewWritePage = () => {
 
             <InputImage count={imageList.length} onClick={handleImageButtonClick} />
 
-            {imageList.map((imageSrc) => (
+            {imageList.map((image) => (
               <InputImage
-                key={imageSrc}
-                imageSrc={imageSrc}
+                key={image.id}
+                imageSrc={image.previewUrl}
                 count={imageList.length}
-                onRemove={() => handleImageRemove(imageSrc)}
+                onRemove={() => handleImageRemove(image.id)}
               />
             ))}
           </div>
@@ -196,14 +299,10 @@ const ReviewWritePage = () => {
 
       <div className="fixed bottom-0 left-1/2 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10">
         <Button
-          variant={canSubmit ? 'primary' : 'disabled'}
-          onClick={
-            canSubmit
-              ? () => navigate(`/mypage/reservations/${reservationId}/review/complete`)
-              : undefined
-          }
+          variant={canSubmit && !isUploading ? 'primary' : 'disabled'}
+          onClick={canSubmit && !isUploading ? handleSubmit : undefined}
         >
-          등록하기
+          {isUploading ? '업로드 중...' : '등록하기'}
         </Button>
       </div>
 

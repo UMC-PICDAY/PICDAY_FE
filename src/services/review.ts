@@ -1,6 +1,7 @@
 // PICDAY_API_1st.pdf 기준 path만 확정, Request/Response DTO는 미정
 // 리뷰 수정/삭제/추천취소는 명세서에 아직 없음 (팀 확인 필요)
 import { apiGet, apiPost } from '@/services/client'
+import type { UploadImageResult } from '@/types/review'
 
 export interface ReviewListParams {
   sort?: string
@@ -18,6 +19,6 @@ export const likeReview = (reviewId: string) =>
 
 export const uploadImage = (file: File) => {
   const formData = new FormData()
-  formData.append('image', file)
-  return apiPost<unknown>('/api/v1/images', formData)
+  formData.append('file', file)
+  return apiPost<UploadImageResult>('/api/v1/images', formData)
 }
