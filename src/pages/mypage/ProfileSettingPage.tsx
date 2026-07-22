@@ -23,6 +23,7 @@ import {
   getMe,
   logout,
   updateNickname,
+  withdraw,
 } from '@/services/auth'
 
 const ProfileSettingPage = () => {
@@ -208,6 +209,16 @@ const ProfileSettingPage = () => {
     }
   }
 
+  // 회원탈퇴
+  const handleWithdraw = async () => {
+    try {
+      await withdraw()
+      navigate('/mypage/withdraw/complete')
+    } catch (error) {
+      console.error('회원탈퇴 실패:', error)
+    }
+  }
+
   // 상단 탭 이동
   const handleTabChange = (value: string) => {
     if (value === 'reservation') {
@@ -390,11 +401,7 @@ const ProfileSettingPage = () => {
             <Alert2
               variant="variant2"
               onCancel={closeWithdrawModal}
-              onConfirm={() =>
-                navigate(
-                  '/mypage/withdraw/complete',
-                )
-              }
+              onConfirm={handleWithdraw}
             />
           )}
         </div>
