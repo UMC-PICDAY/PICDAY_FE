@@ -2,10 +2,10 @@
  * Figma F-1R 리뷰 작성 (라우트: /mypage/reservations/:reservationId/review)
  *
  * 촬영 완료 예약 건에 대한 별점, 태그, 후기, 사진 첨부 입력 화면
- * 별점은 0.5점 단위로 선택 가능함
+ * 별점은 1점 단위로 선택 가능함
  * 사진은 최대 5장까지 첨부하고 삭제할 수 있음
  */
-import type { ChangeEvent, MouseEvent } from 'react'
+import type { ChangeEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
@@ -14,9 +14,12 @@ import Button from '@/components/common/Button'
 import InputImage from '@/components/common/InputImage'
 import InputReview from '@/components/common/InputReview'
 import TimeChip from '@/components/common/TimeChip'
-import { IcStar, IcStar2, IcStarHalf } from '@/components/icons'
+import { IcStar, IcStar2 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
-import { uploadImage } from '@/services/review'
+import {
+  createReview,
+  uploadImage,
+} from '@/services/review'
 
 interface ReviewImage {
   id: string
@@ -87,16 +90,8 @@ const ReviewWritePage = () => {
     )
   }
 
-  const handleStarClick = (
-    event: MouseEvent<HTMLButtonElement>,
-    starIndex: number,
-  ) => {
-    const { left, width } =
-      event.currentTarget.getBoundingClientRect()
-    const clickX = event.clientX - left
-    const isLeftHalf = clickX <= width / 2
-
-    setRating(isLeftHalf ? starIndex - 0.5 : starIndex)
+  const handleStarClick = (starIndex: number) => {
+    setRating(starIndex)
   }
 
   const handleImageButtonClick = () => {
@@ -178,12 +173,21 @@ const ReviewWritePage = () => {
         (result) => result.imageUrl,
       )
 
-      console.log(
-        '업로드 완료 URL:',
-        uploadedImageUrls,
+      await createReview({
+        reservationId: Number(reservationId),
+        rating,
+        content: trimmedReview,
+        imageUrls:
+          uploadedImageUrls.length > 0
+            ? uploadedImageUrls
+            : null,
+      })
+
+      navigate(
+        `/mypage/reservations/${reservationId}/review/complete`,
       )
     } catch (error) {
-      console.error('이미지 업로드 실패:', error)
+      console.error('리뷰 등록 실패:', error)
     } finally {
       setIsUploading(false)
     }
@@ -208,25 +212,34 @@ const ReviewWritePage = () => {
           <div className="flex items-center gap-[5px]">
             {Array.from({ length: 5 }).map((_, index) => {
               const starIndex = index + 1
-              const isFull = rating >= starIndex
-              const isHalf = rating === starIndex - 0.5
+              const isSelected = rating >= starIndex
 
               return (
                 <button
                   key={starIndex}
                   type="button"
-                  onClick={(event) => handleStarClick(event, starIndex)}
+                  onClick={() => handleStarClick(starIndex)}
                 >
-                  {isFull && <IcStar width={36} height={36} className="text-brand-100" />}
-
-                  {isHalf && <IcStarHalf width={36} height={36} className="text-brand-100" />}
-
-                  {!isFull && !isHalf && (
-                    <IcStar2 width={36} height={36} className="text-gray-20" />
+                  {isSelected ? (
+                    <IcStar
+                      width={36}
+                      height={36}
+                      className="text-brand-100"
+                    />
+                  ) : (
+                    <IcStar2
+                      width={36}
+                      height={36}
+                      className="text-gray-20"
+                    />
                   )}
                 </button>
               )
             })}
+
+            <span className="font-b6 text-gray-40">
+              {rating.toFixed(1)}
+            </span>
 
             <span className="font-b6 text-gray-40">{rating.toFixed(1)}</span>
           </div>
