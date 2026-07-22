@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 
 import CardStudioSmall from '@/components/cards/CardStudioSmall'
@@ -16,6 +16,16 @@ import StudioResultsBottomSheet from '@/pages/studio/components/StudioResultsBot
 import StudioResultsList from '@/pages/studio/components/StudioResultsList'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
+import {
+  buildStudioSearchChipLabel,
+  hasBaseSearchCondition,
+  isStudioServiceTag,
+  parseStudioSearchParams,
+  serializeStudioSearchParams,
+  STUDIO_SERVICE_OPTIONS,
+  STUDIO_SORT_OPTIONS,
+  toggleStudioService,
+} from '@/utils/studioSearchParams'
 
 import cardImage1 from '@/assets/images/CardImage1.png'
 import cardImage2 from '@/assets/images/CardImage2.png'
@@ -23,13 +33,11 @@ import cardImage3 from '@/assets/images/CardImage3.png'
 
 type ResultStatus = 'loading' | 'success' | 'empty' | 'map-error'
 
-const SORT_ITEMS = [
-  { value: 'recommended', label: '추천순' },
-  { value: 'lowest-price', label: '가격낮은순' },
-  { value: 'rating', label: '별점순' },
-  { value: 'reviews', label: '리뷰많은순' },
-  { value: 'hair-makeup', label: '헤어·메이크업' },
-  { value: 'parking', label: '주차' },
+const QUICK_FILTER_ITEMS = [
+  ...STUDIO_SORT_OPTIONS,
+  ...STUDIO_SERVICE_OPTIONS
+    .filter(({ value }) => value !== 'COSTUME')
+    .map(({ value, quickLabel }) => ({ value, label: quickLabel })),
 ]
 
 const RECOMMENDATIONS = [
@@ -44,21 +52,23 @@ const resolveStatus = (state: string | null): ResultStatus => {
   return 'success'
 }
 
-const isSheetSnap = (value: string | null): value is SheetSnap =>
-  value === 'collapsed' || value === 'half' || value === 'expanded'
-
 const StudioSearchPage = () => {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filters = parseStudioSearchParams(searchParams)
   const status = resolveStatus(searchParams.get('state'))
-  const snapParam = searchParams.get('snap')
-  const initialSnap: SheetSnap = isSheetSnap(snapParam)
-    ? snapParam
-    : status === 'empty'
-      ? 'expanded'
-      : 'half'
+  const [snap, setSnap] = useState<SheetSnap>(() =>
+    status === 'empty' ? 'expanded' : 'half',
+  )
 
-  const [snap, setSnap] = useState<SheetSnap>(initialSnap)
+  useEffect(() => {
+    if (!searchParams.has('snap')) return
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('snap')
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
+
   const {
     containerRef,
     listRef,
@@ -77,22 +87,35 @@ const StudioSearchPage = () => {
     listRef,
   }
 
+  const handleQuickFilterChange = (value: string) => {
+    if (!hasBaseSearchCondition(filters)) return
+
+    const nextFilters = isStudioServiceTag(value)
+      ? { ...filters, services: toggleStudioService(filters.services, value) }
+      : { ...filters, sort: value }
+    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
+  }
+
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-white">
       <NavigationBar
         variant="chip"
-        chipLabel="프로필·홍대·6월25일"
+        chipLabel={buildStudioSearchChipLabel(filters)}
         rightNode={
           <button
             type="button"
             aria-label="필터"
-            onClick={() => navigate('/studios/filter')}
+            onClick={() => navigate({ pathname: '/studios/filter', search: `?${searchParams.toString()}` })}
           >
             <IcFilter width={24} height={24} />
           </button>
         }
       />
-      <FilterBar2 items={SORT_ITEMS} />
+      <FilterBar2
+        items={QUICK_FILTER_ITEMS}
+        value={[...(filters.sort ? [filters.sort] : []), ...filters.services]}
+        onChange={handleQuickFilterChange}
+      />
 
       <div ref={containerRef} className="relative flex-1 overflow-hidden">
         <StudioMapCanvas interactive={!isDragging} />
@@ -135,7 +158,11 @@ const StudioSearchPage = () => {
         ) : (
           <StudioResultsBottomSheet
             {...sheetShellProps}
-            header={<p className="py-2.5 font-b8 text-gray-60">사진관 24 곳</p>}
+            header={
+              <p className="py-2.5 text-center font-b8 text-gray-60">
+                사진관 24 곳
+              </p>
+            }
             footer={
               <div className="relative">
                 <div className="pointer-events-none absolute inset-x-0 -top-14 flex justify-center">

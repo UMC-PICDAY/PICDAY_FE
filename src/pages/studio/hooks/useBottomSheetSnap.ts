@@ -11,7 +11,7 @@ interface UseBottomSheetSnapOptions {
   onSnapChange: (snap: SheetSnap) => void
 }
 
-interface SnapOffsets {
+export interface SnapOffsets {
   collapsed: number
   half: number
   expanded: number
@@ -22,17 +22,17 @@ const FLICK_VELOCITY = 0.5 // px/ms
 const COLLAPSED_VISIBLE = 48
 const DRAG_THRESHOLD = 6
 
-const step = (snap: SheetSnap, dir: number): SheetSnap => {
+export const step = (snap: SheetSnap, dir: number): SheetSnap => {
   const index = SNAP_ORDER.indexOf(snap)
   return SNAP_ORDER[Math.min(Math.max(index + dir, 0), SNAP_ORDER.length - 1)]
 }
 
-const nearestSnap = (offset: number, offsets: SnapOffsets): SheetSnap =>
+export const nearestSnap = (offset: number, offsets: SnapOffsets): SheetSnap =>
   (Object.entries(offsets) as [SheetSnap, number][]).reduce((best, current) =>
     Math.abs(current[1] - offset) < Math.abs(best[1] - offset) ? current : best,
   )[0]
 
-const decideSnap = (
+export const decideSnap = (
   offset: number,
   velocity: number,
   offsets: SnapOffsets,
@@ -42,6 +42,9 @@ const decideSnap = (
   if (velocity >= FLICK_VELOCITY) return step(startSnap, -1)
   return nearestSnap(offset, offsets)
 }
+
+export const clampOffset = (value: number, collapsedOffset: number) =>
+  Math.min(Math.max(value, 0), collapsedOffset)
 
 /**
  * 검색 결과 바텀시트의 스냅 지오메트리와 포인터 드래그를 관리한다.
@@ -98,12 +101,14 @@ export const useBottomSheetSnap = ({
     lastTime: number
     velocity: number
     moved: boolean
+    suppressClickAfterEnd: boolean
   } | null>(null)
   const pendingList = useRef<{ startY: number } | null>(null)
+  const suppressClick = useRef(false)
 
-  const clamp = (value: number) => Math.min(Math.max(value, 0), collapsedOffset)
+  const clamp = (value: number) => clampOffset(value, collapsedOffset)
 
-  const beginDrag = (clientY: number) => {
+  const beginDrag = (clientY: number, suppressClickAfterEnd: boolean) => {
     drag.current = {
       startY: clientY,
       startOffset: targetOffset,
@@ -111,6 +116,7 @@ export const useBottomSheetSnap = ({
       lastTime: performance.now(),
       velocity: 0,
       moved: false,
+      suppressClickAfterEnd,
     }
     setIsDragging(true)
     setDragOffset(targetOffset)
@@ -133,11 +139,20 @@ export const useBottomSheetSnap = ({
     if (!state) return
     const current = clamp(state.startOffset + (state.lastY - state.startY))
     const decided = decideSnap(current, state.velocity, offsets, snap)
+    suppressClick.current = state.moved && state.suppressClickAfterEnd
     drag.current = null
     pendingList.current = null
     setIsDragging(false)
     setDragOffset(null)
     onSnapChange(decided)
+  }
+
+  const cancelDrag = () => {
+    drag.current = null
+    pendingList.current = null
+    suppressClick.current = false
+    setIsDragging(false)
+    setDragOffset(null)
   }
 
   const cycleSnap = () => {
@@ -151,19 +166,25 @@ export const useBottomSheetSnap = ({
 
   const handleHandlers = {
     onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
+      suppressClick.current = false
       event.currentTarget.setPointerCapture?.(event.pointerId)
-      beginDrag(event.clientY)
+      beginDrag(event.clientY, true)
     },
     onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
       if (drag.current) moveDrag(event.clientY)
     },
     onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
-      event.currentTarget.releasePointerCapture?.(event.pointerId)
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
       endDrag()
     },
-    onPointerCancel: () => endDrag(),
+    onPointerCancel: cancelDrag,
     onClick: () => {
-      if (drag.current?.moved) return
+      if (suppressClick.current) {
+        suppressClick.current = false
+        return
+      }
       cycleSnap()
     },
     onKeyDown: (event: ReactKeyboardEvent<HTMLElement>) => {
@@ -203,7 +224,7 @@ export const useBottomSheetSnap = ({
       const delta = event.clientY - pending.startY
       if (delta > DRAG_THRESHOLD && list.scrollTop <= 0) {
         event.currentTarget.setPointerCapture?.(event.pointerId)
-        beginDrag(pending.startY)
+        beginDrag(pending.startY, false)
         pendingList.current = null
         moveDrag(event.clientY)
       } else if (delta < 0) {
@@ -213,13 +234,14 @@ export const useBottomSheetSnap = ({
     onPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => {
       pendingList.current = null
       if (drag.current) {
-        event.currentTarget.releasePointerCapture?.(event.pointerId)
+        if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }
         endDrag()
       }
     },
     onPointerCancel: () => {
-      pendingList.current = null
-      if (drag.current) endDrag()
+      cancelDrag()
     },
   }
 

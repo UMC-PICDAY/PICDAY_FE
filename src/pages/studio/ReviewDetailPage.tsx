@@ -1,53 +1,95 @@
-import { useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 
 import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
 import Dropdown from '@/components/common/Dropdown'
+import Notice2 from '@/components/common/Notice2'
 import { IcFilter, IcStar, IcStarHalf } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import ReviewCard from '@/pages/studio/components/ReviewCard'
+import { MOCK_STUDIO_REVIEW_DATA } from '@/pages/studio/mocks/studioReviews'
+import type {
+  ReviewListItem,
+  ReviewListParams,
+  ReviewSort,
+} from '@/pages/studio/types/review'
+import {
+  formatReviewDate,
+  selectReviews,
+} from '@/pages/studio/utils/reviews'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 const SORT_OPTIONS = [
-  { value: 'recommended', label: '추천순' },
-  { value: 'latest', label: '최신순' },
-  { value: 'rating-high', label: '평점 높은순' },
-  { value: 'rating-low', label: '평점 낮은 순' },
+  { value: 'recent', label: '최신순' },
+  { value: 'recommend', label: '추천순' },
 ] as const
 
-const REVIEWS = [
-  {
-    reviewerName: '봄_핑크',
-    date: '2개월 전',
-    stats: '리뷰 32 · 사진 84 · 장소 23',
-    conceptTitle: '개인화보',
-    body: '스튜디오 분위기가 너무 예뻐서 촬영하는 내내 설레었어요. 작가님도 친절하시고 포즈 가이드도 상세하게 해주셔서 어색함 없이 자연스럽게 찍을 수 있었습니다.',
-    likeCount: 0,
-    liked: false,
-  },
-  {
-    reviewerName: '봄_핑크',
-    date: '3개월 전',
-    stats: '리뷰 11 · 사진 37 · 장소 8',
-    conceptTitle: '체리베리벌쓰데이',
-    body: '컨셉 소품 구성이 풍부하고 의상도 퀄리티가 높았어요. 보정본 퀄리티도 만족스럽고 당일 현장에서 바로 가이드받으며...',
-    likeCount: 3,
-    liked: true,
-  },
-]
+const commitMockLikeChange = () =>
+  new Promise<void>((resolve) => window.setTimeout(resolve, 200))
 
 const ReviewDetailPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
-  const [searchParams] = useSearchParams()
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
+  const [reviews, setReviews] = useState<ReviewListItem[]>(() =>
+    MOCK_STUDIO_REVIEW_DATA.items.map((review) => ({ ...review })),
+  )
   const [photoOnly, setPhotoOnly] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
-  const [sortValue, setSortValue] = useState('recommended')
-  const [loginOpen, setLoginOpen] = useState(searchParams.get('login') === '1')
+  const [sortValue, setSortValue] = useState<ReviewSort>('recent')
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [pendingReviewId, setPendingReviewId] = useState<number | null>(null)
+  const pendingReviewIdRef = useRef<number | null>(null)
+
+  const reviewParams = useMemo<ReviewListParams>(
+    () => ({ sort: sortValue, photoOnly, page: 1, size: 10 }),
+    [photoOnly, sortValue],
+  )
+  const visibleReviews = useMemo(
+    () => selectReviews(reviews, reviewParams),
+    [reviewParams, reviews],
+  )
 
   const sortLabel =
-    SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? '추천순'
+    SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? '최신순'
+
+  const handleLikeChange = async (reviewId: number, nextLiked: boolean) => {
+    if (!isLoggedIn) {
+      setLoginOpen(true)
+      return
+    }
+    if (pendingReviewIdRef.current !== null) return
+
+    const previousReviews = reviews
+    pendingReviewIdRef.current = reviewId
+    setPendingReviewId(reviewId)
+    setReviews((currentReviews) =>
+      currentReviews.map((review) =>
+        review.reviewId === reviewId
+          ? {
+              ...review,
+              isLiked: nextLiked,
+              likeCount: Math.max(
+                0,
+                review.likeCount + (nextLiked ? 1 : -1),
+              ),
+            }
+          : review,
+      ),
+    )
+
+    try {
+      // API 연동 시 likeReview/unlikeReview mutation으로 교체합니다.
+      await commitMockLikeChange()
+    } catch {
+      setReviews(previousReviews)
+    } finally {
+      pendingReviewIdRef.current = null
+      setPendingReviewId(null)
+    }
+  }
 
   return (
     <div className="flex min-h-dvh flex-col bg-white pb-24">
@@ -76,9 +118,13 @@ const ReviewDetailPage = () => {
             <IcStar width={36} height={36} className="text-brand-80" />
             <IcStarHalf width={36} height={36} className="text-brand-80" />
           </div>
-          <span className="pl-2 font-h2 text-black">4.9</span>
+          <span className="pl-2 font-h2 text-black">
+            {MOCK_STUDIO_REVIEW_DATA.summary.avgRating.toFixed(1)}
+          </span>
         </div>
-        <span className="font-b6 text-gray-60">(721개 평가)</span>
+        <span className="font-b6 text-gray-60">
+          ({MOCK_STUDIO_REVIEW_DATA.summary.totalCount}개 평가)
+        </span>
       </div>
 
       {/* 필터 행 */}
@@ -88,7 +134,10 @@ const ReviewDetailPage = () => {
             checked={photoOnly}
             onChange={() => setPhotoOnly((prev) => !prev)}
           />
-          <span className="font-b6 text-gray-60">사진 리뷰만 보기 (198)</span>
+          <span className="font-b6 text-gray-60">
+            사진 리뷰만 보기 (
+            {MOCK_STUDIO_REVIEW_DATA.summary.photoReviewCount})
+          </span>
         </label>
         <div className="relative">
           <button
@@ -113,7 +162,7 @@ const ReviewDetailPage = () => {
                   options={SORT_OPTIONS}
                   value={sortValue}
                   onChange={(value) => {
-                    setSortValue(value)
+                    setSortValue(value as ReviewSort)
                     setSortOpen(false)
                   }}
                 />
@@ -125,23 +174,32 @@ const ReviewDetailPage = () => {
 
       {/* 리뷰 리스트 */}
       <div className="flex flex-col gap-5 pb-5">
-        {REVIEWS.map((review, index) => (
+        {visibleReviews.map((review) => (
           <ReviewCard
-            key={index}
+            key={review.reviewId}
+            reviewId={review.reviewId}
             variant="full"
-            reviewerName={review.reviewerName}
-            isBest
-            rating={5}
-            date={review.date}
-            stats={review.stats}
-            conceptTitle={review.conceptTitle}
-            body={review.body}
-            photos={[null, null]}
-            helpfulText="1명에게 도움이 된 리뷰예요"
+            reviewerName={review.writerNickname}
+            isBest={review.isBest}
+            rating={review.rating}
+            date={formatReviewDate(review.createdAt)}
+            conceptTitle={review.conceptName}
+            body={review.content}
+            photos={review.images}
+            helpfulText={`${review.likeCount}명에게 도움이 된 리뷰예요`}
             likeCount={review.likeCount}
-            liked={review.liked}
+            liked={review.isLiked}
+            likePending={pendingReviewId !== null}
+            onLikeChange={handleLikeChange}
           />
         ))}
+        {visibleReviews.length === 0 && (
+          <Notice2
+            variant="message"
+            title="조건에 맞는 리뷰가 없어요"
+            className="py-20"
+          />
+        )}
       </div>
 
       {/* 하단 고정 CTA */}
@@ -161,7 +219,11 @@ const ReviewDetailPage = () => {
           onClick={() => setLoginOpen(false)}
         >
           <div className="w-full" onClick={(event) => event.stopPropagation()}>
-            <Alert3 variant="variant3" onHelperClick={() => setLoginOpen(false)} />
+            <Alert3
+              variant="variant3"
+              onClick={() => navigate('/login')}
+              onHelperClick={() => setLoginOpen(false)}
+            />
           </div>
         </div>
       )}

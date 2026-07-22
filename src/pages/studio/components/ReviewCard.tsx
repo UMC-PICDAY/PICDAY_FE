@@ -1,9 +1,8 @@
-import { useState } from 'react'
-
 import LikesChip from '@/components/common/LikesChip'
 import { IcStar } from '@/components/icons'
 
 interface ReviewCardProps {
+  reviewId?: number
   variant?: 'summary' | 'full'
   reviewerName: string
   isBest?: boolean
@@ -16,6 +15,8 @@ interface ReviewCardProps {
   helpfulText?: string
   likeCount?: number
   liked?: boolean
+  likePending?: boolean
+  onLikeChange?: (reviewId: number, nextLiked: boolean) => void
   className?: string
 }
 
@@ -55,6 +56,7 @@ const Photos = ({ photos, size }: { photos: (string | null)[]; size: number }) =
 )
 
 const ReviewCard = ({
+  reviewId,
   variant = 'summary',
   reviewerName,
   isBest = false,
@@ -67,19 +69,11 @@ const ReviewCard = ({
   helpfulText,
   likeCount,
   liked = false,
+  likePending = false,
+  onLikeChange,
   className = '',
 }: ReviewCardProps) => {
   const isFull = variant === 'full'
-  const [likeState, setLikeState] = useState({
-    liked,
-    count: likeCount ?? 0,
-  })
-
-  const handleLikedChange = (nextLiked: boolean) =>
-    setLikeState((prev) => ({
-      liked: nextLiked,
-      count: prev.count + (nextLiked ? 1 : -1),
-    }))
 
   const badge = isBest && (
     <span className="rounded-lg bg-brand-20 px-2 py-0.5 font-b12 text-brand-100">
@@ -141,9 +135,17 @@ const ReviewCard = ({
           <span className="font-cap3 text-gray-40">{helpfulText}</span>
           {likeCount !== undefined && (
             <LikesChip
-              count={likeState.count}
-              liked={likeState.liked}
-              onLikedChange={handleLikedChange}
+              count={likeCount}
+              liked={liked}
+              disabled={
+                likePending || reviewId === undefined || !onLikeChange
+              }
+              aria-busy={likePending}
+              onLikedChange={(nextLiked) => {
+                if (reviewId !== undefined) {
+                  onLikeChange?.(reviewId, nextLiked)
+                }
+              }}
             />
           )}
         </div>

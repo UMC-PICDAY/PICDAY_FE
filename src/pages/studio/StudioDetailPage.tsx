@@ -143,7 +143,6 @@ const StudioDetailPage = () => {
       <section className="px-5">
         <div className="flex items-center pb-3 pt-5">
           <h2 className="flex-1 font-b3 text-black">편의시설 및 서비스</h2>
-          <IcRight width={24} height={24} className="text-gray-40" />
         </div>
         <div className="flex justify-center pb-5">
           <FeatureGrid />
@@ -277,12 +276,8 @@ const StudioDetailPage = () => {
 
       <Divider />
 
-      {/* 판매자 정보 */}
+      {/* 판매자 고지 */}
       <section className="px-5 py-5">
-        <div className="flex items-center pb-3">
-          <h2 className="flex-1 font-b3 text-black">판매자 정보</h2>
-          <IcRight width={24} height={24} className="text-gray-40" />
-        </div>
         <p className="font-b8 text-gray-40">
           통신판매중개자로서 PICDAY는 거래 당사자가 아니며, 예약·이용·환불 관련 책임은 각
           사진관에 있습니다.

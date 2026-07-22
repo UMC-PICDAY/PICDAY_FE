@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 
 import CardStudioDetail from '@/components/cards/CardStudioDetail'
 import Toast from '@/components/common/Toast'
@@ -7,6 +7,13 @@ import { IcFavorite } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import DateChangeSheet from '@/pages/studio/components/DateChangeSheet'
+import { MOCK_STUDIO_SLOTS } from '@/pages/studio/mocks/studioSlots'
+import type {
+  StudioDateTimeSelection,
+  StudioTimeSlot,
+} from '@/pages/studio/types/dateTime'
+
+import type { CalendarDate } from '@/components/common/Calendar'
 
 import cardImage1 from '@/assets/images/CardImage1.png'
 import cardImage2 from '@/assets/images/CardImage2.png'
@@ -21,6 +28,11 @@ interface ConceptCard {
 interface ConceptGroup {
   title: string
   cards: ConceptCard[]
+}
+
+interface ReservationToast {
+  id: number
+  message: string
 }
 
 const GROUPS: ConceptGroup[] = [
@@ -47,27 +59,64 @@ const GROUPS: ConceptGroup[] = [
   },
 ]
 
+const formatDate = ({ year, month, day }: CalendarDate) =>
+  [year, month, day]
+    .map((value, index) =>
+      index === 0 ? String(value) : String(value).padStart(2, '0'),
+    )
+    .join('.')
+
 const ConceptListPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
-  const [searchParams] = useSearchParams()
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
+  const [dateTimeSelection, setDateTimeSelection] =
+    useState<StudioDateTimeSelection | null>(null)
+  const [slots, setSlots] = useState<readonly StudioTimeSlot[]>([])
+  const [reservationToast, setReservationToast] =
+    useState<ReservationToast | null>(null)
 
-  const noAvailableTime = searchParams.get('noslot') === '1'
+  useEffect(() => {
+    if (!reservationToast) return
 
-  // 미리보기: ?toast=date(날짜·시간 미선택), ?toast=time(날짜만 선택)
-  const toastParam = searchParams.get('toast')
-  const dateSelected = toastParam !== 'date'
-  const timeSelected = toastParam === null
+    const timer = window.setTimeout(() => setReservationToast(null), 3000)
+    return () => window.clearTimeout(timer)
+  }, [reservationToast])
 
-  const toastMessage = !dateSelected
-    ? '날짜를 먼저 설정해 주세요'
-    : !timeSelected
-      ? '시간을 먼저 설정해 주세요'
-      : null
+  const subtitleDate = dateTimeSelection
+    ? formatDate(dateTimeSelection.date)
+    : '날짜, 시간 선택'
+  const subtitleTime = dateTimeSelection?.startTime ?? ''
 
-  const subtitleDate = dateSelected ? '2026.06.18' : '날짜, 시간 선택'
-  const subtitleTime = dateSelected ? (timeSelected ? '14:00' : '시간 선택') : ''
+  const loadMockSlots = (_date: CalendarDate) => {
+    // API 연동 시 getStudioSlots(studioId, date) 호출 결과로 교체합니다.
+    setSlots(MOCK_STUDIO_SLOTS)
+  }
+
+  const openDateSheet = () => {
+    if (dateTimeSelection) loadMockSlots(dateTimeSelection.date)
+    else setSlots([])
+
+    setDateSheetOpen(true)
+  }
+
+  const showReservationToast = (message: string) => {
+    setReservationToast({ id: Date.now(), message })
+  }
+
+  const handleReserve = () => {
+    if (!dateTimeSelection?.date) {
+      showReservationToast('날짜를 먼저 설정해 주세요')
+      return
+    }
+
+    if (!dateTimeSelection.slotId || !dateTimeSelection.startTime) {
+      showReservationToast('시간을 먼저 설정해 주세요')
+      return
+    }
+
+    setReservationToast(null)
+  }
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -78,13 +127,14 @@ const ConceptListPage = () => {
         count={subtitleTime}
         rightNode={<IcFavorite width={24} height={24} />}
         onBack={() => navigate(-1)}
-        onSubtitleClick={() => setDateSheetOpen(true)}
+        onSubtitleClick={openDateSheet}
       />
 
-      {toastMessage && (
+      {reservationToast && (
         <div className="flex justify-center px-5 py-2">
           <Toast
-            message={toastMessage}
+            key={reservationToast.id}
+            message={reservationToast.message}
             className="flex items-center justify-center whitespace-nowrap rounded-[100px] bg-brand-60 px-4 py-2 font-b10 text-white"
           />
         </div>
@@ -105,6 +155,7 @@ const ConceptListPage = () => {
                       `/studios/${studioId}/concepts/${groupIndex}-${index}`,
                     )
                   }
+                  onReserveClick={handleReserve}
                 />
               ))}
             </div>
@@ -114,9 +165,14 @@ const ConceptListPage = () => {
 
       {dateSheetOpen && (
         <DateChangeSheet
-          noAvailableTime={noAvailableTime}
+          initialSelection={dateTimeSelection}
+          slots={slots}
+          onDateChange={loadMockSlots}
           onClose={() => setDateSheetOpen(false)}
-          onApply={() => setDateSheetOpen(false)}
+          onApply={(selection) => {
+            setDateTimeSelection(selection)
+            setDateSheetOpen(false)
+          }}
         />
       )}
     </div>
