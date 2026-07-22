@@ -21,6 +21,7 @@ import TabBarUser from '@/components/layout/TabBarUser'
 import {
   checkNicknameAvailable,
   getMe,
+  logout,
   updateNickname,
 } from '@/services/auth'
 
@@ -197,6 +198,16 @@ const ProfileSettingPage = () => {
     }
   }
 
+  // 로그아웃
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+    }
+  }
+
   // 상단 탭 이동
   const handleTabChange = (value: string) => {
     if (value === 'reservation') {
@@ -325,7 +336,10 @@ const ProfileSettingPage = () => {
                 : '저장하기'}
           </Button>
 
-          <Button variant="secondary">
+          <Button
+            variant="secondary"
+            onClick={handleLogout}
+          >
             로그아웃
           </Button>
 
