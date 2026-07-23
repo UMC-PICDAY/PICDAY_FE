@@ -5,7 +5,8 @@
  * 닉네임, 연결 계정, 알림 설정을 관리하고
  * 회원탈퇴 팝업 플로우를 처리함
  */
-
+import Toast from '@/components/common/Toast'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -28,6 +29,19 @@ import {
 
 const ProfileSettingPage = () => {
   const navigate = useNavigate()
+
+  const clearAuth = useAuthStore((state) => state.logout)
+
+  const [toastMessage, setToastMessage] = useState('')
+
+  // 토스트 메시지 표시
+  const showToast = (message: string) => {
+    setToastMessage(message)
+
+    window.setTimeout(() => {
+      setToastMessage('')
+    }, 3000)
+  }
 
   // 사용자 정보
   const [userName, setUserName] = useState('')
@@ -191,9 +205,10 @@ const ProfileSettingPage = () => {
       setOriginalNickname(updatedNickname)
       setIsNicknameDuplicate(false)
 
-      alert('프로필이 저장되었습니다.')
+      showToast('프로필이 저장되었습니다.')
     } catch (error) {
       console.error('닉네임 수정 실패:', error)
+      showToast('프로필 저장에 실패했습니다.')
     } finally {
       setIsSaving(false)
     }
@@ -203,9 +218,11 @@ const ProfileSettingPage = () => {
   const handleLogout = async () => {
     try {
       await logout()
-      navigate('/login')
     } catch (error) {
       console.error('로그아웃 실패:', error)
+    } finally {
+      clearAuth()
+      navigate('/login')
     }
   }
 
@@ -213,9 +230,14 @@ const ProfileSettingPage = () => {
   const handleWithdraw = async () => {
     try {
       await withdraw()
+
+      clearAuth()
       navigate('/mypage/withdraw/complete')
     } catch (error) {
       console.error('회원탈퇴 실패:', error)
+      showToast(
+        '회원탈퇴에 실패했습니다. 진행 중인 예약을 확인해 주세요.',
+      )
     }
   }
 
@@ -404,6 +426,12 @@ const ProfileSettingPage = () => {
               onConfirm={handleWithdraw}
             />
           )}
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="fixed bottom-[110px] left-1/2 z-[60] -translate-x-1/2">
+          <Toast message={toastMessage} />
         </div>
       )}
     </main>

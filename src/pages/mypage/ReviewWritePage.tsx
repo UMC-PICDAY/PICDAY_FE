@@ -240,8 +240,6 @@ const ReviewWritePage = () => {
             <span className="font-b6 text-gray-40">
               {rating.toFixed(1)}
             </span>
-
-            <span className="font-b6 text-gray-40">{rating.toFixed(1)}</span>
           </div>
         </div>
 
