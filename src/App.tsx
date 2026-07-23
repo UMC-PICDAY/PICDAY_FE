@@ -14,8 +14,6 @@ import PurposeSelectPage from '@/pages/search/PurposeSelectPage'
 import StudioSearchPage from '@/pages/studio/StudioSearchPage'
 import FilterPage from '@/pages/studio/FilterPage'
 import StudioDetailPage from '@/pages/studio/StudioDetailPage'
-import StudioInfoPage from '@/pages/studio/StudioInfoPage'
-import HairMakeupPage from '@/pages/studio/HairMakeupPage'
 import ReviewDetailPage from '@/pages/studio/ReviewDetailPage'
 import ReviewPolicyPage from '@/pages/studio/ReviewPolicyPage'
 import ConceptListPage from '@/pages/studio/ConceptListPage'
@@ -68,8 +66,6 @@ function App() {
       <Route path="/studios" element={<StudioSearchPage />} />
       <Route path="/studios/filter" element={<FilterPage />} />
       <Route path="/studios/:studioId" element={<StudioDetailPage />} />
-      <Route path="/studios/:studioId/info" element={<StudioInfoPage />} />
-      <Route path="/studios/:studioId/hair-makeup" element={<HairMakeupPage />} />
       <Route path="/studios/:studioId/reviews" element={<ReviewDetailPage />} />
       <Route path="/studios/:studioId/reviews/policy" element={<ReviewPolicyPage />} />
       <Route path="/studios/:studioId/concepts" element={<ConceptListPage />} />
