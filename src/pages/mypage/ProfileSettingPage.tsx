@@ -1,17 +1,13 @@
 /**
- * Figma F-3 프로필 설정 (라우트: /mypage/profile)
+ * Figma F-3 프로필 설정
+ * 라우트: /mypage/profile
  *
- * 닉네임, 연결 계정, 알림 설정을 관리하고 회원탈퇴 팝업 플로우를 처리함
- *
- * 화면 상태 확인:
- * - loginType = 'social' → 카카오 계정 연결 상태
- * - loginType = 'local'  → 자체 로그인, 연동된 외부 계정 없음 상태
- * - isNicknameDuplicate = true → 닉네임 중복 에러 상태
- *
- * TODO: API 연결 후 로그인 방식과 닉네임 중복 여부를 서버 응답값으로 대체 예정
+ * 닉네임, 연결 계정, 알림 설정을 관리하고
+ * 회원탈퇴 팝업 플로우를 처리함
  */
-
-import { useState } from 'react'
+import Toast from '@/components/common/Toast'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import logoIcon from '@/assets/images/logo-icon.png'
@@ -23,25 +19,229 @@ import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import Toggle from '@/components/common/Toggle'
 import TabBarUser from '@/components/layout/TabBarUser'
-
-type LoginType = 'social' | 'local'
-
-const loginType: LoginType = 'social'
-const isNicknameDuplicate = false
+import {
+  checkNicknameAvailable,
+  getMe,
+  logout,
+  updateNickname,
+  withdraw,
+} from '@/services/auth'
 
 const ProfileSettingPage = () => {
   const navigate = useNavigate()
-  const [nickname, setNickname] = useState('고요한순간0409')
-  const [reservationAlarm, setReservationAlarm] = useState(true)
-  const [marketingAlarm, setMarketingAlarm] = useState(false)
-  const [withdrawStep, setWithdrawStep] = useState<'none' | 'confirm' | 'delete'>('none')
 
-  const isSocialLogin = loginType === 'social'
+  const clearAuth = useAuthStore((state) => state.logout)
 
-  const accountText = isSocialLogin ? '카카오 계정 연결' : '자체 로그인'
-  const connectedAccountText = isSocialLogin ? '카카오계정' : '-'
-  const connectionLabel = isSocialLogin ? '연결됨' : '연동된 외부 계정 없음'
+  const [toastMessage, setToastMessage] = useState('')
 
+  // 토스트 메시지 표시
+  const showToast = (message: string) => {
+    setToastMessage(message)
+
+    window.setTimeout(() => {
+      setToastMessage('')
+    }, 3000)
+  }
+
+  // 사용자 정보
+  const [userName, setUserName] = useState('')
+  const [nickname, setNickname] = useState('')
+  const [originalNickname, setOriginalNickname] =
+    useState('')
+  const [profileImageUrl, setProfileImageUrl] =
+    useState('')
+  const [provider, setProvider] = useState<
+    'LOCAL' | 'KAKAO' | 'GOOGLE'
+  >('LOCAL')
+
+  // 알림 설정
+  const [reservationAlarm, setReservationAlarm] =
+    useState(false)
+  const [marketingAlarm, setMarketingAlarm] =
+    useState(false)
+
+  // API 처리 상태
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [
+    isCheckingNickname,
+    setIsCheckingNickname,
+  ] = useState(false)
+  const [
+    isNicknameDuplicate,
+    setIsNicknameDuplicate,
+  ] = useState(false)
+
+  // 회원탈퇴 팝업 단계
+  const [withdrawStep, setWithdrawStep] = useState<
+    'none' | 'confirm' | 'delete'
+  >('none')
+
+  // 닉네임 유효성 검사
+  const trimmedNickname = nickname.trim()
+
+  const isNicknameValid =
+    trimmedNickname.length >= 2 &&
+    trimmedNickname.length <= 10
+
+  const isSaveDisabled =
+    isSaving ||
+    isCheckingNickname ||
+    !isNicknameValid ||
+    isNicknameDuplicate
+
+  // 내 정보 조회
+  useEffect(() => {
+    const fetchMyInfo = async () => {
+      try {
+        setIsLoading(true)
+
+        const result = await getMe()
+        const user = result.user
+
+        setUserName(user.name)
+        setNickname(user.nickname)
+        setOriginalNickname(user.nickname)
+        setProfileImageUrl(user.profileImageUrl)
+        setProvider(user.provider)
+        setReservationAlarm(
+          user.notification.reservation,
+        )
+        setMarketingAlarm(
+          user.notification.marketing,
+        )
+      } catch (error) {
+        console.error('내 정보 조회 실패:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMyInfo()
+  }, [])
+
+  // 닉네임 중복 확인
+  useEffect(() => {
+    if (!isNicknameValid) {
+      setIsNicknameDuplicate(false)
+      setIsCheckingNickname(false)
+      return
+    }
+
+    if (trimmedNickname === originalNickname) {
+      setIsNicknameDuplicate(false)
+      setIsCheckingNickname(false)
+      return
+    }
+
+    const timer = window.setTimeout(async () => {
+      try {
+        setIsCheckingNickname(true)
+
+        const result =
+          await checkNicknameAvailable(
+            trimmedNickname,
+          )
+
+        setIsNicknameDuplicate(!result.available)
+      } catch (error) {
+        console.error(
+          '닉네임 중복 확인 실패:',
+          error,
+        )
+      } finally {
+        setIsCheckingNickname(false)
+      }
+    }, 300)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [
+    trimmedNickname,
+    originalNickname,
+    isNicknameValid,
+  ])
+
+  // 로그인 제공자 표시 문구
+  const isSocialLogin = provider !== 'LOCAL'
+
+  const providerLabel =
+    provider === 'KAKAO'
+      ? '카카오'
+      : provider === 'GOOGLE'
+        ? '구글'
+        : '자체'
+
+  const accountText = isSocialLogin
+    ? `${providerLabel} 계정 연결`
+    : '자체 로그인'
+
+  const connectedAccountText = isSocialLogin
+    ? `${providerLabel}계정`
+    : '-'
+
+  const connectionLabel = isSocialLogin
+    ? '연결됨'
+    : '연동된 외부 계정 없음'
+
+  // 닉네임 저장
+  const handleSave = async () => {
+    if (isSaveDisabled) {
+      return
+    }
+
+    try {
+      setIsSaving(true)
+
+      const result = await updateNickname(
+        trimmedNickname,
+      )
+
+      const updatedNickname =
+        result.user.nickname
+
+      setNickname(updatedNickname)
+      setOriginalNickname(updatedNickname)
+      setIsNicknameDuplicate(false)
+
+      showToast('프로필이 저장되었습니다.')
+    } catch (error) {
+      console.error('닉네임 수정 실패:', error)
+      showToast('프로필 저장에 실패했습니다.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // 로그아웃
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+    } finally {
+      clearAuth()
+      navigate('/login')
+    }
+  }
+
+  // 회원탈퇴
+  const handleWithdraw = async () => {
+    try {
+      await withdraw()
+
+      clearAuth()
+      navigate('/mypage/withdraw/complete')
+    } catch (error) {
+      console.error('회원탈퇴 실패:', error)
+      showToast(
+        '회원탈퇴에 실패했습니다. 진행 중인 예약을 확인해 주세요.',
+      )
+    }
+  }
+
+  // 상단 탭 이동
   const handleTabChange = (value: string) => {
     if (value === 'reservation') {
       navigate('/mypage')
@@ -51,6 +251,7 @@ const ProfileSettingPage = () => {
     navigate('/mypage/profile')
   }
 
+  // 회원탈퇴 팝업 닫기
   const closeWithdrawModal = () => {
     setWithdrawStep('none')
   }
@@ -59,15 +260,27 @@ const ProfileSettingPage = () => {
     <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
       <Profile
         variant="userInfo"
-        userName="이수현"
+        userName={
+          isLoading
+            ? '불러오는 중...'
+            : userName
+        }
         accountText={accountText}
-        userImageSrc={logoIcon}
+        userImageSrc={
+          profileImageUrl || logoIcon
+        }
       />
 
       <SegmentedTab
         items={[
-          { value: 'reservation', label: '예약관리' },
-          { value: 'profile', label: '프로필 설정' },
+          {
+            value: 'reservation',
+            label: '예약관리',
+          },
+          {
+            value: 'profile',
+            label: '프로필 설정',
+          },
         ]}
         value="profile"
         onChange={handleTabChange}
@@ -78,45 +291,97 @@ const ProfileSettingPage = () => {
           label="닉네임"
           value={nickname}
           helperText={
-            isNicknameDuplicate
-              ? '이미 사용 중인 닉네임이에요'
-              : '2~10자, 한글·영문·숫자 사용 가능'
+            isCheckingNickname
+              ? '닉네임을 확인하고 있어요'
+              : isNicknameDuplicate
+                ? '이미 사용 중인 닉네임이에요'
+                : '2~10자, 한글·영문·숫자 사용 가능'
           }
           isError={isNicknameDuplicate}
           onChange={setNickname}
         />
 
         <div className="mt-5">
-          <p className="font-cap1 text-gray-80">연결된 계정</p>
+          <p className="font-cap1 text-gray-80">
+            연결된 계정
+          </p>
 
           <div className="mt-2 flex h-10 w-full items-center justify-between rounded-[8px] bg-[rgba(254,228,235,0.3)] px-[10px]">
-            <span className="font-b8 text-gray-80">{connectedAccountText}</span>
-            <ConnectionTag label={connectionLabel} />
+            <span className="font-b8 text-gray-80">
+              {connectedAccountText}
+            </span>
+
+            <ConnectionTag
+              label={connectionLabel}
+            />
           </div>
         </div>
 
         <div className="mt-5">
-          <p className="font-cap1 text-gray-80">알림설정</p>
+          <p className="font-cap1 text-gray-80">
+            알림설정
+          </p>
 
           <div className="mt-2 flex h-10 items-center justify-between border-b border-gray-10">
-            <span className="font-b8 text-gray-80">예약 확정 알림</span>
-            <Toggle checked={reservationAlarm} onCheckedChange={setReservationAlarm} />
+            <span className="font-b8 text-gray-80">
+              예약 확정 알림
+            </span>
+
+            <Toggle
+              checked={reservationAlarm}
+              onCheckedChange={
+                setReservationAlarm
+              }
+            />
           </div>
 
           <div className="flex h-10 items-center justify-between border-b border-gray-10">
-            <span className="font-b8 text-gray-80">마케팅·이벤트 알림</span>
-            <Toggle checked={marketingAlarm} onCheckedChange={setMarketingAlarm} />
+            <span className="font-b8 text-gray-80">
+              마케팅·이벤트 알림
+            </span>
+
+            <Toggle
+              checked={marketingAlarm}
+              onCheckedChange={
+                setMarketingAlarm
+              }
+            />
           </div>
         </div>
 
         <div className="mt-5 flex flex-col gap-[10px]">
-          <Button variant="primary">저장하기</Button>
-          <Button variant="secondary">로그아웃</Button>
+          <Button
+            variant={
+              isSaveDisabled
+                ? 'disabled'
+                : 'primary'
+            }
+            onClick={
+              isSaveDisabled
+                ? undefined
+                : handleSave
+            }
+          >
+            {isSaving
+              ? '저장 중...'
+              : isCheckingNickname
+                ? '확인 중...'
+                : '저장하기'}
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={handleLogout}
+          >
+            로그아웃
+          </Button>
 
           <button
             type="button"
             className="h-10 w-full font-b8 text-gray-40"
-            onClick={() => setWithdrawStep('confirm')}
+            onClick={() =>
+              setWithdrawStep('confirm')
+            }
           >
             회원탈퇴
           </button>
@@ -127,9 +392,17 @@ const ProfileSettingPage = () => {
         <TabBarUser
           activeTab="mypage"
           onTabChange={(tab) => {
-            if (tab === 'search') navigate('/home')
-            if (tab === 'wishlist') navigate('/wishlist')
-            if (tab === 'mypage') navigate('/mypage')
+            if (tab === 'search') {
+              navigate('/home')
+            }
+
+            if (tab === 'wishlist') {
+              navigate('/wishlist')
+            }
+
+            if (tab === 'mypage') {
+              navigate('/mypage')
+            }
           }}
         />
       </div>
@@ -140,7 +413,9 @@ const ProfileSettingPage = () => {
             <Alert2
               variant="default"
               onCancel={closeWithdrawModal}
-              onConfirm={() => setWithdrawStep('delete')}
+              onConfirm={() =>
+                setWithdrawStep('delete')
+              }
             />
           )}
 
@@ -148,9 +423,15 @@ const ProfileSettingPage = () => {
             <Alert2
               variant="variant2"
               onCancel={closeWithdrawModal}
-              onConfirm={() => navigate('/mypage/withdraw/complete')}
+              onConfirm={handleWithdraw}
             />
           )}
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="fixed bottom-[110px] left-1/2 z-[60] -translate-x-1/2">
+          <Toast message={toastMessage} />
         </div>
       )}
     </main>
