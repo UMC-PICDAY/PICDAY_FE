@@ -1,64 +1,52 @@
 /**
  * ComparePurposePage 사용법
  *
- * 사진관 비교 전 촬영 목적을 선택하는 페이지
- *
  * 기본 진입
- *   navigate('/compare')
- *
- * 선택된 사진관 목록
- *   selectedStudios 상태로 최대 3개까지 관리
- *
- * 촬영 목적 선택
- *   증명 / 프로필 / 개인화보 / 취업 / 가족 / 우정 중 하나를 선택
- *
- * 사진관 삭제
- *   하단 선택 슬롯의 X 버튼 클릭 시 해당 사진관 삭제
- *   선택된 사진관이 3개 미만이면 사진관 추가 버튼 표시
- *
- * 사진관 추가
- *   추가 슬롯 클릭 시 사진관 목록 페이지로 이동
- *   navigate('/studios', {
- *     state: {
- *       selectedStudios,
- *       purpose: selectedPurpose,
- *     },
+ *   navigate('/compare', {
+ *     state: { studioIds }
  *   })
  *
- * 비교 시작
- *   선택된 사진관이 2개이면 /compare/two로 이동
- *   선택된 사진관이 3개이면 /compare/three로 이동
+ * 초기 로드
+ *   전달받은 studioIds로 2-9 API 호출
+ *   응답받은 사진관 목록을 selectedStudios 상태로 관리
  *
- * 비교 페이지 전달 데이터
+ * 촬영 목적 선택
+ *   증명 / 프로필 / 개인화보 / 취업 / 가족 / 우정
+ *
+ * 사진관 관리
+ *   - X 버튼: 사진관 삭제
+ *   - + 버튼: 사진관 추가 (/studios 이동)
+ *
+ * 비교 시작
+ *   - 목적 미지원 시 Alert2 표시
+ *   - 2개 비교 → /compare/two
+ *   - 3개 비교 → /compare/three
+ *
+ * 비교 결과 페이지 전달 데이터
  *   {
- *     purpose: selectedPurpose,
- *     studios: selectedStudios,
+ *     studioIds: number[]
+ *     shootingCategory: ShootingCategory
+ *     purpose: PurposeType
+ *     studios: Studio[]
  *   }
  *
- * 촬영 목적 미지원 예외 처리
- *   3개 중 1개만 미지원:
- *     해당 사진관을 제외하고 비교할지 Alert2 표시
- *
- *   비교 가능한 사진관이 1개 이하:
- *     다른 촬영 목적을 선택하도록 Alert2 표시
- *
- * 비교 버튼 비활성화
- *   선택된 사진관이 1개 이하이면 비교 시작 버튼 비활성화
- *
- * TODO
- *   API 연결 후 MOCK_SELECTED_STUDIOS를 실제 비교 선택 데이터로 교체
+ * 비교 버튼
+ *   사진관이 1개 이하이거나 API 로딩/에러 시 비활성화
  */
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 
-import cardImage5 from '@/assets/images/CardImage5.png'
 import Alert2 from '@/components/common/Alert2'
 import Button from '@/components/common/Button'
 import ButtonCompareSlot from '@/components/common/ButtonCompareSlot'
 import CategoryButton from '@/components/common/CategoryButton'
 import Title from '@/components/common/Title'
 import { IcBack } from '@/components/icons'
+import {
+  getComparePurposes,
+  type ShootingCategory,
+} from '@/services/studio'
 
 type PurposeType = '증명' | '프로필' | '개인화보' | '취업' | '가족' | '우정'
 
@@ -67,10 +55,11 @@ type AlertType = 'exclude' | 'reselect' | null
 interface Studio {
   id: number
   name: string
-  imageSrc?: string
-  rating: number
-  reviewCount: number
   availablePurposes: PurposeType[]
+}
+
+interface CompareNavigationState {
+  studioIds?: number[]
 }
 
 const PURPOSES: PurposeType[] = [
@@ -82,48 +71,91 @@ const PURPOSES: PurposeType[] = [
   '우정',
 ]
 
-const STUDIO_LIST_PATH = '/studios'
+const PURPOSE_MAP: Record<ShootingCategory, PurposeType> = {
+  ID_PHOTO: '증명',
+  PROFILE: '프로필',
+  PERSONAL_PORTRAIT: '개인화보',
+  JOB_PHOTO: '취업',
+  FAMILY: '가족',
+  FRIENDSHIP: '우정',
+}
 
-const MOCK_SELECTED_STUDIOS: Studio[] = [
-  {
-    id: 1,
-    name: '데이지',
-    rating: 4.9,
-    reviewCount: 128,
-    availablePurposes: ['증명', '프로필', '개인화보'],
-  },
-  {
-    id: 2,
-    name: '타임온미',
-    imageSrc: cardImage5,
-    rating: 4.9,
-    reviewCount: 128,
-    availablePurposes: ['증명', '개인화보'],
-  },
-  {
-    id: 3,
-    name: '데이',
-    rating: 4.8,
-    reviewCount: 96,
-    availablePurposes: ['증명', '취업'],
-  },
-]
+const PURPOSE_CATEGORY_MAP: Record<PurposeType, ShootingCategory> = {
+  증명: 'ID_PHOTO',
+  프로필: 'PROFILE',
+  개인화보: 'PERSONAL_PORTRAIT',
+  취업: 'JOB_PHOTO',
+  가족: 'FAMILY',
+  우정: 'FRIENDSHIP',
+}
+
+const STUDIO_LIST_PATH = '/studios'
 
 const ComparePurposePage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const navigationState = location.state as CompareNavigationState | null
+  const studioIds = navigationState?.studioIds
 
   const [selectedPurpose, setSelectedPurpose] =
     useState<PurposeType>('프로필')
 
-  const [selectedStudios, setSelectedStudios] = useState<Studio[]>(
-    MOCK_SELECTED_STUDIOS,
-  )
+  const [selectedStudios, setSelectedStudios] = useState<Studio[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const [alertType, setAlertType] = useState<AlertType>(null)
   const [unavailableStudios, setUnavailableStudios] = useState<Studio[]>([])
 
   const selectedStudioCount = selectedStudios.length
-  const isCompareDisabled = selectedStudioCount <= 1
+
+  const isCompareDisabled =
+    isLoading || errorMessage !== null || selectedStudioCount <= 1
+
+  useEffect(() => {
+    if (!studioIds || studioIds.length < 2 || studioIds.length > 3) {
+      setIsLoading(false)
+      setErrorMessage('비교할 사진관 목록이 올바르지 않습니다.')
+      return
+    }
+
+    const hasInvalidStudioId = studioIds.some(
+      (studioId) => !Number.isInteger(studioId) || studioId <= 0,
+    )
+
+    if (hasInvalidStudioId) {
+      setIsLoading(false)
+      setErrorMessage('올바르지 않은 사진관 ID입니다.')
+      return
+    }
+
+    const fetchComparePurposes = async () => {
+      try {
+        setIsLoading(true)
+        setErrorMessage(null)
+
+        const data = await getComparePurposes(studioIds)
+
+        const studios: Studio[] = data.studios.map((studio) => ({
+          id: studio.studioId,
+          name: studio.studioName,
+          availablePurposes: studio.shootingCategories.map(
+            (category) => PURPOSE_MAP[category],
+          ),
+        }))
+
+        setSelectedStudios(studios)
+      } catch {
+        setSelectedStudios([])
+        setErrorMessage('비교 정보를 불러오지 못했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void fetchComparePurposes()
+  }, [studioIds])
 
   const getAvailableStudios = () =>
     selectedStudios.filter((studio) =>
@@ -131,21 +163,23 @@ const ComparePurposePage = () => {
     )
 
   const navigateToComparePage = (studios: Studio[]) => {
-    const navigationState = {
+    const compareNavigationState = {
+      studioIds: studios.map((studio) => studio.id),
+      shootingCategory: PURPOSE_CATEGORY_MAP[selectedPurpose],
       purpose: selectedPurpose,
       studios,
     }
 
     if (studios.length === 2) {
       navigate('/compare/two', {
-        state: navigationState,
+        state: compareNavigationState,
       })
       return
     }
 
     if (studios.length === 3) {
       navigate('/compare/three', {
-        state: navigationState,
+        state: compareNavigationState,
       })
     }
   }
@@ -160,7 +194,9 @@ const ComparePurposePage = () => {
     navigate(STUDIO_LIST_PATH, {
       state: {
         selectedStudios,
+        studioIds: selectedStudios.map((studio) => studio.id),
         purpose: selectedPurpose,
+        shootingCategory: PURPOSE_CATEGORY_MAP[selectedPurpose],
       },
     })
   }
@@ -208,7 +244,7 @@ const ComparePurposePage = () => {
   }
 
   const unavailableStudioNames = unavailableStudios
-    .map((studio) => `${studio.name} 스튜디오`)
+    .map((studio) => studio.name)
     .join(', ')
 
   const excludeAlertDescription = `${unavailableStudioNames}엔 선택하신 컨셉이 없어요.\n제외하고 비교할까요?`
@@ -217,7 +253,6 @@ const ComparePurposePage = () => {
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-white text-black">
-
       <header className="flex w-full items-center justify-between px-5 py-3">
         <button
           type="button"
@@ -242,19 +277,39 @@ const ComparePurposePage = () => {
           />
         </section>
 
-        <section
-          className="grid grid-cols-2 gap-4 py-[10px]"
-          aria-label="촬영 목적 선택"
-        >
-          {PURPOSES.map((purpose) => (
-            <CategoryButton
-              key={purpose}
-              type={purpose}
-              active={selectedPurpose === purpose}
-              onClick={() => setSelectedPurpose(purpose)}
-            />
-          ))}
-        </section>
+        {isLoading ? (
+          <div
+            className="flex min-h-[200px] items-center justify-center"
+            role="status"
+          >
+            <p className="font-b6 text-gray-40">
+              비교 정보를 불러오는 중이에요.
+            </p>
+          </div>
+        ) : errorMessage ? (
+          <div
+            className="flex min-h-[200px] items-center justify-center"
+            role="alert"
+          >
+            <p className="font-b6 text-center text-gray-40">
+              {errorMessage}
+            </p>
+          </div>
+        ) : (
+          <section
+            className="grid grid-cols-2 gap-4 py-[10px]"
+            aria-label="촬영 목적 선택"
+          >
+            {PURPOSES.map((purpose) => (
+              <CategoryButton
+                key={purpose}
+                type={purpose}
+                active={selectedPurpose === purpose}
+                onClick={() => setSelectedPurpose(purpose)}
+              />
+            ))}
+          </section>
+        )}
       </main>
 
       <footer className="absolute inset-x-0 bottom-0 bg-white">
@@ -268,12 +323,14 @@ const ComparePurposePage = () => {
               />
             ))}
 
-            {selectedStudioCount < 3 && (
-              <ButtonCompareSlot
-                state="add"
-                onClick={handleAddStudio}
-              />
-            )}
+            {!isLoading &&
+              errorMessage === null &&
+              selectedStudioCount < 3 && (
+                <ButtonCompareSlot
+                  state="add"
+                  onClick={handleAddStudio}
+                />
+              )}
           </div>
 
           <span className="font-b6 whitespace-nowrap text-gray-20">
