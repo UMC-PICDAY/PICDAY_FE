@@ -13,15 +13,7 @@
  *
  * 초기 로드
  *   studioIds와 shootingCategory로 2-10 API 호출
- *
- * 현재 2-10 Response DTO가 미정이므로
- * API 요청 성공 여부만 확인하고 화면에는 임시 비교 데이터를 사용
- *
- * TODO
- *   2-10 Response DTO 확정 후
- *   - CompareResultResponse 실제 타입 작성
- *   - DEFAULT_COMPARE_DATA 제거
- *   - API 응답을 SelectedStudio[]로 변환
+ *   API 응답을 화면 비교 데이터로 변환하여 렌더링
  */
 
 import type { ReactNode } from 'react'
@@ -34,6 +26,7 @@ import Button from '@/components/common/Button'
 import NavigationBar from '@/components/layout/NavigationBar'
 import {
   getCompareResult,
+  type CompareResultStudio,
   type ShootingCategory,
 } from '@/services/studio'
 
@@ -76,46 +69,72 @@ interface CompareRowProps {
   children: ReactNode
 }
 
-const DEFAULT_COMPARE_DATA: CompareData[] = [
-  {
-    price: '₩30,000',
-    description: '보정 2장 · 의상 포함',
-    badgeLabel: '추가금 없음',
-    services: ['헤어·메이크업', '주차'],
-    location: '홍대 · 도보 3분',
-    reservationDate: '6월 27일 (목)',
-  },
-  {
-    price: '₩35,000',
-    description: '보정 3장',
-    badgeLabel: '추가금 없음',
-    services: ['헤어·메이크업', '의상 비치'],
-    location: '홍대 · 도보 5분',
-    reservationDate: '6월 28일 (금)',
-  },
-]
+const SERVICE_TAG_LABEL_MAP: Record<string, string> = {
+  HAIR_MAKEUP: '헤어·메이크업',
+  PARKING: '주차',
+  COSTUME: '의상 비치',
+}
 
-const getInitialStudios = (
-  navigationState: NavigationState | null,
-): SelectedStudio[] => {
-  const receivedStudios = navigationState?.studios?.slice(0, 2)
+const LOCATION_CATEGORY_LABEL_MAP: Record<string, string> = {
+  HONGDAE: '홍대',
+  GANGNAM: '강남',
+  SINCHON: '신촌',
+  JAMSIL: '잠실',
+}
 
-  if (!receivedStudios?.length) {
-    return []
+const formatServiceTag = (serviceTag: string) =>
+  SERVICE_TAG_LABEL_MAP[serviceTag] ?? serviceTag
+
+const formatLocation = ({
+  locationCategory,
+  nearestStation,
+  walkingMinutes,
+}: CompareResultStudio['location']) => {
+  const locationName =
+    LOCATION_CATEGORY_LABEL_MAP[locationCategory] ?? nearestStation
+
+  return `${locationName} · 도보 ${walkingMinutes}분`
+}
+
+const formatReservationDate = (date: string) => {
+  const [year, month, day] = date.split('-').map(Number)
+
+  if (!year || !month || !day) {
+    return date
   }
 
-  return receivedStudios.map((studio, index) => ({
-    id: studio.id,
-    name: studio.name,
-    imageSrc: studio.imageSrc,
-    rating: studio.rating ?? 0,
-    reviewCount: studio.reviewCount ?? 0,
-    compareData:
-      studio.compareData ??
-      DEFAULT_COMPARE_DATA[index] ??
-      DEFAULT_COMPARE_DATA[0],
-  }))
+  const parsedDate = new Date(year, month - 1, day)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return date
+  }
+
+  return parsedDate.toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  })
 }
+
+const convertStudio = (studio: CompareResultStudio): SelectedStudio => ({
+  id: studio.studioId,
+  name: studio.studioName,
+  imageSrc: studio.thumbnailUrl,
+  rating: studio.rating,
+  reviewCount: studio.reviewCount,
+  compareData: {
+    price: `₩${studio.productsInformation.price.toLocaleString('ko-KR')}`,
+    description: studio.productsInformation.comparisonSummary,
+    badgeLabel: studio.productsInformation.hasAdditionalPrice
+      ? undefined
+      : '추가금 없음',
+    services: studio.serviceTags.map(formatServiceTag),
+    location: formatLocation(studio.location),
+    reservationDate: formatReservationDate(
+      studio.earliestReservationDate,
+    ),
+  },
+})
 
 const CompareTwoPage = () => {
   const location = useLocation()
@@ -127,12 +146,10 @@ const CompareTwoPage = () => {
   const shootingCategory = navigationState?.shootingCategory
   const purpose = navigationState?.purpose
 
-  const [selectedStudios, setSelectedStudios] = useState<SelectedStudio[]>(() =>
-    getInitialStudios(navigationState),
-  )
-
-  const [selectedStudioId, setSelectedStudioId] = useState<number | null>(
-    selectedStudios[0]?.id ?? null,
+  const [selectedStudios, setSelectedStudios] = useState<SelectedStudio[]>([])
+  const [selectedStudioId, setSelectedStudioId] = useState<number | null>(null)
+  const [shootingCategoryName, setShootingCategoryName] = useState(
+    purpose ?? '',
   )
 
   const [isLoading, setIsLoading] = useState(true)
@@ -177,9 +194,21 @@ const CompareTwoPage = () => {
           shootingCategory,
         })
 
-        // TODO: 2-10 Response DTO 확정 후 API 응답으로 화면 데이터 설정
-        console.log('2-10 비교 결과 API 응답:', data)
+        if (data.studios.length !== 2) {
+          setSelectedStudios([])
+          setSelectedStudioId(null)
+          setErrorMessage('비교할 사진관 정보를 불러오지 못했습니다.')
+          return
+        }
+
+        const studios = data.studios.map(convertStudio)
+
+        setSelectedStudios(studios)
+        setSelectedStudioId(studios[0]?.id ?? null)
+        setShootingCategoryName(data.shootingCategoryName)
       } catch {
+        setSelectedStudios([])
+        setSelectedStudioId(null)
         setErrorMessage('사진관 비교 정보를 불러오지 못했습니다.')
       } finally {
         setIsLoading(false)
@@ -192,7 +221,10 @@ const CompareTwoPage = () => {
   const handleBack = () => {
     navigate('/compare', {
       state: {
-        studioIds: currentStudioIds,
+        studioIds:
+          currentStudioIds.length > 0
+            ? currentStudioIds
+            : initialStudioIds,
       },
     })
   }
@@ -228,7 +260,7 @@ const CompareTwoPage = () => {
       state: {
         studioIds: currentStudioIds,
         selectedStudios,
-        purpose,
+        purpose: shootingCategoryName || purpose,
         shootingCategory,
       },
     })
@@ -294,10 +326,12 @@ const CompareTwoPage = () => {
             <section className="flex w-full flex-col gap-3">
               <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
                 <div className="px-5 py-[10px]">
-                  <p className="font-b7 text-brand-100">비교하는 컨셉</p>
+                  <p className="font-b7 text-brand-100">
+                    비교하는 컨셉
+                  </p>
 
                   <p className="font-cap3 text-gray-40">
-                    {purpose ?? '프로필'}
+                    {shootingCategoryName || purpose || '프로필'}
                   </p>
                 </div>
 
@@ -407,9 +441,13 @@ const CompareTwoPage = () => {
 
           <div className="w-full px-5 pt-[10px] pb-5">
             <Button
-              variant={isConceptButtonDisabled ? 'disabled' : 'primary'}
+              variant={
+                isConceptButtonDisabled ? 'disabled' : 'primary'
+              }
               onClick={
-                isConceptButtonDisabled ? undefined : handleConceptList
+                isConceptButtonDisabled
+                  ? undefined
+                  : handleConceptList
               }
             >
               컨셉목록 보러가기

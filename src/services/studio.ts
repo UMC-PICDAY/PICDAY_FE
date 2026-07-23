@@ -1,4 +1,3 @@
-// PICDAY_API_1st.pdf 기준 path만 확정, Response DTO는 미정 (다음 주 확정 후 unknown -> 실제 타입으로 교체)
 import { apiGet } from '@/services/client'
 
 export interface StudioSearchParams {
@@ -30,6 +29,42 @@ export interface ComparePurposeResponse {
   studios: ComparePurposeStudio[]
 }
 
+export interface CompareResultParams {
+  studioIds: number[]
+  shootingCategory: ShootingCategory
+}
+
+export interface CompareProductInformation {
+  price: number
+  isMine: boolean
+  comparisonSummary: string
+  hasAdditionalPrice: boolean
+}
+
+export interface CompareStudioLocation {
+  locationCategory: string
+  nearestStation: string
+  walkingMinutes: number
+}
+
+export interface CompareResultStudio {
+  studioId: number
+  studioName: string
+  thumbnailUrl: string
+  rating: number
+  reviewCount: number
+  productsInformation: CompareProductInformation
+  serviceTags: string[]
+  location: CompareStudioLocation
+  earliestReservationDate: string
+}
+
+export interface CompareResultResponse {
+  shootingCategory: ShootingCategory
+  shootingCategoryName: string
+  studios: CompareResultStudio[]
+}
+
 export const getHome = () => apiGet<unknown>('/api/v1/home')
 
 export const autocompleteStudios = (keyword: string) =>
@@ -44,8 +79,13 @@ export const getStudioDetail = (studioId: string) =>
 export const getStudioConcepts = (studioId: string) =>
   apiGet<unknown>(`/api/v1/studios/${studioId}/concepts`)
 
-export const getStudioConceptDetail = (studioId: string, conceptId: string) =>
-  apiGet<unknown>(`/api/v1/studios/${studioId}/concepts/${conceptId}`)
+export const getStudioConceptDetail = (
+  studioId: string,
+  conceptId: string,
+) =>
+  apiGet<unknown>(
+    `/api/v1/studios/${studioId}/concepts/${conceptId}`,
+  )
 
 export const getStudioSlots = (studioId: string) =>
   apiGet<unknown>(`/api/v1/studios/${studioId}/slots`)
@@ -61,14 +101,6 @@ export const getComparePurposes = (studioIds: number[]) => {
     `/api/v1/studios/compare?${searchParams.toString()}`,
   )
 }
-
-export interface CompareResultParams {
-  studioIds: number[]
-  shootingCategory: ShootingCategory
-}
-
-// TODO: 2-10 Response DTO 확정 후 실제 타입으로 교체
-export type CompareResultResponse = unknown
 
 export const getCompareResult = ({
   studioIds,
@@ -86,4 +118,3 @@ export const getCompareResult = ({
     `/api/v1/studios/compare/result?${searchParams.toString()}`,
   )
 }
-
