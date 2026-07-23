@@ -1,14 +1,15 @@
 import type { CalendarDate } from '@/components/common/Calendar'
+import type { StudioSort } from '@/types/studio'
 
 export const STUDIO_PURPOSES = ['증명', '프로필', '개인화보', '취업', '가족', '우정'] as const
 
-/** API 정렬 enum 확정 전까지 현재 UI 값과 라벨을 한곳에서 관리합니다. */
+/** 백엔드 StudioSort enum 값과 표시 라벨을 한곳에서 관리합니다. */
 export const STUDIO_SORT_OPTIONS = [
-  { value: 'recommended', label: '추천순' },
-  { value: 'lowest-price', label: '가격낮은순' },
-  { value: 'rating', label: '별점순' },
-  { value: 'reviews', label: '리뷰많은순' },
-] as const
+  { value: 'RECOMMENDED', label: '추천순' },
+  { value: 'PRICE_LOW', label: '가격낮은순' },
+  { value: 'RATING_HIGH', label: '별점순' },
+  { value: 'REVIEW_COUNT', label: '리뷰많은순' },
+] as const satisfies readonly { value: StudioSort; label: string }[]
 
 export const STUDIO_SERVICE_OPTIONS = [
   { value: 'HAIR_MAKEUP', label: '헤어·메이크업 연계', quickLabel: '헤어·메이크업' },
@@ -23,7 +24,7 @@ export interface StudioSearchFilters {
   date?: string
   concepts: string[]
   name?: string
-  sort?: string
+  sort?: StudioSort
   minPrice?: number
   maxPrice?: number
   services: StudioServiceTag[]
@@ -43,6 +44,7 @@ const OWNED_PARAM_KEYS = [
 ] as const
 
 const SERVICE_VALUES = new Set<string>(STUDIO_SERVICE_OPTIONS.map(({ value }) => value))
+const SORT_VALUES = new Set<string>(STUDIO_SORT_OPTIONS.map(({ value }) => value))
 
 const uniqueNonEmpty = (values: string[]) =>
   [...new Set(values.map((value) => value.trim()).filter(Boolean))]
@@ -53,12 +55,17 @@ const parseOptionalNumber = (value: string | null) => {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
+const parseSort = (value: string | null): StudioSort | undefined => {
+  const trimmed = value?.trim()
+  return trimmed && SORT_VALUES.has(trimmed) ? (trimmed as StudioSort) : undefined
+}
+
 export const parseStudioSearchParams = (params: URLSearchParams): StudioSearchFilters => ({
   location: params.get('location')?.trim() || undefined,
   date: params.get('date')?.trim() || undefined,
   concepts: uniqueNonEmpty(params.getAll('concept')),
   name: params.get('name')?.trim() || undefined,
-  sort: params.get('sort')?.trim() || undefined,
+  sort: parseSort(params.get('sort')),
   minPrice: parseOptionalNumber(params.get('minPrice')),
   maxPrice: parseOptionalNumber(params.get('maxPrice')),
   services: uniqueNonEmpty(params.getAll('service')).filter((value): value is StudioServiceTag =>
@@ -93,6 +100,9 @@ export const hasBaseSearchCondition = (filters: StudioSearchFilters) =>
 
 export const isStudioServiceTag = (value: string): value is StudioServiceTag =>
   SERVICE_VALUES.has(value)
+
+export const isStudioSort = (value: string): value is StudioSort =>
+  SORT_VALUES.has(value)
 
 export const toggleStudioService = (
   services: StudioServiceTag[],

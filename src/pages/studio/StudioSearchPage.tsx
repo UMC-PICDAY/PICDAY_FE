@@ -21,6 +21,7 @@ import {
   buildStudioSearchChipLabel,
   hasBaseSearchCondition,
   isStudioServiceTag,
+  isStudioSort,
   parseStudioSearchParams,
   serializeStudioSearchParams,
   STUDIO_SERVICE_OPTIONS,
@@ -89,7 +90,9 @@ const StudioSearchPage = () => {
 
     const nextFilters = isStudioServiceTag(value)
       ? { ...filters, services: toggleStudioService(filters.services, value) }
-      : { ...filters, sort: value }
+      : isStudioSort(value)
+        ? { ...filters, sort: value }
+        : filters
     setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
   }
 

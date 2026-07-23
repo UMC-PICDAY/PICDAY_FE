@@ -3,12 +3,18 @@ import type { ReviewListItem, ReviewSummary } from '@/types/review'
 
 // ===== 2-3. GET /api/v1/studios/search =====
 
+/**
+ * 정렬 기준 (백엔드 `StudioSort` enum 확정값).
+ * RECOMMENDED: 추천순 / PRICE_LOW: 가격낮은순 / RATING_HIGH: 별점순 / REVIEW_COUNT: 리뷰많은순
+ */
+export type StudioSort = 'RECOMMENDED' | 'PRICE_LOW' | 'RATING_HIGH' | 'REVIEW_COUNT'
+
 export interface StudioSearchParams {
   location?: string
   date?: string // YYYY-MM-DD
   concept?: string[]
   name?: string
-  sort?: string
+  sort?: StudioSort
   minPrice?: number
   maxPrice?: number
   service?: string[]
@@ -53,7 +59,7 @@ export interface StudioSearchAppliedFilters {
   date: string | null
   concept: string[]
   name: string | null
-  sort: string | null
+  sort: StudioSort | null
   minPrice: number | null
   maxPrice: number | null
   serviceTags: string[]

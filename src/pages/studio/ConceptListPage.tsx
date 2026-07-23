@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardStudioDetail from '@/components/cards/CardStudioDetail'
 import Toast from '@/components/common/Toast'
@@ -40,6 +40,8 @@ const toApiDate = ({ year, month, day }: CalendarDate) =>
 
 const ConceptListPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { studioId } = useParams()
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
   const [dateTimeSelection, setDateTimeSelection] =
@@ -48,6 +50,8 @@ const ConceptListPage = () => {
   const [sheetDate, setSheetDate] = useState<CalendarDate | undefined>(undefined)
   const [reservationToast, setReservationToast] =
     useState<ReservationToast | null>(null)
+  // 예약 도메인 복귀 진입(state/query) 1회만 처리
+  const entryHandledRef = useRef(false)
 
   const apiDate = dateTimeSelection ? toApiDate(dateTimeSelection.date) : undefined
   const apiTime = dateTimeSelection?.startTime
@@ -86,6 +90,35 @@ const ConceptListPage = () => {
     setReservationToast({ id: Date.now(), message })
   }
 
+  // 예약 생성 중 슬롯 충돌(RESERVATION_4091)로 예약 도메인이 C-7로 되돌려보낼 때:
+  // state.openTimeSelectModal → 일시 선택 시트 자동 오픈 / ?toast=time → 안내 토스트
+  useEffect(() => {
+    if (entryHandledRef.current) return
+    const entryState = location.state as { openTimeSelectModal?: boolean } | null
+    const showTimeToast = searchParams.get('toast') === 'time'
+    if (!entryState?.openTimeSelectModal && !showTimeToast) return
+    entryHandledRef.current = true
+
+    if (showTimeToast) {
+      setReservationToast({ id: Date.now(), message: '이미 예약된 시간대예요' })
+    }
+    if (entryState?.openTimeSelectModal) {
+      setSheetDate(dateTimeSelection?.date)
+      setDateSheetOpen(true)
+    }
+
+    // 새로고침·재진입 시 반복되지 않도록 소비한 query·state 제거
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('toast')
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextParams.toString() ? `?${nextParams.toString()}` : '',
+      },
+      { replace: true, state: null },
+    )
+  }, [location, searchParams, navigate, dateTimeSelection])
+
   const handleReserve = (product: StudioProduct) => {
     if (!dateTimeSelection) {
       showReservationToast('날짜, 시간을 먼저 선택해 주세요')
@@ -98,7 +131,26 @@ const ConceptListPage = () => {
     }
 
     setReservationToast(null)
-    // 예약 생성(3-x)은 예약 도메인 담당 → 여기선 조건 검증까지 처리
+
+    // 예약 생성(3-x)은 예약 도메인 담당 → 검증 통과 시 예약 화면으로 계약 데이터 전달
+    const selectedDate = toApiDate(dateTimeSelection.date)
+    const selectedTime = dateTimeSelection.startTime
+    navigate('/reservation', {
+      state: {
+        reservation: {
+          studioId: Number(studioId),
+          studioProductId: product.productId,
+          timeSlotId: Number(dateTimeSelection.slotId),
+          studioName: products?.studioName ?? '',
+          conceptName: product.productName,
+          includedItems: product.shortDescription.split(' · '),
+          reservationDateTime: `${selectedDate.replaceAll('-', '.')} ${selectedTime}`,
+          reserverName: '',
+          reserverPhone: '',
+          price: product.price,
+        },
+      },
+    })
   }
 
   return (
