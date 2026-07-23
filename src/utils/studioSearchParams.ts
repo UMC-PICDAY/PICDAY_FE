@@ -98,6 +98,21 @@ export const serializeStudioSearchParams = (
 export const hasBaseSearchCondition = (filters: StudioSearchFilters) =>
   Boolean(filters.location || filters.date || filters.concepts.length > 0 || filters.name)
 
+/** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
+export const resetStudioSearchFilters = (
+  filters: StudioSearchFilters,
+): StudioSearchFilters => ({
+  location: filters.location,
+  date: filters.date,
+  concepts: filters.concepts,
+  name: filters.name,
+  sort: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
+  services: [],
+  minRating: undefined,
+})
+
 export const isStudioServiceTag = (value: string): value is StudioServiceTag =>
   SERVICE_VALUES.has(value)
 

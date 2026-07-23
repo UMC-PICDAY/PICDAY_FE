@@ -76,6 +76,14 @@ export interface StudioSearchResult {
   recommendStudios?: StudioRecommendItem[]
 }
 
+// ===== 비교(compare) 선택 항목 =====
+
+/** 비교 바에 담기는 사진관 최소 식별 정보. 검색/비교 화면이 공유한다. */
+export interface CompareStudio {
+  studioId: number
+  studioName: string
+}
+
 // ===== 2-4. GET /api/v1/studios/{studioId} =====
 
 export interface StudioConceptPreview {

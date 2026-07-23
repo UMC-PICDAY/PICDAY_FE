@@ -17,12 +17,15 @@ import StudioResultsList from '@/pages/studio/components/StudioResultsList'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import { useStudioSearch } from '@/hooks/useStudio'
+import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
+import type { StudioSearchItem } from '@/types/studio'
 import {
   buildStudioSearchChipLabel,
   hasBaseSearchCondition,
   isStudioServiceTag,
   isStudioSort,
   parseStudioSearchParams,
+  resetStudioSearchFilters,
   serializeStudioSearchParams,
   STUDIO_SERVICE_OPTIONS,
   STUDIO_SORT_OPTIONS,
@@ -51,6 +54,20 @@ const StudioSearchPage = () => {
   const totalCount = result?.totalCount ?? 0
   const isEmpty =
     !loading && result !== null && (result.hasResult === false || studios.length === 0)
+
+  const { items: compareItems, toggle: toggleCompare, remove: removeCompare } = useCompareStore()
+  const selectedIds = new Set(compareItems.map((item) => item.studioId))
+
+  const handleCompareToggle = (studio: StudioSearchItem) => {
+    toggleCompare({ studioId: studio.studioId, studioName: studio.studioName })
+  }
+
+  const handleCompare = () => {
+    if (compareItems.length < 2) return
+    navigate('/compare', {
+      state: { studioIds: compareItems.map((item) => item.studioId) },
+    })
+  }
 
   const [snap, setSnap] = useState<SheetSnap>('half')
 
@@ -96,6 +113,12 @@ const StudioSearchPage = () => {
     setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
   }
 
+  const handleResetFilters = () => {
+    setSearchParams(
+      serializeStudioSearchParams(resetStudioSearchFilters(filters), searchParams),
+    )
+  }
+
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-white">
       <NavigationBar
@@ -135,7 +158,7 @@ const StudioSearchPage = () => {
           >
             <div className="flex flex-col pb-6">
               <div className="flex justify-center pb-[50px] pt-2.5">
-                <Notice2 />
+                <Notice2 onReset={handleResetFilters} />
               </div>
               {(result?.recommendStudios?.length ?? 0) > 0 && (
                 <section>
@@ -177,8 +200,11 @@ const StudioSearchPage = () => {
                   </div>
                 </div>
                 <CompareActionBar
-                  selectedLabels={['데이지', '타임']}
-                  maxSlots={3}
+                  selected={compareItems}
+                  maxSlots={MAX_COMPARE}
+                  disabled={compareItems.length < 2}
+                  onCompare={handleCompare}
+                  onRemove={removeCompare}
                   className="flex w-full flex-col items-start"
                 />
                 <TabBarUser activeTab="search" />
@@ -188,7 +214,9 @@ const StudioSearchPage = () => {
             <StudioResultsList
               studios={studios}
               showCompareButton={snap === 'expanded'}
+              selectedIds={selectedIds}
               onSelect={(id) => navigate(`/studios/${id}`)}
+              onCompareToggle={handleCompareToggle}
             />
           </StudioResultsBottomSheet>
         )}

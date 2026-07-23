@@ -79,8 +79,9 @@ const ButtonCompareSlot = ({
       {!isAdd && (
         <>
           <p
-            className="shrink-0 whitespace-nowrap text-[var(--font-b9-size)] font-[var(--font-b9-weight)] leading-[var(--font-b9-line-height)] tracking-[var(--font-b9-letter-spacing)] text-brand-100 [word-break:break-word]"
+            className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-[var(--font-b9-size)] font-[var(--font-b9-weight)] leading-[var(--font-b9-line-height)] tracking-[var(--font-b9-letter-spacing)] text-brand-100"
             data-node-id="767:4612"
+            title={label}
           >
             {label}
           </p>
