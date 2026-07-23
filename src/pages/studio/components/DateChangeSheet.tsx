@@ -10,7 +10,7 @@ import type { CalendarDate } from '@/components/common/Calendar'
 import type {
   StudioDateTimeSelection,
   StudioTimeSlot,
-} from '@/pages/studio/types/dateTime'
+} from '@/types/studio'
 
 interface DateChangeSheetProps {
   initialSelection: StudioDateTimeSelection | null

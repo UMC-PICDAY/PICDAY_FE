@@ -16,6 +16,7 @@ import StudioResultsBottomSheet from '@/pages/studio/components/StudioResultsBot
 import StudioResultsList from '@/pages/studio/components/StudioResultsList'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
+import { useStudioSearch } from '@/hooks/useStudio'
 import {
   buildStudioSearchChipLabel,
   hasBaseSearchCondition,
@@ -27,12 +28,6 @@ import {
   toggleStudioService,
 } from '@/utils/studioSearchParams'
 
-import cardImage1 from '@/assets/images/CardImage1.png'
-import cardImage2 from '@/assets/images/CardImage2.png'
-import cardImage3 from '@/assets/images/CardImage3.png'
-
-type ResultStatus = 'loading' | 'success' | 'empty' | 'map-error'
-
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
   ...STUDIO_SERVICE_OPTIONS
@@ -40,26 +35,28 @@ const QUICK_FILTER_ITEMS = [
     .map(({ value, quickLabel }) => ({ value, label: quickLabel })),
 ]
 
-const RECOMMENDATIONS = [
-  { name: '데이지 스튜디오', image: cardImage1 },
-  { name: '타임 스튜디오', image: cardImage2 },
-  { name: '보노 스튜디오', image: cardImage3 },
-]
-
-const resolveStatus = (state: string | null): ResultStatus => {
-  if (state === 'empty') return 'empty'
-  if (state === 'error') return 'map-error'
-  return 'success'
-}
-
 const StudioSearchPage = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
-  const status = resolveStatus(searchParams.get('state'))
-  const [snap, setSnap] = useState<SheetSnap>(() =>
-    status === 'empty' ? 'expanded' : 'half',
-  )
+  const mapError = searchParams.get('state') === 'error'
+
+  // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
+  const { data, isLoading } = useStudioSearch(filters)
+  const result = data ?? null
+  const loading = isLoading
+
+  const studios = result?.studios ?? []
+  const totalCount = result?.totalCount ?? 0
+  const isEmpty =
+    !loading && result !== null && (result.hasResult === false || studios.length === 0)
+
+  const [snap, setSnap] = useState<SheetSnap>('half')
+
+  // 빈 결과일 때 시트를 펼쳐 추천 리스트가 보이도록 한다.
+  useEffect(() => {
+    if (isEmpty) setSnap('expanded')
+  }, [isEmpty])
 
   useEffect(() => {
     if (!searchParams.has('snap')) return
@@ -120,39 +117,43 @@ const StudioSearchPage = () => {
       <div ref={containerRef} className="relative flex-1 overflow-hidden">
         <StudioMapCanvas interactive={!isDragging} />
 
-        {status === 'map-error' ? (
+        {mapError ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-10">
             <ErrorNotice
               icon={<IcPin width={48} height={48} className="text-brand-80" />}
               title="지도를 불러오지 못했어요"
             />
           </div>
-        ) : status === 'empty' ? (
+        ) : isEmpty ? (
           <StudioResultsBottomSheet
             {...sheetShellProps}
-            header={<p className="py-2.5 font-b10 text-gray-40">검색 결과 0곳</p>}
+            header={<p className="py-2.5 font-b10 text-gray-40">검색 결과 {totalCount}곳</p>}
             footer={<TabBarUser activeTab="search" />}
           >
             <div className="flex flex-col pb-6">
               <div className="flex justify-center pb-[50px] pt-2.5">
                 <Notice2 />
               </div>
-              <section>
-                <h2 className="pb-3 font-b5 text-black">이런 사진관은 어때요?</h2>
-                <div className="flex gap-3 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {RECOMMENDATIONS.map((studio, index) => (
-                    <CardStudioSmall
-                      key={studio.name}
-                      name={studio.name}
-                      imageSrc={studio.image}
-                      location="홍대"
-                      category="프로필"
-                      secondaryCategory="프로필"
-                      onClick={() => navigate(`/studios/${index + 1}`)}
-                    />
-                  ))}
-                </div>
-              </section>
+              {(result?.recommendStudios?.length ?? 0) > 0 && (
+                <section>
+                  <h2 className="pb-3 font-b5 text-black">이런 사진관은 어때요?</h2>
+                  <div className="flex gap-3 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {result?.recommendStudios?.map((studio) => (
+                      <CardStudioSmall
+                        key={studio.studioId}
+                        name={studio.studioName}
+                        imageSrc={studio.thumbnailUrl}
+                        location={studio.locationCategory}
+                        category={studio.shootingCategory[0] ?? ''}
+                        secondaryCategory={studio.shootingCategory[1]}
+                        price={`₩${studio.minprice.toLocaleString()}~`}
+                        rating={`★${studio.rating}`}
+                        onClick={() => navigate(`/studios/${studio.studioId}`)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           </StudioResultsBottomSheet>
         ) : (
@@ -160,7 +161,9 @@ const StudioSearchPage = () => {
             {...sheetShellProps}
             header={
               <p className="py-2.5 text-center font-b8 text-gray-60">
-                사진관 24 곳
+                {loading && result === null
+                  ? '불러오는 중…'
+                  : `사진관 ${totalCount} 곳`}
               </p>
             }
             footer={
@@ -180,6 +183,7 @@ const StudioSearchPage = () => {
             }
           >
             <StudioResultsList
+              studios={studios}
               showCompareButton={snap === 'expanded'}
               onSelect={(id) => navigate(`/studios/${id}`)}
             />

@@ -1,33 +1,48 @@
-// PICDAY_API_1st.pdf 기준 path만 확정, Response DTO는 미정 (다음 주 확정 후 unknown -> 실제 타입으로 교체)
 import { apiGet } from '@/services/client'
+import type {
+  HairMakeupData,
+  StudioDetail,
+  StudioProductDetail,
+  StudioProductsData,
+  StudioProductsParams,
+  StudioSearchParams,
+  StudioSearchResult,
+  StudioTimeSlot,
+} from '@/types/studio'
 
-export interface StudioSearchParams {
-  name?: string
-  location?: string
-  date?: string
-  concept?: string
-  minPrice?: number
-  maxPrice?: number
-  service?: string[]
-  minRating?: number
-}
+// 2-3. 사진관 검색
+export const searchStudios = (
+  params: StudioSearchParams,
+): Promise<StudioSearchResult> =>
+  apiGet<StudioSearchResult>('/api/v1/studios/search', params)
 
-export const getHome = () => apiGet<unknown>('/api/v1/home')
+// 2-4. 사진관 상세
+export const getStudioDetail = (studioId: string): Promise<StudioDetail> =>
+  apiGet<StudioDetail>(`/api/v1/studios/${studioId}`)
 
-export const autocompleteStudios = (keyword: string) =>
-  apiGet<unknown>('/api/v1/studios/autocomplete', { keyword })
+// 2-5. 컨셉(상품) 목록 조회
+export const getStudioProducts = (
+  studioId: string,
+  params?: StudioProductsParams,
+): Promise<StudioProductsData> =>
+  apiGet<StudioProductsData>(`/api/v1/studios/${studioId}/products`, params)
 
-export const searchStudios = (params: StudioSearchParams) =>
-  apiGet<unknown>('/api/v1/studios/search', params)
+// 2-6. 컨셉 사진 상세
+export const getStudioProductDetail = (
+  studioId: string,
+  productId: string,
+): Promise<StudioProductDetail> =>
+  apiGet<StudioProductDetail>(
+    `/api/v1/studios/${studioId}/products/${productId}`,
+  )
 
-export const getStudioDetail = (studioId: string) =>
-  apiGet<unknown>(`/api/v1/studios/${studioId}`)
+// 2-7. 예약 가능 시간 조회
+export const getStudioSlots = (
+  studioId: string,
+  date: string,
+): Promise<StudioTimeSlot[]> =>
+  apiGet<StudioTimeSlot[]>(`/api/v1/studios/${studioId}/slots`, { date })
 
-export const getStudioConcepts = (studioId: string) =>
-  apiGet<unknown>(`/api/v1/studios/${studioId}/concepts`)
-
-export const getStudioConceptDetail = (studioId: string, conceptId: string) =>
-  apiGet<unknown>(`/api/v1/studios/${studioId}/concepts/${conceptId}`)
-
-export const getStudioSlots = (studioId: string) =>
-  apiGet<unknown>(`/api/v1/studios/${studioId}/slots`)
+// 2-8. 헤어메이크업 연계 상세
+export const getStudioHairMakeup = (studioId: string): Promise<HairMakeupData> =>
+  apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hairMakeupDetail`)
