@@ -1,23 +1,21 @@
-// PICDAY_API_1st.pdf 기준 path만 확정, Request/Response DTO는 미정
-// 리뷰 수정/삭제/추천취소는 명세서에 아직 없음 (팀 확인 필요)
-import { apiGet, apiPost } from '@/services/client'
+import { apiDelete, apiGet, apiPost } from '@/services/client'
+import type {
+  ReviewLikeResult,
+  ReviewListData,
+  ReviewListParams,
+} from '@/types/review'
 
-export interface ReviewListParams {
-  sort?: string
-  photoOnly?: boolean
-  page?: number
-}
+// 5-1. 리뷰 목록 조회
+export const getStudioReviews = (
+  studioId: string,
+  params: ReviewListParams,
+): Promise<ReviewListData> =>
+  apiGet<ReviewListData>(`/api/v1/studios/${studioId}/reviews`, params)
 
-export const getReviews = (studioId: string, params?: ReviewListParams) =>
-  apiGet<unknown>(`/api/v1/studios/${studioId}/reviews`, params)
+// 5-5. 리뷰 추천(도움돼요)
+export const likeReview = (reviewId: number): Promise<ReviewLikeResult> =>
+  apiPost<ReviewLikeResult>(`/api/v1/reviews/${reviewId}/like`)
 
-export const createReview = (body: unknown) => apiPost<unknown>('/api/v1/reviews', body)
-
-export const likeReview = (reviewId: string) =>
-  apiPost<unknown>(`/api/v1/reviews/${reviewId}/like`)
-
-export const uploadImage = (file: File) => {
-  const formData = new FormData()
-  formData.append('image', file)
-  return apiPost<unknown>('/api/v1/images', formData)
-}
+// 5-6. 리뷰 추천 취소
+export const unlikeReview = (reviewId: number): Promise<ReviewLikeResult> =>
+  apiDelete<ReviewLikeResult>(`/api/v1/reviews/${reviewId}/like`)

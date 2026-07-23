@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Alert3 from '@/components/common/Alert3'
@@ -9,16 +9,8 @@ import { IcFilter, IcStar, IcStarHalf } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import ReviewCard from '@/pages/studio/components/ReviewCard'
-import { MOCK_STUDIO_REVIEW_DATA } from '@/pages/studio/mocks/studioReviews'
-import type {
-  ReviewListItem,
-  ReviewListParams,
-  ReviewSort,
-} from '@/pages/studio/types/review'
-import {
-  formatReviewDate,
-  selectReviews,
-} from '@/pages/studio/utils/reviews'
+import { useStudioReviews } from '@/hooks/useStudioReviews'
+import type { ReviewSort } from '@/types/review'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const SORT_OPTIONS = [
@@ -26,69 +18,30 @@ const SORT_OPTIONS = [
   { value: 'recommend', label: '추천순' },
 ] as const
 
-const commitMockLikeChange = () =>
-  new Promise<void>((resolve) => window.setTimeout(resolve, 200))
-
 const ReviewDetailPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
-  const [reviews, setReviews] = useState<ReviewListItem[]>(() =>
-    MOCK_STUDIO_REVIEW_DATA.items.map((review) => ({ ...review })),
-  )
   const [photoOnly, setPhotoOnly] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [sortValue, setSortValue] = useState<ReviewSort>('recent')
   const [loginOpen, setLoginOpen] = useState(false)
-  const [pendingReviewId, setPendingReviewId] = useState<number | null>(null)
-  const pendingReviewIdRef = useRef<number | null>(null)
 
-  const reviewParams = useMemo<ReviewListParams>(
-    () => ({ sort: sortValue, photoOnly, page: 1, size: 10 }),
-    [photoOnly, sortValue],
-  )
-  const visibleReviews = useMemo(
-    () => selectReviews(reviews, reviewParams),
-    [reviewParams, reviews],
-  )
+  const { summary, reviews, toggleLike, likePending } = useStudioReviews({
+    studioId,
+    sort: sortValue,
+    photoOnly,
+  })
 
   const sortLabel =
     SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? '최신순'
 
-  const handleLikeChange = async (reviewId: number, nextLiked: boolean) => {
+  const handleLikeChange = (reviewId: number, nextLiked: boolean) => {
     if (!isLoggedIn) {
       setLoginOpen(true)
       return
     }
-    if (pendingReviewIdRef.current !== null) return
-
-    const previousReviews = reviews
-    pendingReviewIdRef.current = reviewId
-    setPendingReviewId(reviewId)
-    setReviews((currentReviews) =>
-      currentReviews.map((review) =>
-        review.reviewId === reviewId
-          ? {
-              ...review,
-              isLiked: nextLiked,
-              likeCount: Math.max(
-                0,
-                review.likeCount + (nextLiked ? 1 : -1),
-              ),
-            }
-          : review,
-      ),
-    )
-
-    try {
-      // API 연동 시 likeReview/unlikeReview mutation으로 교체합니다.
-      await commitMockLikeChange()
-    } catch {
-      setReviews(previousReviews)
-    } finally {
-      pendingReviewIdRef.current = null
-      setPendingReviewId(null)
-    }
+    toggleLike(reviewId, nextLiked)
   }
 
   return (
@@ -119,11 +72,11 @@ const ReviewDetailPage = () => {
             <IcStarHalf width={36} height={36} className="text-brand-80" />
           </div>
           <span className="pl-2 font-h2 text-black">
-            {MOCK_STUDIO_REVIEW_DATA.summary.avgRating.toFixed(1)}
+            {(summary?.avgRating ?? 0).toFixed(1)}
           </span>
         </div>
         <span className="font-b6 text-gray-60">
-          ({MOCK_STUDIO_REVIEW_DATA.summary.totalCount}개 평가)
+          ({summary?.totalCount ?? 0}개 평가)
         </span>
       </div>
 
@@ -135,8 +88,7 @@ const ReviewDetailPage = () => {
             onChange={() => setPhotoOnly((prev) => !prev)}
           />
           <span className="font-b6 text-gray-60">
-            사진 리뷰만 보기 (
-            {MOCK_STUDIO_REVIEW_DATA.summary.photoReviewCount})
+            사진 리뷰만 보기 ({summary?.photoReviewCount ?? 0})
           </span>
         </label>
         <div className="relative">
@@ -174,7 +126,7 @@ const ReviewDetailPage = () => {
 
       {/* 리뷰 리스트 */}
       <div className="flex flex-col gap-5 pb-5">
-        {visibleReviews.map((review) => (
+        {reviews.map((review) => (
           <ReviewCard
             key={review.reviewId}
             reviewId={review.reviewId}
@@ -182,18 +134,18 @@ const ReviewDetailPage = () => {
             reviewerName={review.writerNickname}
             isBest={review.isBest}
             rating={review.rating}
-            date={formatReviewDate(review.createdAt)}
+            date={review.createdAt.slice(0, 10).replaceAll('-', '.')}
             conceptTitle={review.conceptName}
             body={review.content}
             photos={review.images}
             helpfulText={`${review.likeCount}명에게 도움이 된 리뷰예요`}
             likeCount={review.likeCount}
             liked={review.isLiked}
-            likePending={pendingReviewId !== null}
+            likePending={likePending}
             onLikeChange={handleLikeChange}
           />
         ))}
-        {visibleReviews.length === 0 && (
+        {reviews.length === 0 && (
           <Notice2
             variant="message"
             title="조건에 맞는 리뷰가 없어요"
