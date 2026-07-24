@@ -24,7 +24,7 @@ const SHOOTING_CATEGORY_LABEL: Record<string, string> = {
   PERSONAL_PORTRAIT: '개인화보',
   JOB_PHOTO: '취업',
   FAMILY: '가족',
-  FRIEND: '우정',
+  FRIENDSHIP: '우정',
 }
 
 const formatDate = ({ year, month, day }: CalendarDate) =>
