@@ -25,23 +25,37 @@ const ReviewDetailPage = () => {
   const [photoOnly, setPhotoOnly] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [sortValue, setSortValue] = useState<ReviewSort>('recent')
-  const [loginOpen, setLoginOpen] = useState(false)
 
   const { summary, reviews, toggleLike, likePending } = useStudioReviews({
     studioId,
     sort: sortValue,
     photoOnly,
+    enabled: isLoggedIn,
   })
 
   const sortLabel =
     SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? '최신순'
 
   const handleLikeChange = (reviewId: number, nextLiked: boolean) => {
-    if (!isLoggedIn) {
-      setLoginOpen(true)
-      return
-    }
     toggleLike(reviewId, nextLiked)
+  }
+
+  // 리뷰는 로그인한 사용자만 볼 수 있어, 비로그인 진입 시 로그인 유도 모달만 노출한다.
+  if (!isLoggedIn) {
+    return (
+      <div className="flex min-h-dvh flex-col bg-white">
+        <NavigationBar variant="default" title="리얼리뷰" onBack={() => navigate(-1)} />
+        <div className="fixed inset-0 z-40 mx-auto flex max-w-[390px] items-center justify-center bg-black/40 px-5">
+          <div className="w-full">
+            <Alert3
+              variant="variant3"
+              onClick={() => navigate('/login')}
+              onHelperClick={() => navigate(-1)}
+            />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -164,21 +178,6 @@ const ReviewDetailPage = () => {
           모든 컨셉 보기
         </button>
       </div>
-
-      {loginOpen && (
-        <div
-          className="fixed inset-0 z-40 mx-auto flex max-w-[390px] items-center justify-center bg-black/40 px-5"
-          onClick={() => setLoginOpen(false)}
-        >
-          <div className="w-full" onClick={(event) => event.stopPropagation()}>
-            <Alert3
-              variant="variant3"
-              onClick={() => navigate('/login')}
-              onHelperClick={() => setLoginOpen(false)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   )
 }

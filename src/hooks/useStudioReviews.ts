@@ -7,6 +7,7 @@ interface UseStudioReviewsParams {
   studioId: string | undefined
   sort: ReviewSort
   photoOnly: boolean
+  enabled?: boolean
 }
 
 interface LikeVariables {
@@ -25,6 +26,7 @@ export const useStudioReviews = ({
   studioId,
   sort,
   photoOnly,
+  enabled = true,
 }: UseStudioReviewsParams) => {
   const queryClient = useQueryClient()
   const queryKey = reviewListKey(studioId, sort, photoOnly)
@@ -33,7 +35,7 @@ export const useStudioReviews = ({
     queryKey,
     queryFn: () =>
       getStudioReviews(studioId ?? '', { sort, photoOnly, page: 1, size: 10 }),
-    enabled: Boolean(studioId),
+    enabled: Boolean(studioId) && enabled,
   })
 
   // 캐시된 목록에서 특정 리뷰의 좋아요 상태/카운트만 갱신
