@@ -23,7 +23,6 @@ import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import { IcEvent2 } from '@/components/icons'
 import TabBarUser from '@/components/layout/TabBarUser'
-import TopAppBar from '@/components/layout/TopAppBar'
 import {
   getMyReservations,
   type ReservationListItem,
@@ -296,9 +295,6 @@ const MyReservationPage = () => {
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
-      <div className="sticky top-0 z-10 w-full bg-white">
-        <TopAppBar />
-      </div>
 
       <Profile
         variant="userInfo"
