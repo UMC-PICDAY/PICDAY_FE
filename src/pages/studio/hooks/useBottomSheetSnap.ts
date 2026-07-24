@@ -204,16 +204,10 @@ export const useBottomSheetSnap = ({
     },
   }
 
-  // expanded에서는 목록 최상단에서 아래로 당길 때만 시트 드래그로 넘긴다.
-  // half에서는 목록 자체가 스크롤되지 않으므로(overflow-hidden), 위/아래 어느 방향으로
-  // 드래그해도 바로 시트 드래그로 넘겨 손잡이를 정확히 잡지 않아도 펼칠 수 있게 한다.
+  // expanded 목록 최상단에서 아래로 당길 때만 시트 드래그로 넘긴다.
   const listHandlers = {
     onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (snap === 'collapsed') return
-      if (snap === 'half') {
-        pendingList.current = { startY: event.clientY }
-        return
-      }
+      if (snap !== 'expanded') return
       const list = listRef.current
       if (list && list.scrollTop <= 0) {
         pendingList.current = { startY: event.clientY }
@@ -225,21 +219,9 @@ export const useBottomSheetSnap = ({
         return
       }
       const pending = pendingList.current
-      if (!pending) return
-      const delta = event.clientY - pending.startY
-
-      if (snap === 'half') {
-        if (Math.abs(delta) > DRAG_THRESHOLD) {
-          event.currentTarget.setPointerCapture?.(event.pointerId)
-          beginDrag(pending.startY, false)
-          pendingList.current = null
-          moveDrag(event.clientY)
-        }
-        return
-      }
-
       const list = listRef.current
-      if (!list) return
+      if (!pending || !list) return
+      const delta = event.clientY - pending.startY
       if (delta > DRAG_THRESHOLD && list.scrollTop <= 0) {
         event.currentTarget.setPointerCapture?.(event.pointerId)
         beginDrag(pending.startY, false)
