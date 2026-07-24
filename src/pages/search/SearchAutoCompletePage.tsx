@@ -1,5 +1,5 @@
 /** Figma B-3 지역칩 선택 / 사진관명 텍스트 입력 / 자동완성 노출 (라우트: /search/autocomplete) — 한 화면에서 상태로 분기 */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import NavigationBar from '@/components/layout/NavigationBar'
@@ -8,15 +8,12 @@ import SearchField from '@/components/common/SearchField'
 import FilterChip from '@/components/common/FilterChip'
 import Button from '@/components/common/Button'
 import { useSearchDraftStore } from '@/stores/useSearchDraftStore'
+import { autocompleteStudios } from '@/services/studio'
+import type { AutocompleteSuggestion } from '@/types/studio'
 
 const REGION_CHIPS = ['전체', '홍대', '강남', '성수', '연남', '건대', '신촌', '잠실', '압구정', '혜화', '종로']
 
-// API 명세가 아직 없어서 목업 검색 결과로 대체 (실제 API 연동 시 keyword로 필터링된 목록으로 교체)
-const SUGGESTIONS = [
-  { label: '데이지 스튜디오', meta: '홍대' },
-  { label: '데이지 포토 홍대', meta: '홍대' },
-  { label: '데이지룸 강남', meta: '강남' },
-]
+const AUTOCOMPLETE_DEBOUNCE_MS = 250
 
 const SearchAutoCompletePage = () => {
   const navigate = useNavigate()
@@ -24,12 +21,28 @@ const SearchAutoCompletePage = () => {
   const [keyword, setKeyword] = useState(() => useSearchDraftStore.getState().keyword)
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null)
+  const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([])
 
   const isTyping = keyword.trim().length > 0
   const canProceed = isTyping ? selectedSuggestion !== null : selectedRegion !== null
 
+  useEffect(() => {
+    if (!isTyping) {
+      setSuggestions([])
+      return
+    }
+
+    const timer = setTimeout(() => {
+      autocompleteStudios(keyword)
+        .then((result) => setSuggestions(result.suggestions))
+        .catch(() => setSuggestions([]))
+    }, AUTOCOMPLETE_DEBOUNCE_MS)
+
+    return () => clearTimeout(timer)
+  }, [keyword, isTyping])
+
   const handleConfirm = () => {
-    const value = isTyping ? SUGGESTIONS[selectedSuggestion!].label : selectedRegion!
+    const value = isTyping ? suggestions[selectedSuggestion!].studioName : selectedRegion!
     setKeywordDraft(value)
     navigate('/search')
   }
@@ -54,13 +67,13 @@ const SearchAutoCompletePage = () => {
 
         {isTyping ? (
           <div className="flex w-full flex-col items-start overflow-hidden rounded-lg">
-            {SUGGESTIONS.map((suggestion, index) => (
+            {suggestions.map((suggestion, index) => (
               <SearchField
-                key={suggestion.label}
+                key={suggestion.studioId}
                 variant="result"
-                position={index === 0 ? 'top' : index === SUGGESTIONS.length - 1 ? 'bottom' : 'middle'}
-                resultLabel={suggestion.label}
-                resultMeta={suggestion.meta}
+                position={index === 0 ? 'top' : index === suggestions.length - 1 ? 'bottom' : 'middle'}
+                resultLabel={suggestion.studioName}
+                resultMeta={suggestion.locationCategory}
                 selected={selectedSuggestion === index}
                 onResultClick={() => setSelectedSuggestion(index)}
               />

@@ -8,6 +8,9 @@ import InputField from '@/components/common/InputField'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import { IcClose } from '@/components/icons'
+import { getSocialAuthUrl, login } from '@/services/auth'
+import { useAuthStore } from '@/stores/useAuthStore'
+import type { SocialProvider } from '@/types/auth'
 
 type LoginToast = 'network' | 'auth' | null
 
@@ -18,7 +21,11 @@ const TOAST_MESSAGE: Record<Exclude<LoginToast, null>, string> = {
 
 const LoginPage = () => {
   const navigate = useNavigate()
+  const authLogin = useAuthStore((state) => state.login)
+  const [loginId, setLoginId] = useState('')
+  const [password, setPassword] = useState('')
   const [toast, setToast] = useState<LoginToast>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (!toast) return
@@ -26,9 +33,30 @@ const LoginPage = () => {
     return () => clearTimeout(timer)
   }, [toast])
 
-  const handleLogin = () => {
-    // API 명세가 아직 없어서 온라인 여부로만 분기하고, 그 외에는 인증 실패로 처리
-    setToast(navigator.onLine ? 'auth' : 'network')
+  const canSubmit = loginId !== '' && password !== '' && !isSubmitting
+
+  const handleLogin = async () => {
+    if (!canSubmit) return
+
+    setIsSubmitting(true)
+    try {
+      const { token } = await login(loginId, password)
+      authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
+      navigate('/home')
+    } catch {
+      setToast(navigator.onLine ? 'auth' : 'network')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSocialLogin = async (provider: SocialProvider) => {
+    try {
+      const { authUrl } = await getSocialAuthUrl(provider)
+      window.location.href = authUrl
+    } catch {
+      setToast(navigator.onLine ? 'auth' : 'network')
+    }
   }
 
   return (
@@ -55,8 +83,19 @@ const LoginPage = () => {
         <p className="font-cap1 text-brand-100">사진관 예약을 한 번에</p>
       </div>
 
-      <InputField label="아이디" placeholder="아이디를 입력해 주세요" />
-      <InputField label="비밀번호" placeholder="비밀번호를 입력해 주세요" type="password" />
+      <InputField
+        label="아이디"
+        placeholder="아이디를 입력해 주세요"
+        value={loginId}
+        onChange={(event) => setLoginId(event.target.value)}
+      />
+      <InputField
+        label="비밀번호"
+        placeholder="비밀번호를 입력해 주세요"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+      />
 
       <div className="flex w-full items-center justify-between px-5">
         <button type="button" className="cursor-pointer border-none bg-transparent p-0 font-b6 text-gray-40">
@@ -68,7 +107,7 @@ const LoginPage = () => {
       </div>
 
       <div className="w-full p-5">
-        <Button variant="primary" onClick={handleLogin}>
+        <Button variant={canSubmit ? 'primary' : 'disabled'} onClick={canSubmit ? handleLogin : undefined}>
           로그인
         </Button>
       </div>
@@ -84,7 +123,7 @@ const LoginPage = () => {
           type="button"
           className="flex size-[52px] cursor-pointer items-center justify-center rounded-full border-none bg-[#fee500]"
           aria-label="카카오로 로그인"
-          onClick={handleLogin}
+          onClick={() => handleSocialLogin('kakao')}
         >
           <svg width="26" height="24" viewBox="0 0 26 24" fill="none" aria-hidden>
             <path
@@ -98,7 +137,7 @@ const LoginPage = () => {
           type="button"
           className="flex size-[52px] cursor-pointer items-center justify-center rounded-full border border-gray-10 bg-white"
           aria-label="구글로 로그인"
-          onClick={handleLogin}
+          onClick={() => handleSocialLogin('google')}
         >
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden>
             <path
