@@ -10,13 +10,29 @@ import SearchField from '@/components/common/SearchField'
 import SelectField from '@/components/common/SelectField'
 import Button from '@/components/common/Button'
 import { useSearchDraftStore, formatSearchDate } from '@/stores/useSearchDraftStore'
+import { formatCalendarDateForUrl, serializeStudioSearchParams } from '@/utils/studioSearchParams'
+import type { StudioSearchFilters } from '@/utils/studioSearchParams'
 
 const SearchPage = () => {
   const navigate = useNavigate()
-  const { keyword, date, isDateUndecided, purpose } = useSearchDraftStore()
+  const { keyword, keywordType, date, isDateUndecided, purpose } = useSearchDraftStore()
 
   const dateLabel = isDateUndecided ? '날짜 미정' : date ? formatSearchDate(date) : undefined
   const hasAnyFilter = keyword.trim().length > 0 || dateLabel !== undefined || purpose !== null
+
+  const handleSearch = () => {
+    const isRegion = keywordType === 'region' && keyword !== '' && keyword !== '전체'
+
+    const filters: StudioSearchFilters = {
+      location: isRegion ? keyword : undefined,
+      name: keywordType === 'name' && keyword !== '' ? keyword : undefined,
+      date: date ? formatCalendarDateForUrl(date) : undefined,
+      concepts: purpose ? [purpose] : [],
+      services: [],
+    }
+
+    navigate(`/studios?${serializeStudioSearchParams(filters).toString()}`)
+  }
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
@@ -37,7 +53,7 @@ const SearchPage = () => {
       </div>
 
       <div className="mt-auto w-full p-5">
-        <Button variant={hasAnyFilter ? 'primary' : 'disabled'} onClick={() => navigate('/studios')}>
+        <Button variant={hasAnyFilter ? 'primary' : 'disabled'} onClick={hasAnyFilter ? handleSearch : undefined}>
           검색
         </Button>
       </div>
