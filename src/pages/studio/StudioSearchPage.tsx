@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 
 import CardStudioSmall from '@/components/cards/CardStudioSmall'
@@ -16,49 +16,75 @@ import StudioResultsBottomSheet from '@/pages/studio/components/StudioResultsBot
 import StudioResultsList from '@/pages/studio/components/StudioResultsList'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
+import { useStudioSearch } from '@/hooks/useStudio'
+import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
+import type { StudioSearchItem } from '@/types/studio'
+import {
+  buildStudioSearchChipLabel,
+  hasBaseSearchCondition,
+  isStudioServiceTag,
+  isStudioSort,
+  parseStudioSearchParams,
+  resetStudioSearchFilters,
+  serializeStudioSearchParams,
+  STUDIO_SERVICE_OPTIONS,
+  STUDIO_SORT_OPTIONS,
+  toggleStudioService,
+} from '@/utils/studioSearchParams'
 
-import cardImage1 from '@/assets/images/CardImage1.png'
-import cardImage2 from '@/assets/images/CardImage2.png'
-import cardImage3 from '@/assets/images/CardImage3.png'
-
-type ResultStatus = 'loading' | 'success' | 'empty' | 'map-error'
-
-const SORT_ITEMS = [
-  { value: 'recommended', label: '추천순' },
-  { value: 'lowest-price', label: '가격낮은순' },
-  { value: 'rating', label: '별점순' },
-  { value: 'reviews', label: '리뷰많은순' },
-  { value: 'hair-makeup', label: '헤어·메이크업' },
-  { value: 'parking', label: '주차' },
+const QUICK_FILTER_ITEMS = [
+  ...STUDIO_SORT_OPTIONS,
+  ...STUDIO_SERVICE_OPTIONS
+    .filter(({ value }) => value !== 'COSTUME')
+    .map(({ value, quickLabel }) => ({ value, label: quickLabel })),
 ]
-
-const RECOMMENDATIONS = [
-  { name: '데이지 스튜디오', image: cardImage1 },
-  { name: '타임 스튜디오', image: cardImage2 },
-  { name: '보노 스튜디오', image: cardImage3 },
-]
-
-const resolveStatus = (state: string | null): ResultStatus => {
-  if (state === 'empty') return 'empty'
-  if (state === 'error') return 'map-error'
-  return 'success'
-}
-
-const isSheetSnap = (value: string | null): value is SheetSnap =>
-  value === 'collapsed' || value === 'half' || value === 'expanded'
 
 const StudioSearchPage = () => {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const status = resolveStatus(searchParams.get('state'))
-  const snapParam = searchParams.get('snap')
-  const initialSnap: SheetSnap = isSheetSnap(snapParam)
-    ? snapParam
-    : status === 'empty'
-      ? 'expanded'
-      : 'half'
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filters = parseStudioSearchParams(searchParams)
+  const [sdkError, setSdkError] = useState(false)
+  const mapError = searchParams.get('state') === 'error' || sdkError
 
-  const [snap, setSnap] = useState<SheetSnap>(initialSnap)
+  // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
+  const { data, isLoading } = useStudioSearch(filters)
+  const result = data ?? null
+  const loading = isLoading
+
+  const studios = result?.studios ?? []
+  const totalCount = result?.totalCount ?? 0
+  const isEmpty =
+    !loading && result !== null && (result.hasResult === false || studios.length === 0)
+
+  const { items: compareItems, toggle: toggleCompare, remove: removeCompare } = useCompareStore()
+  const selectedIds = new Set(compareItems.map((item) => item.studioId))
+
+  const handleCompareToggle = (studio: StudioSearchItem) => {
+    toggleCompare({ studioId: studio.studioId, studioName: studio.studioName })
+  }
+
+  const handleCompare = () => {
+    if (compareItems.length < 2) return
+    navigate('/compare', {
+      state: { studioIds: compareItems.map((item) => item.studioId) },
+    })
+  }
+
+  const [snap, setSnap] = useState<SheetSnap>('half')
+
+  // 빈 결과일 때 시트를 펼쳐 추천 리스트가 보이도록 한다.
+  useEffect(() => {
+    if (isEmpty) setSnap('expanded')
+  }, [isEmpty])
+
+  useEffect(() => {
+    if (!searchParams.has('snap')) return
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('snap')
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
+
   const {
     containerRef,
     listRef,
@@ -77,65 +103,100 @@ const StudioSearchPage = () => {
     listRef,
   }
 
+  const handleQuickFilterChange = (value: string) => {
+    if (!hasBaseSearchCondition(filters)) return
+
+    const nextFilters = isStudioServiceTag(value)
+      ? { ...filters, services: toggleStudioService(filters.services, value) }
+      : isStudioSort(value)
+        ? { ...filters, sort: value }
+        : filters
+    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
+  }
+
+  const handleResetFilters = () => {
+    setSearchParams(
+      serializeStudioSearchParams(resetStudioSearchFilters(filters), searchParams),
+    )
+  }
+
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-white">
       <NavigationBar
         variant="chip"
-        chipLabel="프로필·홍대·6월25일"
+        chipLabel={buildStudioSearchChipLabel(filters)}
         rightNode={
           <button
             type="button"
             aria-label="필터"
-            onClick={() => navigate('/studios/filter')}
+            onClick={() => navigate({ pathname: '/studios/filter', search: `?${searchParams.toString()}` })}
           >
             <IcFilter width={24} height={24} />
           </button>
         }
       />
-      <FilterBar2 items={SORT_ITEMS} />
+      <FilterBar2
+        items={QUICK_FILTER_ITEMS}
+        value={[...(filters.sort ? [filters.sort] : []), ...filters.services]}
+        onChange={handleQuickFilterChange}
+      />
 
       <div ref={containerRef} className="relative flex-1 overflow-hidden">
-        <StudioMapCanvas interactive={!isDragging} />
+        <StudioMapCanvas
+          interactive={!isDragging}
+          studios={studios}
+          onLoadError={() => setSdkError(true)}
+        />
 
-        {status === 'map-error' ? (
+        {mapError ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-10">
             <ErrorNotice
               icon={<IcPin width={48} height={48} className="text-brand-80" />}
               title="지도를 불러오지 못했어요"
             />
           </div>
-        ) : status === 'empty' ? (
+        ) : isEmpty ? (
           <StudioResultsBottomSheet
             {...sheetShellProps}
-            header={<p className="py-2.5 font-b10 text-gray-40">검색 결과 0곳</p>}
+            header={<p className="py-2.5 font-b10 text-gray-40">검색 결과 {totalCount}곳</p>}
             footer={<TabBarUser activeTab="search" />}
           >
             <div className="flex flex-col pb-6">
               <div className="flex justify-center pb-[50px] pt-2.5">
-                <Notice2 />
+                <Notice2 onReset={handleResetFilters} />
               </div>
-              <section>
-                <h2 className="pb-3 font-b5 text-black">이런 사진관은 어때요?</h2>
-                <div className="flex gap-3 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {RECOMMENDATIONS.map((studio, index) => (
-                    <CardStudioSmall
-                      key={studio.name}
-                      name={studio.name}
-                      imageSrc={studio.image}
-                      location="홍대"
-                      category="프로필"
-                      secondaryCategory="프로필"
-                      onClick={() => navigate(`/studios/${index + 1}`)}
-                    />
-                  ))}
-                </div>
-              </section>
+              {(result?.recommendStudios?.length ?? 0) > 0 && (
+                <section>
+                  <h2 className="pb-3 font-b5 text-black">이런 사진관은 어때요?</h2>
+                  <div className="flex gap-3 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {result?.recommendStudios?.map((studio) => (
+                      <CardStudioSmall
+                        key={studio.studioId}
+                        name={studio.studioName}
+                        imageSrc={studio.thumbnailUrl}
+                        location={studio.locationCategory}
+                        category={studio.shootingCategory[0] ?? ''}
+                        secondaryCategory={studio.shootingCategory[1]}
+                        price={`₩${studio.minPrice.toLocaleString()}~`}
+                        rating={`★${studio.rating}`}
+                        onClick={() => navigate(`/studios/${studio.studioId}`)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           </StudioResultsBottomSheet>
         ) : (
           <StudioResultsBottomSheet
             {...sheetShellProps}
-            header={<p className="py-2.5 font-b8 text-gray-60">사진관 24 곳</p>}
+            header={
+              <p className="py-2.5 text-center font-b8 text-gray-60">
+                {loading && result === null
+                  ? '불러오는 중…'
+                  : `사진관 ${totalCount} 곳`}
+              </p>
+            }
             footer={
               <div className="relative">
                 <div className="pointer-events-none absolute inset-x-0 -top-14 flex justify-center">
@@ -144,8 +205,11 @@ const StudioSearchPage = () => {
                   </div>
                 </div>
                 <CompareActionBar
-                  selectedLabels={['데이지', '타임']}
-                  maxSlots={3}
+                  selected={compareItems}
+                  maxSlots={MAX_COMPARE}
+                  disabled={compareItems.length < 2}
+                  onCompare={handleCompare}
+                  onRemove={removeCompare}
                   className="flex w-full flex-col items-start"
                 />
                 <TabBarUser activeTab="search" />
@@ -153,8 +217,11 @@ const StudioSearchPage = () => {
             }
           >
             <StudioResultsList
+              studios={studios}
               showCompareButton={snap === 'expanded'}
+              selectedIds={selectedIds}
               onSelect={(id) => navigate(`/studios/${id}`)}
+              onCompareToggle={handleCompareToggle}
             />
           </StudioResultsBottomSheet>
         )}

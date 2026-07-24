@@ -1,25 +1,24 @@
-import { useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 import Notice2 from '@/components/common/Notice2'
 import { IcPicture } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
-import cardImage1 from '@/assets/images/CardImage1.png'
-import cardImage2 from '@/assets/images/CardImage2.png'
-import cardImage3 from '@/assets/images/CardImage3.png'
-
-const IMAGES = [cardImage1, cardImage2, cardImage3]
+import { useStudioProductDetail } from '@/hooks/useStudio'
 
 const ConceptDetailPage = () => {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const isEmpty = searchParams.get('empty') === '1'
+  const { studioId, conceptId } = useParams()
+  const { data: detail, isLoading } = useStudioProductDetail(studioId, conceptId)
+
+  const images = detail?.imageList ?? []
+  const isEmpty = !isLoading && images.length === 0
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <NavigationBar
         variant="default"
-        title="체리베리벌쓰데이"
+        title={detail?.studioName ?? ''}
         showLeft={false}
         onClose={() => navigate(-1)}
       />
@@ -34,7 +33,7 @@ const ConceptDetailPage = () => {
         </div>
       ) : (
         <div className="flex flex-col gap-5 p-5">
-          {IMAGES.map((src, index) => (
+          {images.map((src, index) => (
             <img
               key={index}
               src={src}

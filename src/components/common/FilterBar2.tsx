@@ -22,7 +22,7 @@ export type FilterItem = {
 
 export interface FilterBar2Props {
   items: readonly FilterItem[];
-  value?: string;
+  value?: string | readonly string[];
   className?: string;
   onChange?: (value: string) => void;
 }
@@ -42,7 +42,7 @@ const FilterBar2 = ({
         key={item.value}
         label={item.label}
         size="medium"
-        selected={item.value === value}
+        selected={Array.isArray(value) ? value.includes(item.value) : item.value === value}
         disabled={item.disabled}
         onClick={() => onChange?.(item.value)}
       />

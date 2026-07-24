@@ -1,36 +1,69 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import FilterChip from '@/components/common/FilterChip'
 import RangeSlider from '@/components/common/RangeSlider'
 import NavigationBar from '@/components/layout/NavigationBar'
+import {
+  hasBaseSearchCondition,
+  parseStudioSearchParams,
+  serializeStudioSearchParams,
+  STUDIO_PURPOSES,
+  STUDIO_SERVICE_OPTIONS,
+  type StudioServiceTag,
+} from '@/utils/studioSearchParams'
 
-const PURPOSES = ['증명', '프로필', '개인화보', '취업', '가족', '우정']
-const SERVICES = ['헤어·메이크업 연계', '의상비치', '주차가능']
-const RATINGS = ['전체', '★4.0이상', '★4.5이상', '★4.8이상']
+const RATINGS = [
+  { value: undefined, label: '전체' },
+  { value: 4, label: '★4.0이상' },
+  { value: 4.5, label: '★4.5이상' },
+  { value: 4.8, label: '★4.8이상' },
+] as const
 
 const PRICE_MIN = 30000
 const PRICE_MAX = 150000
 
 const formatKRW = (value: number) => `₩${value.toLocaleString('ko-KR')}`
 
-const toggle = (list: string[], value: string) =>
+const toggle = <T extends string>(list: T[], value: T) =>
   list.includes(value)
     ? list.filter((item) => item !== value)
     : [...list, value]
 
 const FilterPage = () => {
   const navigate = useNavigate()
-  const [purposes, setPurposes] = useState<string[]>(['증명'])
-  const [services, setServices] = useState<string[]>(['헤어·메이크업 연계'])
-  const [rating, setRating] = useState('전체')
-  const [price, setPrice] = useState<[number, number]>([PRICE_MIN, PRICE_MAX])
+  const [searchParams] = useSearchParams()
+  const initialFilters = parseStudioSearchParams(searchParams)
+  const [purposes, setPurposes] = useState<string[]>(initialFilters.concepts)
+  const [services, setServices] = useState<StudioServiceTag[]>(initialFilters.services)
+  const [rating, setRating] = useState<number | undefined>(initialFilters.minRating)
+  const [price, setPrice] = useState<[number, number]>([
+    Math.max(PRICE_MIN, initialFilters.minPrice ?? PRICE_MIN),
+    Math.min(PRICE_MAX, initialFilters.maxPrice ?? PRICE_MAX),
+  ])
+
+  const canApply = hasBaseSearchCondition({ ...initialFilters, concepts: purposes })
 
   const handleReset = () => {
     setPurposes([])
     setServices([])
-    setRating('전체')
+    setRating(undefined)
     setPrice([PRICE_MIN, PRICE_MAX])
+  }
+
+  const handleApply = () => {
+    if (!canApply) return
+
+    const nextFilters = {
+      ...initialFilters,
+      concepts: purposes,
+      services,
+      minRating: rating,
+      minPrice: price[0] === PRICE_MIN ? undefined : price[0],
+      maxPrice: price[1] === PRICE_MAX ? undefined : price[1],
+    }
+    const params = serializeStudioSearchParams(nextFilters, searchParams)
+    navigate({ pathname: '/studios', search: `?${params.toString()}` })
   }
 
   return (
@@ -42,7 +75,7 @@ const FilterPage = () => {
         <section className="pb-5">
           <h2 className="pb-3 font-b5 text-black">촬영 목적</h2>
           <div className="grid grid-cols-3 gap-2">
-            {PURPOSES.map((purpose) => (
+            {STUDIO_PURPOSES.map((purpose) => (
               <FilterChip
                 key={purpose}
                 label={purpose}
@@ -77,13 +110,13 @@ const FilterPage = () => {
         <section className="pb-5">
           <h2 className="pb-3 font-b5 text-black">연계 서비스</h2>
           <div className="flex flex-wrap gap-2">
-            {SERVICES.map((service) => (
+            {STUDIO_SERVICE_OPTIONS.map((service) => (
               <FilterChip
-                key={service}
-                label={service}
+                key={service.value}
+                label={service.label}
                 size="large"
-                selected={services.includes(service)}
-                onClick={() => setServices((prev) => toggle(prev, service))}
+                selected={services.includes(service.value)}
+                onClick={() => setServices((prev) => toggle(prev, service.value))}
               />
             ))}
           </div>
@@ -95,11 +128,11 @@ const FilterPage = () => {
           <div className="flex flex-wrap gap-2">
             {RATINGS.map((item) => (
               <FilterChip
-                key={item}
-                label={item}
+                key={item.label}
+                label={item.label}
                 size="large"
-                selected={rating === item}
-                onClick={() => setRating(item)}
+                selected={rating === item.value}
+                onClick={() => setRating(item.value)}
               />
             ))}
           </div>
@@ -116,8 +149,9 @@ const FilterPage = () => {
         </button>
         <button
           type="button"
-          onClick={() => navigate('/studios')}
-          className="flex h-12 items-center justify-center rounded-lg bg-brand-100 px-8 font-b5 text-white"
+          onClick={handleApply}
+          disabled={!canApply}
+          className="flex h-12 items-center justify-center rounded-lg bg-brand-100 px-8 font-b5 text-white disabled:cursor-not-allowed disabled:bg-gray-20"
         >
           사진관 24곳 보기
         </button>
