@@ -9,6 +9,7 @@ import type {
   StudioProductDetail,
   StudioProductsData,
   StudioProductsParams,
+  StudioSearchItem,
   StudioSearchParams,
   StudioSearchResult,
   StudioTimeSlot,
@@ -65,29 +66,139 @@ export const autocompleteStudios = (keyword: string) =>
 // ===== 2-3 ~ 2-8. 사진관 검색/상세/상품/슬롯/헤어메이크업 (남현준) =====
 
 // 백엔드 미배포 데모용 mock — services/client.ts의 withMockFallback 참고
-const MOCK_SEARCH_STUDIO = {
-  studioId: 1,
-  studioName: '데이지 스튜디오',
-  thumbnailUrls: [cardImage1, cardImage2],
-  locationCategory: '홍대',
-  latitude: 37.5563,
-  longitude: 126.9236,
-  minPrice: 55000,
-  rating: 4.9,
-  reviewCount: 128,
-  shootingCategory: ['PROFILE', 'PERSONAL_PORTRAIT'],
-  serviceTags: ['HAIR_MAKEUP', 'PARKING'],
-  isWishlisted: true,
-  productSummaries: [
-    { productId: 1, productName: '프로필 기본', shootingCategory: 'PROFILE', price: 55000 },
-  ],
-}
+// 지역별로 지도/목록에 여러 사진관이 보이도록 지역마다 좌표를 다르게 구성
+const MOCK_SEARCH_STUDIOS: StudioSearchItem[] = [
+  {
+    studioId: 1,
+    studioName: '데이지 스튜디오',
+    thumbnailUrls: [cardImage1, cardImage2],
+    locationCategory: '홍대',
+    latitude: 37.5563,
+    longitude: 126.9236,
+    minPrice: 55000,
+    rating: 4.9,
+    reviewCount: 128,
+    shootingCategory: ['PROFILE', 'PERSONAL_PORTRAIT'],
+    serviceTags: ['HAIR_MAKEUP', 'PARKING'],
+    isWishlisted: true,
+    productSummaries: [
+      { productId: 1, productName: '프로필 기본', shootingCategory: 'PROFILE', price: 55000 },
+    ],
+  },
+  {
+    studioId: 7,
+    studioName: '데이지 포토 홍대',
+    thumbnailUrls: [cardImage7, cardImage1],
+    locationCategory: '홍대',
+    latitude: 37.5578,
+    longitude: 126.9256,
+    minPrice: 45000,
+    rating: 4.9,
+    reviewCount: 96,
+    shootingCategory: ['PERSONAL_PORTRAIT'],
+    serviceTags: ['PARKING'],
+    isWishlisted: false,
+    productSummaries: [
+      { productId: 7, productName: '개인화보', shootingCategory: 'PERSONAL_PORTRAIT', price: 45000 },
+    ],
+  },
+  {
+    studioId: 2,
+    studioName: '타임온미 스튜디오',
+    thumbnailUrls: [cardImage2, cardImage3],
+    locationCategory: '강남',
+    latitude: 37.4979,
+    longitude: 127.0276,
+    minPrice: 60000,
+    rating: 4.8,
+    reviewCount: 152,
+    shootingCategory: ['JOB_PHOTO', 'PROFILE'],
+    serviceTags: ['HAIR_MAKEUP', 'WIFI'],
+    isWishlisted: false,
+    productSummaries: [
+      { productId: 2, productName: '증명사진', shootingCategory: 'JOB_PHOTO', price: 60000 },
+    ],
+  },
+  {
+    studioId: 3,
+    studioName: '무드바이 스튜디오',
+    thumbnailUrls: [cardImage3, cardImage4],
+    locationCategory: '성수',
+    latitude: 37.5446,
+    longitude: 127.0559,
+    minPrice: 65000,
+    rating: 4.7,
+    reviewCount: 84,
+    shootingCategory: ['FAMILY', 'PERSONAL_PORTRAIT'],
+    serviceTags: ['COSTUME', 'PARKING'],
+    isWishlisted: false,
+    productSummaries: [
+      { productId: 3, productName: '가족사진', shootingCategory: 'FAMILY', price: 65000 },
+    ],
+  },
+  {
+    studioId: 4,
+    studioName: '스펙플렉스',
+    thumbnailUrls: [cardImage4, cardImage5],
+    locationCategory: '연남',
+    latitude: 37.5629,
+    longitude: 126.9254,
+    minPrice: 55000,
+    rating: 4.9,
+    reviewCount: 201,
+    shootingCategory: ['PROFILE', 'FRIENDSHIP'],
+    serviceTags: ['HAIR_MAKEUP', 'COSTUME'],
+    isWishlisted: true,
+    productSummaries: [
+      { productId: 4, productName: '프로필 기본', shootingCategory: 'PROFILE', price: 55000 },
+    ],
+  },
+  {
+    studioId: 6,
+    studioName: '포토그래피 by J',
+    thumbnailUrls: [cardImage6, cardImage7],
+    locationCategory: '건대',
+    latitude: 37.5401,
+    longitude: 127.07,
+    minPrice: 70000,
+    rating: 4.7,
+    reviewCount: 63,
+    shootingCategory: ['FRIENDSHIP', 'PERSONAL_PORTRAIT'],
+    serviceTags: ['WIFI'],
+    isWishlisted: false,
+    productSummaries: [
+      { productId: 6, productName: '우정사진', shootingCategory: 'FRIENDSHIP', price: 70000 },
+    ],
+  },
+  {
+    studioId: 5,
+    studioName: '보노 스튜디오',
+    thumbnailUrls: [cardImage5, cardImage6],
+    locationCategory: '홍대',
+    latitude: 37.5551,
+    longitude: 126.9221,
+    minPrice: 30000,
+    rating: 4.8,
+    reviewCount: 110,
+    shootingCategory: ['ID_PHOTO', 'PROFILE'],
+    serviceTags: ['PARKING'],
+    isWishlisted: false,
+    productSummaries: [
+      { productId: 5, productName: '반명함사진', shootingCategory: 'ID_PHOTO', price: 30000 },
+    ],
+  },
+]
 
 export const searchStudios = (
   params: StudioSearchParams,
-): Promise<StudioSearchResult> =>
-  withMockFallback(() => apiGet<StudioSearchResult>('/api/v1/studios/search', params), {
-    totalCount: 1,
+): Promise<StudioSearchResult> => {
+  const matchedStudios = params.location
+    ? MOCK_SEARCH_STUDIOS.filter((studio) => studio.locationCategory.includes(params.location!))
+    : MOCK_SEARCH_STUDIOS
+  const mockStudios = matchedStudios.length > 0 ? matchedStudios : MOCK_SEARCH_STUDIOS
+
+  return withMockFallback(() => apiGet<StudioSearchResult>('/api/v1/studios/search', params), {
+    totalCount: mockStudios.length,
     appliedFilters: {
       location: params.location ?? null,
       date: params.date ?? null,
@@ -99,8 +210,9 @@ export const searchStudios = (
       serviceTags: params.service ?? [],
       minRating: params.minRating ?? null,
     },
-    studios: [MOCK_SEARCH_STUDIO],
+    studios: mockStudios,
   })
+}
 
 // 2-4. 사진관 상세
 const MOCK_STUDIO_DETAIL: StudioDetail = {
