@@ -1,221 +1,449 @@
-  /**
-   * Figma F-1 예약관리 (라우트: /mypage)
-   *
-   * 예약 상태 필터(전체/예약완료/촬영완료/취소)와 예약 내역 카드 목록을 표시함
-   * 예약 내역이 없는 경우 empty 상태 화면을 표시함
-   * 
-  */
+/**
+ * Figma F-1 예약관리 (라우트: /mypage)
+ *
+ * 예약 상태 필터(전체/예약완료/촬영완료/취소)와
+ * 예약 내역 카드 목록을 표시함
+ * 예약 내역이 없는 경우 empty 상태 화면을 표시함
+ */
 
-  import { useState } from 'react'
-  import { useNavigate, useSearchParams } from 'react-router'
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import {
+  useNavigate,
+  useSearchParams,
+} from 'react-router'
 
-  import TopAppBar from '@/components/layout/TopAppBar'
-  import cardImage6 from '@/assets/images/CardImage6.png'
-  import cardImage7 from '@/assets/images/CardImage7.png'
-  import logoIcon from '@/assets/images/logo-icon.png'
-  import CardReservationHistory from '@/components/cards/CardReservationHistory'
-  import Alert3 from '@/components/common/Alert3'
-  import FilterBar1 from '@/components/common/FilterBar1'
-  import Profile from '@/components/common/Profile'
-  import SegmentedTab from '@/components/common/SegmentedTab'
-  import TabBarUser from '@/components/layout/TabBarUser'
-  import { IcEvent2 } from '@/components/icons'
+import logoIcon from '@/assets/images/logo-icon.png'
+import CardReservationHistory from '@/components/cards/CardReservationHistory'
+import FilterBar1 from '@/components/common/FilterBar1'
+import Profile from '@/components/common/Profile'
+import SegmentedTab from '@/components/common/SegmentedTab'
+import { IcEvent2 } from '@/components/icons'
+import TabBarUser from '@/components/layout/TabBarUser'
+import TopAppBar from '@/components/layout/TopAppBar'
+import {
+  getMyReservations,
+  type ReservationListItem,
+  type ReservationStatus,
+} from '@/services/reservation'
 
-  type FilterType = 'all' | 'reservation' | 'shooting' | 'canceled'
-  type ReservationViewMode = 'empty' | 'list'
+type FilterType =
+  | 'all'
+  | 'reservation'
+  | 'shooting'
+  | 'canceled'
 
-  /**
-   * 화면 상태 확인용 mock 값
-   *
-   * 'list'  → 예약 카드 목록 표시
-   * 'empty' → 예약 내역 없음 화면 표시
-   *
-   * TODO: API 연결 후 예약 목록 길이에 따라 empty/list 분기 처리 예정
-   */
-  const getMockReservationViewMode = (): ReservationViewMode => 'list'
+const FILTER_STATUS_MAP: Record<
+  Exclude<FilterType, 'all'>,
+  ReservationStatus
+> = {
+  reservation: 'RESERVED',
+  shooting: 'COMPLETED',
+  canceled: 'CANCELLED',
+}
 
-  const reservationCounts = {
-    reservation: 1,
-    shooting: 1,
-    canceled: 1,
+const isFilterType = (
+  value: string | null,
+): value is FilterType =>
+  value === 'all' ||
+  value === 'reservation' ||
+  value === 'shooting' ||
+  value === 'canceled'
+
+const formatReservationDateTime = (
+  reservationDate: string,
+  reservationTime: string,
+) => {
+  const [year, month, day] = reservationDate
+    .split('-')
+    .map(Number)
+
+  const date = new Date(
+    year,
+    month - 1,
+    day,
+  )
+
+  const weekday =
+    new Intl.DateTimeFormat('ko-KR', {
+      weekday: 'short',
+    }).format(date)
+
+  return `${year}년 ${month}월 ${day}일 (${weekday}) ${reservationTime}`
+}
+
+const getStatusTag = (
+  status: ReservationStatus,
+) => {
+  switch (status) {
+    case 'RESERVED':
+      return '예약 완료'
+
+    case 'COMPLETED':
+      return '촬영 완료'
+
+    case 'CANCELLED':
+      return '취소'
+  }
+}
+
+const MyReservationPage = () => {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  const [
+    reservations,
+    setReservations,
+  ] = useState<ReservationListItem[]>([])
+
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true)
+
+  const [
+    hasError,
+    setHasError,
+  ] = useState(false)
+
+  const filterParam =
+    searchParams.get('filter')
+
+  const currentFilter: FilterType =
+    isFilterType(filterParam)
+      ? filterParam
+      : 'all'
+
+  useEffect(() => {
+    const fetchReservations =
+      async () => {
+        setIsLoading(true)
+        setHasError(false)
+
+        try {
+          const result =
+            await getMyReservations()
+
+          setReservations(result)
+        } catch (error) {
+          console.error(
+            '예약 내역 조회에 실패했습니다.',
+            error,
+          )
+
+          setReservations([])
+          setHasError(true)
+        } finally {
+          setIsLoading(false)
+        }
+      }
+
+    void fetchReservations()
+  }, [])
+
+  const reservationCounts = useMemo(
+    () => ({
+      reservation:
+        reservations.filter(
+          (reservation) =>
+            reservation.status ===
+            'RESERVED',
+        ).length,
+
+      shooting:
+        reservations.filter(
+          (reservation) =>
+            reservation.status ===
+            'COMPLETED',
+        ).length,
+
+      canceled:
+        reservations.filter(
+          (reservation) =>
+            reservation.status ===
+            'CANCELLED',
+        ).length,
+    }),
+    [reservations],
+  )
+
+  const filterItems = useMemo(
+    () => [
+      {
+        value: 'all',
+        label: '전체',
+        count: reservations.length,
+      },
+      {
+        value: 'reservation',
+        label: '예약완료',
+        count:
+          reservationCounts.reservation,
+      },
+      {
+        value: 'shooting',
+        label: '촬영완료',
+        count:
+          reservationCounts.shooting,
+      },
+      {
+        value: 'canceled',
+        label: '취소',
+        count:
+          reservationCounts.canceled,
+      },
+    ],
+    [
+      reservationCounts,
+      reservations.length,
+    ],
+  )
+
+  const filteredReservations =
+    useMemo(() => {
+      if (currentFilter === 'all') {
+        return reservations
+      }
+
+      const targetStatus =
+        FILTER_STATUS_MAP[currentFilter]
+
+      return reservations.filter(
+        (reservation) =>
+          reservation.status ===
+          targetStatus,
+      )
+    }, [
+      currentFilter,
+      reservations,
+    ])
+
+  const handleTabChange = (
+    value: string,
+  ) => {
+    if (value === 'profile') {
+      navigate('/mypage/profile')
+      return
+    }
+
+    navigate('/mypage')
   }
 
-  const totalReservationCount =
-    reservationCounts.reservation + reservationCounts.shooting + reservationCounts.canceled
+  const handleFilterChange = (
+    value: string,
+  ) => {
+    if (!isFilterType(value)) {
+      return
+    }
 
-  const filterItems = [
-    { value: 'all', label: '전체', count: totalReservationCount },
-    { value: 'reservation', label: '예약완료', count: reservationCounts.reservation },
-    { value: 'shooting', label: '촬영완료', count: reservationCounts.shooting },
-    { value: 'canceled', label: '취소', count: reservationCounts.canceled },
-  ] as const
-
-  /**
-  * 예약 취소 가능 여부 확인용 mock 값
-  *
-  * true  → 촬영 당일이라 취소 불가 팝업 표시
-  * false → 예약 취소 페이지로 이동
-  *
-  * TODO: API 연결 후 현재 날짜/예약 날짜 또는 서버 응답값으로 대체 예정
-  */
-  const MOCK_IS_SAME_DAY_RESERVATION = false
-
-
-  const MyReservationPage = () => {
-    const navigate = useNavigate()
-    const [searchParams] = useSearchParams()
-    const [isSameDayCancelModalOpen, setIsSameDayCancelModalOpen] = useState(false)
-
-    const currentFilter = (searchParams.get('filter') as FilterType) || 'all'
-    const isReservationEmpty = getMockReservationViewMode() === 'empty'
-
-    const showReservationCard =
-      !isReservationEmpty && (currentFilter === 'all' || currentFilter === 'reservation')
-    const showShootingCard =
-      !isReservationEmpty && (currentFilter === 'all' || currentFilter === 'shooting')
-    const showCanceledCard =
-      !isReservationEmpty && (currentFilter === 'all' || currentFilter === 'canceled')
-
-    const handleTabChange = (value: string) => {
-      if (value === 'profile') {
-        navigate('/mypage/profile')
-        return
-      }
-
+    if (value === 'all') {
       navigate('/mypage')
+      return
     }
 
-    const handleFilterChange = (value: string) => {
-      if (value === 'all') {
-        navigate('/mypage')
-        return
-      }
+    navigate(
+      `/mypage?filter=${value}`,
+    )
+  }
 
-      navigate(`/mypage?filter=${value}`)
+  const handleLeftButtonClick = (
+    reservation: ReservationListItem,
+  ) => {
+    switch (reservation.status) {
+      case 'RESERVED':
+        navigate(
+          `/mypage/reservations/${reservation.reservationId}/cancel`,
+        )
+        break
+
+      case 'COMPLETED':
+      case 'CANCELLED':
+        navigate(
+          `/mypage/reservations/${reservation.reservationId}`,
+        )
+        break
     }
+  }
 
-    return (
-      <>
-        <div className="sticky top-0 z-10 w-full bg-white">
-          <TopAppBar />
-        </div>
+  const handleRightButtonClick = (
+    reservation: ReservationListItem,
+  ) => {
+    switch (reservation.status) {
+      case 'RESERVED':
+        navigate(
+          `/mypage/reservations/${reservation.reservationId}`,
+        )
+        break
 
-        <Profile
-          variant="userInfo"
-          userName="이수현"
-          accountText="카카오 계정 연결"
-          userImageSrc={logoIcon}
-        />
+      case 'COMPLETED':
+        navigate(
+          `/mypage/reservations/${reservation.reservationId}/review`,
+        )
+        break
 
-        <SegmentedTab
-          items={[
-            { value: 'reservation', label: '예약관리' },
-            { value: 'profile', label: '프로필 설정' },
-          ]}
-          value="reservation"
-          onChange={handleTabChange}
-        />
+      case 'CANCELLED':
+        navigate('/search')
+        break
+    }
+  }
 
-        <FilterBar1 items={filterItems} value={currentFilter} onChange={handleFilterChange} />
+  const isReservationEmpty =
+    !isLoading &&
+    filteredReservations.length === 0
 
-        <section className="flex flex-1 flex-col px-5 pb-5 pt-[10px]">
-          {isReservationEmpty ? (
-            <div className="flex flex-1 items-center justify-center">
-              <div className="flex flex-col items-center justify-center gap-5 p-[10px]">
-                <div className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-brand-20">
-                  <IcEvent2 width={36} height={36} className="text-brand-40" />
-                </div>
+  return (
+    <>
+      <div className="sticky top-0 z-10 w-full bg-white">
+        <TopAppBar />
+      </div>
 
-                <div className="flex flex-col items-center gap-5">
-                  <p className="font-b5 text-black">아직 예약 내역이 없어요</p>
+      <Profile
+        variant="userInfo"
+        userName="이수현"
+        accountText="카카오 계정 연결"
+        userImageSrc={logoIcon}
+      />
 
+      <SegmentedTab
+        items={[
+          {
+            value: 'reservation',
+            label: '예약관리',
+          },
+          {
+            value: 'profile',
+            label: '프로필 설정',
+          },
+        ]}
+        value="reservation"
+        onChange={handleTabChange}
+      />
+
+      <FilterBar1
+        items={filterItems}
+        value={currentFilter}
+        onChange={handleFilterChange}
+      />
+
+      <section className="flex flex-1 flex-col px-5 pb-5 pt-[10px]">
+        {isLoading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <p className="font-b8 text-gray-60">
+              예약 내역을 불러오는 중입니다.
+            </p>
+          </div>
+        ) : hasError ? (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="flex flex-col items-center gap-5">
+              <p className="font-b5 text-black">
+                예약 내역을 불러오지 못했어요
+              </p>
+
+              <button
+                type="button"
+                className="rounded-[8px] border border-brand-20 px-5 py-[10px] font-b8 text-brand-100"
+                onClick={() =>
+                  window.location.reload()
+                }
+              >
+                다시 시도하기
+              </button>
+            </div>
+          </div>
+        ) : isReservationEmpty ? (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="flex flex-col items-center justify-center gap-5 p-[10px]">
+              <div className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-brand-20">
+                <IcEvent2
+                  width={36}
+                  height={36}
+                  className="text-brand-40"
+                />
+              </div>
+
+              <div className="flex flex-col items-center gap-5">
+                <p className="font-b5 text-black">
+                  {reservations.length === 0
+                    ? '아직 예약 내역이 없어요'
+                    : '해당 예약 내역이 없어요'}
+                </p>
+
+                {reservations.length ===
+                  0 && (
                   <button
                     type="button"
                     className="rounded-[8px] border border-brand-20 px-5 py-[10px] font-b8 text-brand-100"
-                    onClick={() => navigate('/search')}
+                    onClick={() =>
+                      navigate('/search')
+                    }
                   >
                     사진관 찾아보기
                   </button>
-                </div>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col items-center gap-5">
-              {showReservationCard && (
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-5">
+            {filteredReservations.map(
+              (reservation) => (
                 <CardReservationHistory
-                  statusTag="예약 완료"
-                  studioName="스튜디오 아롬"
-                  dateTime="2026년 3월 15일 (토) 14:00"
-                  packageName="증명사진"
-                  onLeftButtonClick={() => {
-                    /* true  → 촬영 당일이라 취소 불가 팝업 표시
-                    * false → 예약 취소 페이지로 이동
-                    */
-                    if (MOCK_IS_SAME_DAY_RESERVATION) {
-                      setIsSameDayCancelModalOpen(false)
-                      return
-                    }
-
-                    navigate('/mypage/reservations/1/cancel')
-                  }}
-                  onRightButtonClick={() => navigate('/mypage/reservations/1')}
+                  key={
+                    reservation.reservationId
+                  }
+                  statusTag={getStatusTag(
+                    reservation.status,
+                  )}
+                  studioName={
+                    reservation.studioName
+                  }
+                  dateTime={formatReservationDateTime(
+                    reservation.reservationDate,
+                    reservation.reservationTime,
+                  )}
+                  packageName={
+                    reservation.conceptName
+                  }
+                  onLeftButtonClick={() =>
+                    handleLeftButtonClick(
+                      reservation,
+                    )
+                  }
+                  onRightButtonClick={() =>
+                    handleRightButtonClick(
+                      reservation,
+                    )
+                  }
                 />
-              )}
-
-              {showShootingCard && (
-                <CardReservationHistory
-                  imageSrc={cardImage6}
-                  secondImageSrc={cardImage7}
-                  statusTag="촬영 완료"
-                  studioName="포토그래피 by J"
-                  dateTime="2026년 4월 20일 (월) 11:00"
-                  packageName="개인화보"
-                  onLeftButtonClick={() => navigate('/mypage/reservations/2')}
-                  onRightButtonClick={() => navigate('/mypage/reservations/2/review')}
-                />
-              )}
-
-              {showCanceledCard && (
-                <CardReservationHistory
-                  imageSrc={cardImage6}
-                  secondImageSrc={cardImage7}
-                  statusTag="취소"
-                  studioName="타임온미"
-                  dateTime="2026년 5월 10일 (일) 13:00"
-                  packageName="프로필"
-                  onLeftButtonClick={() => navigate('/mypage/reservations/3')}
-                  onRightButtonClick={() => navigate('/reservation')}
-                />
-              )}
-            </div>
-          )}
-        </section>
-
-        <div className="sticky bottom-0 mt-auto w-full">
-          <TabBarUser
-            activeTab="mypage"
-            onTabChange={(tab) => {
-              if (tab === 'search') navigate('/home')
-              if (tab === 'wishlist') navigate('/wishlist')
-              if (tab === 'mypage') navigate('/mypage')
-            }}
-          />
-        </div>
-
-        {isSameDayCancelModalOpen && (
-          <div className="fixed left-1/2 top-0 z-50 flex h-dvh w-full max-w-[402px] -translate-x-1/2 items-center justify-center bg-[#464545]/90 px-5">
-            <Alert3
-              variant="default"
-              title="촬영 당일은 취소가 불가합니다"
-              description="사진관에 직접 문의해 주세요"
-              buttonText="확인"
-              helperText="취소 가능 여부는 사진관 규정에 따라 다를 수 있어요"
-              onClick={() => setIsSameDayCancelModalOpen(false)}
-            />
+              ),
+            )}
           </div>
         )}
+      </section>
 
-      </>
-    )
-  }
-  export default MyReservationPage
+      <div className="sticky bottom-0 mt-auto w-full">
+        <TabBarUser
+          activeTab="mypage"
+          onTabChange={(tab) => {
+            if (tab === 'search') {
+              navigate('/home')
+            }
+
+            if (tab === 'wishlist') {
+              navigate('/wishlist')
+            }
+
+            if (tab === 'mypage') {
+              navigate('/mypage')
+            }
+          }}
+        />
+      </div>
+    </>
+  )
+}
+
+export default MyReservationPage

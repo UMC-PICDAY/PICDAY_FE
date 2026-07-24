@@ -3,32 +3,32 @@
  *
  * 사진관 2개의 가격, 서비스, 위치, 예약 가능일을 비교하는 페이지
  *
- * 진입 시 navigation state로 촬영 목적과 사진관 목록 전달
+ * 진입 시 navigation state
  *   {
- *     purpose?: string
- *     studios?: NavigationStudio[]
+ *     studioIds: number[]
+ *     shootingCategory: ShootingCategory
+ *     purpose: string
+ *     studios: NavigationStudio[]
  *   }
  *
- * 주요 기능
- *   - 사진관 카드 클릭 시 상세 페이지 이동
- *   - X 버튼 클릭 시 해당 사진관 삭제
- *   - 사진관 추가 시 현재 비교 목록과 촬영 목적 전달
- *   - 하단에서 사진관 선택 후 컨셉 목록 이동
- *
- * 전달 데이터가 없으면 테스트용 fallback 데이터 사용
- *
- * TODO
- *   API 연결 후 DEFAULT_COMPARE_DATA와 FALLBACK_STUDIOS 제거
+ * 초기 로드
+ *   studioIds와 shootingCategory로 2-10 API 호출
+ *   API 응답을 화면 비교 데이터로 변환하여 렌더링
  */
 
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
 import CardStudioCompare from '@/components/cards/CardStudioCompare'
 import AddButton from '@/components/common/AddButton'
 import Button from '@/components/common/Button'
 import NavigationBar from '@/components/layout/NavigationBar'
+import {
+  getCompareResult,
+  type CompareResultStudio,
+  type ShootingCategory,
+} from '@/services/studio'
 
 interface CompareData {
   price: string
@@ -52,12 +52,14 @@ interface NavigationStudio {
   id: number
   name: string
   imageSrc?: string
-  rating: number
-  reviewCount: number
+  rating?: number
+  reviewCount?: number
   compareData?: CompareData
 }
 
 interface NavigationState {
+  studioIds?: number[]
+  shootingCategory?: ShootingCategory
   purpose?: string
   studios?: NavigationStudio[]
 }
@@ -67,59 +69,72 @@ interface CompareRowProps {
   children: ReactNode
 }
 
-const DEFAULT_COMPARE_DATA: CompareData[] = [
-  {
-    price: '₩30,000',
-    description: '보정 2장 · 의상 포함',
-    badgeLabel: '추가금 없음',
-    services: ['헤어·메이크업', '주차'],
-    location: '홍대 · 도보 3분',
-    reservationDate: '6월 27일 (목)',
-  },
-  {
-    price: '₩35,000',
-    description: '보정 3장',
-    badgeLabel: '추가금 없음',
-    services: ['헤어·메이크업', '의상 비치'],
-    location: '홍대 · 도보 5분',
-    reservationDate: '6월 28일 (금)',
-  },
-]
+const SERVICE_TAG_LABEL_MAP: Record<string, string> = {
+  HAIR_MAKEUP: '헤어·메이크업',
+  PARKING: '주차',
+  COSTUME: '의상 비치',
+}
 
-const FALLBACK_STUDIOS: SelectedStudio[] = [
-  {
-    id: 1,
-    name: '데이지',
-    rating: 4.9,
-    reviewCount: 128,
-    compareData: DEFAULT_COMPARE_DATA[0],
-  },
-  {
-    id: 2,
-    name: '타임온미',
-    rating: 4.9,
-    reviewCount: 128,
-    compareData: DEFAULT_COMPARE_DATA[1],
-  },
-]
+const LOCATION_CATEGORY_LABEL_MAP: Record<string, string> = {
+  HONGDAE: '홍대',
+  GANGNAM: '강남',
+  SINCHON: '신촌',
+  JAMSIL: '잠실',
+}
 
-const getInitialStudios = (
-  navigationState: NavigationState | null,
-): SelectedStudio[] => {
-  const receivedStudios = navigationState?.studios?.slice(0, 2)
+const formatServiceTag = (serviceTag: string) =>
+  SERVICE_TAG_LABEL_MAP[serviceTag] ?? serviceTag
 
-  if (!receivedStudios?.length) {
-    return FALLBACK_STUDIOS
+const formatLocation = ({
+  locationCategory,
+  nearestStation,
+  walkingMinutes,
+}: CompareResultStudio['location']) => {
+  const locationName =
+    LOCATION_CATEGORY_LABEL_MAP[locationCategory] ?? nearestStation
+
+  return `${locationName} · 도보 ${walkingMinutes}분`
+}
+
+const formatReservationDate = (date: string) => {
+  const [year, month, day] = date.split('-').map(Number)
+
+  if (!year || !month || !day) {
+    return date
   }
 
-  return receivedStudios.map((studio, index) => ({
-    ...studio,
-    compareData:
-      studio.compareData ??
-      DEFAULT_COMPARE_DATA[index] ??
-      DEFAULT_COMPARE_DATA[0],
-  }))
+  const parsedDate = new Date(year, month - 1, day)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return date
+  }
+
+  return parsedDate.toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  })
 }
+
+const convertStudio = (studio: CompareResultStudio): SelectedStudio => ({
+  id: studio.studioId,
+  name: studio.studioName,
+  imageSrc: studio.thumbnailUrl,
+  rating: studio.rating,
+  reviewCount: studio.reviewCount,
+  compareData: {
+    price: `₩${studio.productsInformation.price.toLocaleString('ko-KR')}`,
+    description: studio.productsInformation.comparisonSummary,
+    badgeLabel: studio.productsInformation.hasAdditionalPrice
+      ? undefined
+      : '추가금 없음',
+    services: studio.serviceTags.map(formatServiceTag),
+    location: formatLocation(studio.location),
+    reservationDate: formatReservationDate(
+      studio.earliestReservationDate,
+    ),
+  },
+})
 
 const CompareTwoPage = () => {
   const location = useLocation()
@@ -127,20 +142,91 @@ const CompareTwoPage = () => {
 
   const navigationState = location.state as NavigationState | null
 
-  const [selectedStudios, setSelectedStudios] = useState<SelectedStudio[]>(() =>
-    getInitialStudios(navigationState),
+  const initialStudioIds = navigationState?.studioIds
+  const shootingCategory = navigationState?.shootingCategory
+  const purpose = navigationState?.purpose
+
+  const [selectedStudios, setSelectedStudios] = useState<SelectedStudio[]>([])
+  const [selectedStudioId, setSelectedStudioId] = useState<number | null>(null)
+  const [shootingCategoryName, setShootingCategoryName] = useState(
+    purpose ?? '',
   )
 
-  const [selectedStudioId, setSelectedStudioId] = useState<number | null>(
-    selectedStudios[0]?.id ?? null,
-  )
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const currentStudioIds = selectedStudios.map((studio) => studio.id)
 
   const hasSelectedStudio = selectedStudios.some(
     (studio) => studio.id === selectedStudioId,
   )
 
+  useEffect(() => {
+    if (!initialStudioIds || initialStudioIds.length !== 2) {
+      setIsLoading(false)
+      setErrorMessage('비교할 사진관 목록이 올바르지 않습니다.')
+      return
+    }
+
+    const hasInvalidStudioId = initialStudioIds.some(
+      (studioId) => !Number.isInteger(studioId) || studioId <= 0,
+    )
+
+    if (hasInvalidStudioId) {
+      setIsLoading(false)
+      setErrorMessage('올바르지 않은 사진관 ID입니다.')
+      return
+    }
+
+    if (!shootingCategory) {
+      setIsLoading(false)
+      setErrorMessage('비교할 촬영 컨셉이 올바르지 않습니다.')
+      return
+    }
+
+    const fetchCompareResult = async () => {
+      try {
+        setIsLoading(true)
+        setErrorMessage(null)
+
+        const data = await getCompareResult({
+          studioIds: initialStudioIds,
+          shootingCategory,
+        })
+
+        if (data.studios.length !== 2) {
+          setSelectedStudios([])
+          setSelectedStudioId(null)
+          setErrorMessage('비교할 사진관 정보를 불러오지 못했습니다.')
+          return
+        }
+
+        const studios = data.studios.map(convertStudio)
+
+        setSelectedStudios(studios)
+        setSelectedStudioId(studios[0]?.id ?? null)
+        setShootingCategoryName(data.shootingCategoryName)
+      } catch {
+        setSelectedStudios([])
+        setSelectedStudioId(null)
+        setErrorMessage('사진관 비교 정보를 불러오지 못했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void fetchCompareResult()
+  }, [initialStudioIds, shootingCategory])
+
   const handleBack = () => {
-    navigate('/compare')
+    navigate('/compare', {
+      state: {
+        studioIds:
+          currentStudioIds.length > 0
+            ? currentStudioIds
+            : initialStudioIds,
+      },
+    })
   }
 
   const handleClose = () => {
@@ -172,8 +258,10 @@ const CompareTwoPage = () => {
   const handleAddStudio = () => {
     navigate('/studios', {
       state: {
+        studioIds: currentStudioIds,
         selectedStudios,
-        purpose: navigationState?.purpose,
+        purpose: shootingCategoryName || purpose,
+        shootingCategory,
       },
     })
   }
@@ -186,10 +274,12 @@ const CompareTwoPage = () => {
     navigate(`/studios/${selectedStudioId}/concepts`)
   }
 
+  const isConceptButtonDisabled =
+    isLoading || errorMessage !== null || !hasSelectedStudio
+
   return (
     <div className="relative mx-auto min-h-dvh w-full max-w-[402px] overflow-x-hidden bg-white">
       <div className="sticky top-0 z-20 bg-white">
-
         <NavigationBar
           title="사진관 비교"
           onBack={handleBack}
@@ -198,107 +288,131 @@ const CompareTwoPage = () => {
       </div>
 
       <main className="pb-[166px]">
-        <section className="flex w-full items-center justify-between gap-4 px-5 py-[10px]">
-          {selectedStudios.map((studio) => (
-            <CardStudioCompare
-              key={studio.id}
-              size="default"
-              imageSrc={studio.imageSrc}
-              name={studio.name}
-              rating={studio.rating}
-              reviewCount={studio.reviewCount}
-              onClick={() => handleStudioDetail(studio.id)}
-              onDelete={() => handleDeleteStudio(studio.id)}
-            />
-          ))}
-        </section>
-
-        <section className="flex w-full flex-col gap-3">
-          <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
-            <div className="px-5 py-[10px]">
-              <p className="font-b7 text-brand-100">비교하는 컨셉</p>
-
-              <p className="font-cap3 text-gray-40">
-                {navigationState?.purpose ?? '프로필'}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 px-5 pb-[10px]">
+        {isLoading ? (
+          <div
+            className="flex min-h-[200px] items-center justify-center px-5"
+            role="status"
+          >
+            <p className="font-b6 text-center text-gray-40">
+              비교 정보를 불러오는 중이에요.
+            </p>
+          </div>
+        ) : errorMessage ? (
+          <div
+            className="flex min-h-[200px] items-center justify-center px-5"
+            role="alert"
+          >
+            <p className="font-b6 text-center text-gray-40">
+              {errorMessage}
+            </p>
+          </div>
+        ) : (
+          <>
+            <section className="flex w-full items-center justify-between gap-4 px-5 py-[10px]">
               {selectedStudios.map((studio) => (
-                <div
-                  key={`${studio.id}-price`}
-                  className="flex min-w-0 flex-col items-start gap-1"
-                >
-                  <p className="font-b3 text-[#222]">
-                    {studio.compareData.price}
-                  </p>
-
-                  <p className="font-cap3 w-full truncate text-[#888]">
-                    {studio.compareData.description}
-                  </p>
-
-                  {studio.compareData.badgeLabel && (
-                    <span className="font-cap3 flex h-[22px] items-center justify-center rounded-full border border-gray-10 bg-brand-20 px-1.5 py-0.5 text-gray-60">
-                      {studio.compareData.badgeLabel}
-                    </span>
-                  )}
-                </div>
+                <CardStudioCompare
+                  key={studio.id}
+                  size="default"
+                  imageSrc={studio.imageSrc}
+                  name={studio.name}
+                  rating={studio.rating}
+                  reviewCount={studio.reviewCount}
+                  onClick={() => handleStudioDetail(studio.id)}
+                  onDelete={() => handleDeleteStudio(studio.id)}
+                />
               ))}
-            </div>
-          </div>
+            </section>
 
-          <CompareRow title="연계 서비스">
-            {selectedStudios.map((studio) => (
-              <div
-                key={`${studio.id}-services`}
-                className="flex min-w-0 flex-wrap items-center gap-[5px]"
-              >
-                {studio.compareData.services.length > 0 ? (
-                  studio.compareData.services.map((service) => (
-                    <span
-                      key={service}
-                      className="font-cap3 flex h-[22px] items-center justify-center rounded-full border border-gray-10 bg-white px-2 py-0.5 text-gray-80"
+            <section className="flex w-full flex-col gap-3">
+              <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+                <div className="px-5 py-[10px]">
+                  <p className="font-b7 text-brand-100">
+                    비교하는 컨셉
+                  </p>
+
+                  <p className="font-cap3 text-gray-40">
+                    {shootingCategoryName || purpose || '프로필'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 px-5 pb-[10px]">
+                  {selectedStudios.map((studio) => (
+                    <div
+                      key={`${studio.id}-price`}
+                      className="flex min-w-0 flex-col items-start gap-1"
                     >
-                      {service}
-                    </span>
-                  ))
-                ) : (
-                  <span className="font-b8 text-gray-40">없음</span>
-                )}
+                      <p className="font-b3 text-[#222]">
+                        {studio.compareData.price}
+                      </p>
+
+                      <p className="font-cap3 w-full truncate text-[#888]">
+                        {studio.compareData.description}
+                      </p>
+
+                      {studio.compareData.badgeLabel && (
+                        <span className="font-cap3 flex h-[22px] items-center justify-center rounded-full border border-gray-10 bg-brand-20 px-1.5 py-0.5 text-gray-60">
+                          {studio.compareData.badgeLabel}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </CompareRow>
 
-          <CompareRow title="위치">
-            {selectedStudios.map((studio) => (
-              <p
-                key={`${studio.id}-location`}
-                className="font-b8 min-w-0 truncate text-gray-60"
-              >
-                {studio.compareData.location}
-              </p>
-            ))}
-          </CompareRow>
+              <CompareRow title="연계 서비스">
+                {selectedStudios.map((studio) => (
+                  <div
+                    key={`${studio.id}-services`}
+                    className="flex min-w-0 flex-wrap items-center gap-[5px]"
+                  >
+                    {studio.compareData.services.length > 0 ? (
+                      studio.compareData.services.map((service) => (
+                        <span
+                          key={service}
+                          className="font-cap3 flex h-[22px] items-center justify-center rounded-full border border-gray-10 bg-white px-2 py-0.5 text-gray-80"
+                        >
+                          {service}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="font-b8 text-gray-40">없음</span>
+                    )}
+                  </div>
+                ))}
+              </CompareRow>
 
-          <CompareRow title="예약 가능일">
-            {selectedStudios.map((studio) => (
-              <p
-                key={`${studio.id}-reservation`}
-                className="font-b8 min-w-0 truncate text-gray-60"
-              >
-                {studio.compareData.reservationDate}
-              </p>
-            ))}
-          </CompareRow>
+              <CompareRow title="위치">
+                {selectedStudios.map((studio) => (
+                  <p
+                    key={`${studio.id}-location`}
+                    className="font-b8 min-w-0 truncate text-gray-60"
+                  >
+                    {studio.compareData.location}
+                  </p>
+                ))}
+              </CompareRow>
 
-          <div className="px-5 py-5">
-            <AddButton
-              label="사진관 추가"
-              subLabel="최대 3개까지 비교 가능해요"
-              onClick={handleAddStudio}
-            />
-          </div>
-        </section>
+              <CompareRow title="예약 가능일">
+                {selectedStudios.map((studio) => (
+                  <p
+                    key={`${studio.id}-reservation`}
+                    className="font-b8 min-w-0 truncate text-gray-60"
+                  >
+                    {studio.compareData.reservationDate}
+                  </p>
+                ))}
+              </CompareRow>
+
+              <div className="px-5 py-5">
+                <AddButton
+                  label="사진관 추가"
+                  subLabel="최대 3개까지 비교 가능해요"
+                  onClick={handleAddStudio}
+                />
+              </div>
+            </section>
+          </>
+        )}
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[402px] border-t border-gray-10 bg-white">
@@ -327,14 +441,19 @@ const CompareTwoPage = () => {
 
           <div className="w-full px-5 pt-[10px] pb-5">
             <Button
-              variant={hasSelectedStudio ? 'primary' : 'disabled'}
-              onClick={hasSelectedStudio ? handleConceptList : undefined}
+              variant={
+                isConceptButtonDisabled ? 'disabled' : 'primary'
+              }
+              onClick={
+                isConceptButtonDisabled
+                  ? undefined
+                  : handleConceptList
+              }
             >
               컨셉목록 보러가기
             </Button>
           </div>
         </div>
-
       </footer>
     </div>
   )
