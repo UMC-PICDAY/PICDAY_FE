@@ -7,31 +7,24 @@
  *   })
  *
  * 초기 로드
- *   전달받은 studioIds로 2-9 API 호출
- *   응답받은 사진관 목록을 selectedStudios 상태로 관리
+ *   전달받은 studioIds로 비교 목적 조회 API 호출
+ *   응답받은 사진관과 촬영 목적별 지원 정보를 상태로 관리
  *
  * 촬영 목적 선택
  *   증명 / 프로필 / 개인화보 / 취업 / 가족 / 우정
  *
- * 사진관 관리
- *   - X 버튼: 사진관 삭제
- *   - + 버튼: 사진관 추가 (/studios 이동)
- *
  * 비교 시작
- *   - 목적 미지원 시 Alert2 표시
- *   - 2개 비교 → /compare/two
- *   - 3개 비교 → /compare/three
+ *   - 지원 사진관이 2개 미만이면 비교 불가 팝업
+ *   - 지원 사진관이 2개 이상이고 미지원 사진관이 있으면 제외 팝업
+ *   - 모든 사진관이 지원하면 바로 비교 결과 페이지로 이동
  *
  * 비교 결과 페이지 전달 데이터
  *   {
- *     studioIds: number[]
+ *     studioIds: string[]
  *     shootingCategory: ShootingCategory
  *     purpose: PurposeType
  *     studios: Studio[]
  *   }
- *
- * 비교 버튼
- *   사진관이 1개 이하이거나 API 로딩/에러 시 비활성화
  */
 
 import { useEffect, useState } from 'react'
@@ -45,21 +38,27 @@ import Title from '@/components/common/Title'
 import { IcBack } from '@/components/icons'
 import {
   getComparePurposes,
+  type CompareShootingPurpose,
   type ShootingCategory,
 } from '@/services/studio'
 
-type PurposeType = '증명' | '프로필' | '개인화보' | '취업' | '가족' | '우정'
+type PurposeType =
+  | '증명'
+  | '프로필'
+  | '개인화보'
+  | '취업'
+  | '가족'
+  | '우정'
 
 type AlertType = 'exclude' | 'reselect' | null
 
 interface Studio {
-  id: number
+  id: string
   name: string
-  availablePurposes: PurposeType[]
 }
 
 interface CompareNavigationState {
-  studioIds?: number[]
+  studioIds?: string[]
 }
 
 const PURPOSES: PurposeType[] = [
@@ -71,16 +70,10 @@ const PURPOSES: PurposeType[] = [
   '우정',
 ]
 
-const PURPOSE_MAP: Record<ShootingCategory, PurposeType> = {
-  ID_PHOTO: '증명',
-  PROFILE: '프로필',
-  PERSONAL_PORTRAIT: '개인화보',
-  JOB_PHOTO: '취업',
-  FAMILY: '가족',
-  FRIENDSHIP: '우정',
-}
-
-const PURPOSE_CATEGORY_MAP: Record<PurposeType, ShootingCategory> = {
+const PURPOSE_CATEGORY_MAP: Record<
+  PurposeType,
+  ShootingCategory
+> = {
   증명: 'ID_PHOTO',
   프로필: 'PROFILE',
   개인화보: 'PERSONAL_PORTRAIT',
@@ -91,42 +84,79 @@ const PURPOSE_CATEGORY_MAP: Record<PurposeType, ShootingCategory> = {
 
 const STUDIO_LIST_PATH = '/studios'
 
+const isValidStudioId = (studioId: string) =>
+  /^[1-9]\d*$/.test(studioId)
+
 const ComparePurposePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const navigationState = location.state as CompareNavigationState | null
+  const navigationState =
+    location.state as CompareNavigationState | null
+
   const studioIds = navigationState?.studioIds
 
   const [selectedPurpose, setSelectedPurpose] =
     useState<PurposeType>('프로필')
 
-  const [selectedStudios, setSelectedStudios] = useState<Studio[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [selectedStudios, setSelectedStudios] = useState<Studio[]>(
+    [],
+  )
 
-  const [alertType, setAlertType] = useState<AlertType>(null)
-  const [unavailableStudios, setUnavailableStudios] = useState<Studio[]>([])
+  const [shootingPurposes, setShootingPurposes] = useState<
+    CompareShootingPurpose[]
+  >([])
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    null,
+  )
+
+  const [alertType, setAlertType] =
+    useState<AlertType>(null)
+
+  const [unavailableStudios, setUnavailableStudios] = useState<
+    Studio[]
+  >([])
 
   const selectedStudioCount = selectedStudios.length
 
   const isCompareDisabled =
-    isLoading || errorMessage !== null || selectedStudioCount <= 1
+    isLoading ||
+    errorMessage !== null ||
+    selectedStudioCount <= 1
 
   useEffect(() => {
-    if (!studioIds || studioIds.length < 2 || studioIds.length > 3) {
+    if (
+      !studioIds ||
+      studioIds.length < 2 ||
+      studioIds.length > 3
+    ) {
       setIsLoading(false)
-      setErrorMessage('비교할 사진관 목록이 올바르지 않습니다.')
+      setErrorMessage(
+        '비교할 사진관 목록이 올바르지 않습니다.',
+      )
       return
     }
 
     const hasInvalidStudioId = studioIds.some(
-      (studioId) => !Number.isInteger(studioId) || studioId <= 0,
+      (studioId) => !isValidStudioId(studioId),
     )
 
     if (hasInvalidStudioId) {
       setIsLoading(false)
       setErrorMessage('올바르지 않은 사진관 ID입니다.')
+      return
+    }
+
+    const hasDuplicateStudioId =
+      new Set(studioIds).size !== studioIds.length
+
+    if (hasDuplicateStudioId) {
+      setIsLoading(false)
+      setErrorMessage(
+        '비교할 사진관 목록이 올바르지 않습니다.',
+      )
       return
     }
 
@@ -137,18 +167,21 @@ const ComparePurposePage = () => {
 
         const data = await getComparePurposes(studioIds)
 
-        const studios: Studio[] = data.studios.map((studio) => ({
-          id: studio.studioId,
-          name: studio.studioName,
-          availablePurposes: studio.shootingCategories.map(
-            (category) => PURPOSE_MAP[category],
-          ),
-        }))
+        const studios: Studio[] = data.studios.map(
+          (studio) => ({
+            id: studio.studioId,
+            name: studio.studioName,
+          }),
+        )
 
         setSelectedStudios(studios)
+        setShootingPurposes(data.shootingPurposes)
       } catch {
         setSelectedStudios([])
-        setErrorMessage('비교 정보를 불러오지 못했습니다.')
+        setShootingPurposes([])
+        setErrorMessage(
+          '비교 정보를 불러오지 못했습니다.',
+        )
       } finally {
         setIsLoading(false)
       }
@@ -157,15 +190,46 @@ const ComparePurposePage = () => {
     void fetchComparePurposes()
   }, [studioIds])
 
-  const getAvailableStudios = () =>
-    selectedStudios.filter((studio) =>
-      studio.availablePurposes.includes(selectedPurpose),
+  const selectedShootingCategory =
+    PURPOSE_CATEGORY_MAP[selectedPurpose]
+
+  const selectedPurposeData = shootingPurposes.find(
+    (purpose) =>
+      purpose.shootingCategory === selectedShootingCategory,
+  )
+
+  const getSupportedStudios = () => {
+    if (!selectedPurposeData) {
+      return []
+    }
+
+    const supportedStudioIdSet = new Set(
+      selectedPurposeData.supportedStudioIds,
     )
+
+    return selectedStudios.filter((studio) =>
+      supportedStudioIdSet.has(studio.id),
+    )
+  }
+
+  const getUnsupportedStudios = () => {
+    if (!selectedPurposeData) {
+      return selectedStudios
+    }
+
+    const supportedStudioIdSet = new Set(
+      selectedPurposeData.supportedStudioIds,
+    )
+
+    return selectedStudios.filter(
+      (studio) => !supportedStudioIdSet.has(studio.id),
+    )
+  }
 
   const navigateToComparePage = (studios: Studio[]) => {
     const compareNavigationState = {
       studioIds: studios.map((studio) => studio.id),
-      shootingCategory: PURPOSE_CATEGORY_MAP[selectedPurpose],
+      shootingCategory: selectedShootingCategory,
       purpose: selectedPurpose,
       studios,
     }
@@ -184,9 +248,11 @@ const ComparePurposePage = () => {
     }
   }
 
-  const handleDeleteStudio = (studioId: number) => {
-    setSelectedStudios((prevStudios) =>
-      prevStudios.filter((studio) => studio.id !== studioId),
+  const handleDeleteStudio = (studioId: string) => {
+    setSelectedStudios((currentStudios) =>
+      currentStudios.filter(
+        (studio) => studio.id !== studioId,
+      ),
     )
   }
 
@@ -194,9 +260,11 @@ const ComparePurposePage = () => {
     navigate(STUDIO_LIST_PATH, {
       state: {
         selectedStudios,
-        studioIds: selectedStudios.map((studio) => studio.id),
+        studioIds: selectedStudios.map(
+          (studio) => studio.id,
+        ),
         purpose: selectedPurpose,
-        shootingCategory: PURPOSE_CATEGORY_MAP[selectedPurpose],
+        shootingCategory: selectedShootingCategory,
       },
     })
   }
@@ -206,30 +274,22 @@ const ComparePurposePage = () => {
       return
     }
 
-    const availableStudios = getAvailableStudios()
+    const supportedStudios = getSupportedStudios()
+    const unsupportedStudios = getUnsupportedStudios()
 
-    const unavailableStudioList = selectedStudios.filter(
-      (studio) => !studio.availablePurposes.includes(selectedPurpose),
-    )
+    setUnavailableStudios(unsupportedStudios)
 
-    const availableStudioCount = availableStudios.length
-
-    setUnavailableStudios(unavailableStudioList)
-
-    if (selectedStudioCount === 3 && availableStudioCount === 2) {
-      setAlertType('exclude')
-      return
-    }
-
-    if (
-      (selectedStudioCount === 2 && availableStudioCount === 1) ||
-      (selectedStudioCount === 3 && availableStudioCount <= 1)
-    ) {
+    if (supportedStudios.length < 2) {
       setAlertType('reselect')
       return
     }
 
-    navigateToComparePage(availableStudios)
+    if (unsupportedStudios.length > 0) {
+      setAlertType('exclude')
+      return
+    }
+
+    navigateToComparePage(supportedStudios)
   }
 
   const handleCloseAlert = () => {
@@ -237,19 +297,24 @@ const ComparePurposePage = () => {
   }
 
   const handleCompareWithoutUnavailableStudios = () => {
-    const availableStudios = getAvailableStudios()
+    const supportedStudios = getSupportedStudios()
 
     setAlertType(null)
-    navigateToComparePage(availableStudios)
+    navigateToComparePage(supportedStudios)
   }
 
   const unavailableStudioNames = unavailableStudios
     .map((studio) => studio.name)
     .join(', ')
 
-  const excludeAlertDescription = `${unavailableStudioNames}엔 선택하신 컨셉이 없어요.\n제외하고 비교할까요?`
+  const excludeAlertDescription =
+    `${unavailableStudioNames}엔 선택하신 컨셉이 없어요.\n` +
+    '제외하고 비교할까요?'
 
-  const reselectAlertDescription = `${unavailableStudioNames}엔\n선택하신 컨셉이 없어요.\n다른 컨셉을 선택해 주세요.`
+  const reselectAlertDescription =
+    unavailableStudioNames.length > 0
+      ? `${unavailableStudioNames}엔\n선택하신 컨셉이 없어요.\n다른 컨셉을 선택해 주세요.`
+      : '선택하신 컨셉을 제공하는 사진관이 부족해요.\n다른 컨셉을 선택해 주세요.'
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-white text-black">
@@ -263,7 +328,9 @@ const ComparePurposePage = () => {
           <IcBack width={24} height={24} />
         </button>
 
-        <h1 className="font-h6 flex-1 text-center">사진관 비교</h1>
+        <h1 className="font-h6 flex-1 text-center">
+          사진관 비교
+        </h1>
 
         <div className="size-9" />
       </header>
@@ -305,7 +372,9 @@ const ComparePurposePage = () => {
                 key={purpose}
                 type={purpose}
                 active={selectedPurpose === purpose}
-                onClick={() => setSelectedPurpose(purpose)}
+                onClick={() =>
+                  setSelectedPurpose(purpose)
+                }
               />
             ))}
           </section>
@@ -319,7 +388,9 @@ const ComparePurposePage = () => {
               <ButtonCompareSlot
                 key={studio.id}
                 label={studio.name}
-                onDelete={() => handleDeleteStudio(studio.id)}
+                onDelete={() =>
+                  handleDeleteStudio(studio.id)
+                }
               />
             ))}
 
@@ -340,8 +411,14 @@ const ComparePurposePage = () => {
 
         <div className="px-5 pb-[9px]">
           <Button
-            variant={isCompareDisabled ? 'disabled' : 'primary'}
-            onClick={isCompareDisabled ? undefined : handleCompareStart}
+            variant={
+              isCompareDisabled ? 'disabled' : 'primary'
+            }
+            onClick={
+              isCompareDisabled
+                ? undefined
+                : handleCompareStart
+            }
           >
             비교 시작
           </Button>
@@ -360,7 +437,9 @@ const ComparePurposePage = () => {
               variant="alert"
               description={excludeAlertDescription}
               onCancel={handleCloseAlert}
-              onConfirm={handleCompareWithoutUnavailableStudios}
+              onConfirm={
+                handleCompareWithoutUnavailableStudios
+              }
             />
           ) : (
             <Alert2
