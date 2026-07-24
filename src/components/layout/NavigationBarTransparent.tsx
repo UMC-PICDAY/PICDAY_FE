@@ -26,7 +26,11 @@ const NavigationBarTransparent = ({
     <button className={iconBtn} onClick={onBack} aria-label="뒤로가기">
       <IcBack width={24} height={24} />
     </button>
-    <button className={iconBtn} onClick={onFavorite} aria-label={isFavorited ? '찜 해제' : '찜하기'}>
+    <button
+      className={`${iconBtn} ${isFavorited ? 'text-brand-100' : 'text-gray-60'}`}
+      onClick={onFavorite}
+      aria-label={isFavorited ? '찜 해제' : '찜하기'}
+    >
       {isFavorited ? <IcFavoriteFill width={24} height={24} /> : <IcFavorite width={24} height={24} />}
     </button>
   </div>
