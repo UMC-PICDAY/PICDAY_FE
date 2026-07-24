@@ -77,7 +77,7 @@ const MOCK_SEARCH_STUDIO = {
   reviewCount: 128,
   shootingCategory: ['PROFILE', 'PERSONAL_PORTRAIT'],
   serviceTags: ['HAIR_MAKEUP', 'PARKING'],
-  isWishlisted: false,
+  isWishlisted: true,
   productSummaries: [
     { productId: 1, productName: '프로필 기본', shootingCategory: 'PROFILE', price: 55000 },
   ],
@@ -142,10 +142,18 @@ const MOCK_STUDIO_DETAIL: StudioDetail = {
   },
 }
 
+// MOCK_WISHLIST_RESULT(services/wishlist.ts)에 들어있는 studioId와 맞춰서
+// 위시리스트에서 들어간 사진관은 상세에서도 찜된 상태로 보이게 함
+const MOCK_WISHLISTED_STUDIO_IDS = [1, 4]
+
 export const getStudioDetail = (studioId: string): Promise<StudioDetail> =>
   withMockFallback(
     () => apiGet<StudioDetail>(`/api/v1/studios/${studioId}`),
-    { ...MOCK_STUDIO_DETAIL, studioId: Number(studioId) || MOCK_STUDIO_DETAIL.studioId },
+    {
+      ...MOCK_STUDIO_DETAIL,
+      studioId: Number(studioId) || MOCK_STUDIO_DETAIL.studioId,
+      isWishlisted: MOCK_WISHLISTED_STUDIO_IDS.includes(Number(studioId)),
+    },
   )
 
 // 2-5. 컨셉(상품) 목록 조회
