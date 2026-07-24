@@ -295,7 +295,7 @@ const MyReservationPage = () => {
     filteredReservations.length === 0
 
   return (
-    <>
+    <div className="flex min-h-dvh w-full flex-col bg-white">
       <div className="sticky top-0 z-10 w-full bg-white">
         <TopAppBar />
       </div>
@@ -442,7 +442,7 @@ const MyReservationPage = () => {
           }}
         />
       </div>
-    </>
+    </div>
   )
 }
 
