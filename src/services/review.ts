@@ -46,11 +46,16 @@ const MOCK_REVIEW_LIST: ReviewListData = {
 export const getStudioReviews = (
   studioId: string,
   params: ReviewListParams,
-): Promise<ReviewListData> =>
-  withMockFallback(
+): Promise<ReviewListData> => {
+  const mockItems = params.photoOnly
+    ? MOCK_REVIEW_LIST.items.filter((item) => item.images.length > 0)
+    : MOCK_REVIEW_LIST.items
+
+  return withMockFallback(
     () => apiGet<ReviewListData>(`/api/v1/studios/${studioId}/reviews`, params),
-    MOCK_REVIEW_LIST,
+    { ...MOCK_REVIEW_LIST, items: mockItems },
   )
+}
 
 // 5-5. 리뷰 추천(도움돼요)
 export const likeReview = (reviewId: number): Promise<ReviewLikeResult> =>
