@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 
 import CardStudioSmall from '@/components/cards/CardStudioSmall'
 import CompareActionBar from '@/components/common/CompareActionBar'
@@ -16,9 +17,10 @@ import StudioResultsBottomSheet from '@/pages/studio/components/StudioResultsBot
 import StudioResultsList from '@/pages/studio/components/StudioResultsList'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
-import { useStudioSearch } from '@/hooks/useStudio'
+import { studioSearchQueryKey, useStudioSearch } from '@/hooks/useStudio'
+import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
-import type { StudioSearchItem } from '@/types/studio'
+import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
 import {
   buildStudioSearchChipLabel,
   hasBaseSearchCondition,
@@ -45,6 +47,7 @@ const StudioSearchPage = () => {
   const filters = parseStudioSearchParams(searchParams)
   const [sdkError, setSdkError] = useState(false)
   const mapError = searchParams.get('state') === 'error' || sdkError
+  const queryClient = useQueryClient()
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
   const { data, isLoading } = useStudioSearch(filters)
@@ -61,6 +64,34 @@ const StudioSearchPage = () => {
 
   const handleCompareToggle = (studio: StudioSearchItem) => {
     toggleCompare({ studioId: studio.studioId, studioName: studio.studioName })
+  }
+
+  // 검색 결과 카드의 찜하기 토글 — 목록 캐시를 낙관적으로 갱신하고 실패 시 되돌린다.
+  const handleFavoriteToggle = async (studio: StudioSearchItem) => {
+    const queryKey = studioSearchQueryKey(filters)
+    const nextWishlisted = !studio.isWishlisted
+
+    const patchStudios = (prev: StudioSearchResult | undefined): StudioSearchResult | undefined =>
+      prev
+        ? {
+            ...prev,
+            studios: prev.studios.map((item) =>
+              item.studioId === studio.studioId ? { ...item, isWishlisted: nextWishlisted } : item,
+            ),
+          }
+        : prev
+
+    queryClient.setQueryData<StudioSearchResult>(queryKey, patchStudios)
+
+    try {
+      if (nextWishlisted) {
+        await addWishlist(studio.studioId)
+      } else {
+        await removeWishlist(studio.studioId)
+      }
+    } catch {
+      queryClient.invalidateQueries({ queryKey })
+    }
   }
 
   const handleCompare = () => {
@@ -223,6 +254,7 @@ const StudioSearchPage = () => {
               selectedIds={selectedIds}
               onSelect={(id) => navigate(`/studios/${id}`)}
               onCompareToggle={handleCompareToggle}
+              onFavoriteToggle={handleFavoriteToggle}
             />
           </StudioResultsBottomSheet>
         )}

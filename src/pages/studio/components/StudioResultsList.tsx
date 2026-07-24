@@ -14,6 +14,7 @@ interface StudioResultsListProps {
   selectedIds?: ReadonlySet<number>
   onSelect?: (id: number) => void
   onCompareToggle?: (studio: StudioSearchItem) => void
+  onFavoriteToggle?: (studio: StudioSearchItem) => void
 }
 
 /**
@@ -26,6 +27,7 @@ const StudioResultsList = ({
   selectedIds,
   onSelect,
   onCompareToggle,
+  onFavoriteToggle,
 }: StudioResultsListProps) => (
   <div className="flex w-full flex-col gap-5 pb-14">
     {studios.map((studio) => {
@@ -48,6 +50,7 @@ const StudioResultsList = ({
           showCompareButton={showCompareButton}
           compareButtonLabel={isSelected ? '비교취소' : '비교추가'}
           onCompareClick={() => onCompareToggle?.(studio)}
+          onFavoriteClick={() => onFavoriteToggle?.(studio)}
           onClick={() => onSelect?.(studio.studioId)}
           className="relative w-full rounded-[20px] border border-[rgba(254,228,235,0.4)] bg-white/75 p-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]"
         />
