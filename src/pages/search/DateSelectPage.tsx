@@ -18,10 +18,15 @@ const DateSelectPage = () => {
   )
   const [isUndecided, setIsUndecided] = useState(() => useSearchDraftStore.getState().isDateUndecided)
 
-  const startMonth = useMemo(() => {
-    const today = new Date()
-    return { year: today.getFullYear(), month: today.getMonth() + 1 }
+  const today = useMemo(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate())
   }, [])
+
+  const startMonth = useMemo(
+    () => ({ year: today.getFullYear(), month: today.getMonth() + 1 }),
+    [today],
+  )
 
   const canProceed = isUndecided || selectedDate !== undefined
 
@@ -51,6 +56,7 @@ const DateSelectPage = () => {
             setSelectedDate(date)
             setIsUndecided(false)
           }}
+          isDateDisabled={(date) => new Date(date.year, date.month - 1, date.day) < today}
         />
       </div>
 
