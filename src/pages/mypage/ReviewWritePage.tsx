@@ -17,9 +17,30 @@ import TimeChip from '@/components/common/TimeChip'
 import { IcStar, IcStar2 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 import {
+  getReservationDetail,
+  type ReservationDetailData,
+} from '@/services/reservation'
+import {
   createReview,
   uploadImage,
 } from '@/services/review'
+
+const formatShootingDate = (
+  reservationDate: string,
+  reservationTime: string,
+) => {
+  const [year, month, day] = reservationDate
+    .split('-')
+    .map(Number)
+
+  const date = new Date(year, month - 1, day)
+
+  const weekday = new Intl.DateTimeFormat('ko-KR', {
+    weekday: 'short',
+  }).format(date)
+
+  return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')} (${weekday}) ${reservationTime} 촬영`
+}
 
 interface ReviewImage {
   id: string
@@ -47,9 +68,14 @@ const reviewTags = [
 
 const ReviewWritePage = () => {
   const navigate = useNavigate()
-  const { reservationId = '2' } = useParams()
+  const { reservationId } = useParams<{
+    reservationId: string
+  }>()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const imageListRef = useRef<ReviewImage[]>([])
+
+  const [reservation, setReservation] =
+    useState<ReservationDetailData | null>(null)
 
   const [rating, setRating] = useState(5)
   const [selectedTags, setSelectedTags] = useState<string[]>([
@@ -69,6 +95,25 @@ const ReviewWritePage = () => {
     rating >= 1 &&
     trimmedReview.length >= 10 &&
     trimmedReview.length <= 500
+
+  useEffect(() => {
+    if (!reservationId) {
+      navigate('/mypage', { replace: true })
+      return
+    }
+
+    const fetchReservationDetail = async () => {
+      try {
+        const result = await getReservationDetail(reservationId)
+        setReservation(result)
+      } catch (error) {
+        console.error('예약 정보 조회에 실패했습니다.', error)
+        navigate('/mypage', { replace: true })
+      }
+    }
+
+    void fetchReservationDetail()
+  }, [navigate, reservationId])
 
   useEffect(() => {
     imageListRef.current = imageList
@@ -156,7 +201,7 @@ const ReviewWritePage = () => {
   }
 
   const handleSubmit = async () => {
-    if (!canSubmit || isUploading) {
+    if (!canSubmit || isUploading || !reservation) {
       return
     }
 
@@ -185,6 +230,15 @@ const ReviewWritePage = () => {
 
       navigate(
         `/mypage/reservations/${reservationId}/review/complete`,
+        {
+          state: {
+            review: {
+              studioName: reservation.studioName,
+              conceptName: reservation.conceptName,
+              rating,
+            },
+          },
+        },
       )
     } catch (error) {
       console.error('리뷰 등록 실패:', error)
@@ -192,6 +246,15 @@ const ReviewWritePage = () => {
       setIsUploading(false)
     }
   }
+
+  if (!reservation) {
+    return (
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
+        <NavigationBar title="리뷰 작성" showRight={false} onBack={() => navigate(-1)} />
+      </div>
+    )
+  }
+
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white pb-[120px]">
       <NavigationBar title="리뷰 작성" showRight={false} onBack={() => setIsCancelModalOpen(true)} />
@@ -199,8 +262,14 @@ const ReviewWritePage = () => {
       <section className="flex w-full flex-col items-start gap-[15px] p-5">
         <div className="flex w-full flex-col items-start rounded-[8px] bg-[rgba(254,228,235,0.3)] px-4 py-3">
           <div className="flex w-full flex-col items-start gap-0.5">
-            <h2 className="font-b3 text-gray-80">데이지 스튜디오</h2>
-            <p className="font-b8 text-gray-60">개인화보 · 2025.06.14 (일) 촬영</p>
+            <h2 className="font-b3 text-gray-80">{reservation.studioName}</h2>
+            <p className="font-b8 text-gray-60">
+              {reservation.conceptName} ·{' '}
+              {formatShootingDate(
+                reservation.reservationDate,
+                reservation.reservationTime,
+              )}
+            </p>
           </div>
         </div>
 
