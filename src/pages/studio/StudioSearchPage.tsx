@@ -125,6 +125,7 @@ const StudioSearchPage = () => {
       <NavigationBar
         variant="chip"
         chipLabel={buildStudioSearchChipLabel(filters)}
+        onBack={() => navigate(-1)}
         rightNode={
           <button
             type="button"
