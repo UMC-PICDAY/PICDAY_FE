@@ -230,7 +230,16 @@ export const getStudioSlots = (
 
 // 2-8. 헤어메이크업 연계 상세
 export const getStudioHairMakeup = (studioId: string): Promise<HairMakeupData> =>
-  apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hairMakeupDetail`)
+  withMockFallback(
+    () => apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hairMakeupDetail`),
+    {
+      studioId: Number(studioId) || 1,
+      hairMakeupList: [
+        { studioServiceId: 1, partnerName: '뷰티스튜디오 홍대점', additionalPrice: 30000, displayOrder: 1 },
+        { studioServiceId: 2, partnerName: '메이크업 온 홍대', additionalPrice: 25000, displayOrder: 2 },
+      ],
+    },
+  )
 
 // ===== 2-9. 비교 목적 / 2-10. 비교 결과 (전지혜) =====
 
@@ -295,8 +304,20 @@ export const getComparePurposes = (studioIds: number[]) => {
     searchParams.append('studioIds', String(studioId))
   })
 
-  return apiGet<ComparePurposeResponse>(
-    `/api/v1/studios/compare?${searchParams.toString()}`,
+  const mockResult: ComparePurposeResponse = {
+    studios: studioIds.map((studioId) => ({
+      studioId,
+      studioName: `데이지 스튜디오 ${studioId}`,
+      shootingCategories: ['PROFILE', 'PERSONAL_PORTRAIT'],
+    })),
+  }
+
+  return withMockFallback(
+    () =>
+      apiGet<ComparePurposeResponse>(
+        `/api/v1/studios/compare?${searchParams.toString()}`,
+      ),
+    mockResult,
   )
 }
 
@@ -312,7 +333,36 @@ export const getCompareResult = ({
 
   searchParams.append('shootingCategory', shootingCategory)
 
-  return apiGet<CompareResultResponse>(
-    `/api/v1/studios/compare/result?${searchParams.toString()}`,
+  const mockResult: CompareResultResponse = {
+    shootingCategory,
+    shootingCategoryName: '프로필',
+    studios: studioIds.map((studioId, index) => ({
+      studioId,
+      studioName: `데이지 스튜디오 ${studioId}`,
+      thumbnailUrl: [cardImage1, cardImage2, cardImage3][index % 3],
+      rating: 4.8,
+      reviewCount: 120,
+      productsInformation: {
+        price: 55000 + index * 10000,
+        isMine: index === 0,
+        comparisonSummary: index === 0 ? '가장 저렴해요' : '평균보다 비싸요',
+        hasAdditionalPrice: false,
+      },
+      serviceTags: ['HAIR_MAKEUP', 'PARKING'],
+      location: {
+        locationCategory: '홍대',
+        nearestStation: '홍대입구역',
+        walkingMinutes: 5,
+      },
+      earliestReservationDate: '2026-08-01',
+    })),
+  }
+
+  return withMockFallback(
+    () =>
+      apiGet<CompareResultResponse>(
+        `/api/v1/studios/compare/result?${searchParams.toString()}`,
+      ),
+    mockResult,
   )
 }
