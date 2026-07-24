@@ -27,10 +27,13 @@ const toSearchParams = (filters: StudioSearchFilters): StudioSearchParams => ({
   minRating: filters.minRating,
 })
 
+export const studioSearchQueryKey = (filters: StudioSearchFilters) =>
+  ['studioSearch', serializeStudioSearchParams(filters).toString()] as const
+
 // 2-3. 사진관 검색 — 기본 조건(location/date/concept/name)이 하나라도 있어야 호출.
 export const useStudioSearch = (filters: StudioSearchFilters) =>
   useQuery({
-    queryKey: ['studioSearch', serializeStudioSearchParams(filters).toString()],
+    queryKey: studioSearchQueryKey(filters),
     queryFn: () => searchStudios(toSearchParams(filters)),
     enabled: hasBaseSearchCondition(filters),
   })
