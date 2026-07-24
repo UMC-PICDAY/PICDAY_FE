@@ -1,9 +1,12 @@
-// PICDAY_API_1st.pdf 기준 path만 확정, Request/Response DTO는 미정
+// PICDAY_API_Spec.md 기준
 import { apiDelete, apiGet, apiPost } from '@/services/client'
+import type { AddWishlistResult, WishlistResult } from '@/types/wishlist'
 
-export const getWishlists = () => apiGet<unknown>('/api/v1/wishlists')
+export const getWishlists = (page = 1, size = 10) =>
+  apiGet<WishlistResult>('/api/v1/wishlists', { page, size })
 
-export const addWishlist = (body: unknown) => apiPost<unknown>('/api/v1/wishlists', body)
+export const addWishlist = (studioId: number) =>
+  apiPost<AddWishlistResult>('/api/v1/wishlists', { studioId })
 
-export const removeWishlist = (studioId: string) =>
-  apiDelete<unknown>(`/api/v1/wishlists/${studioId}`)
+export const removeWishlist = (studioId: number) =>
+  apiDelete<null>(`/api/v1/wishlists/${studioId}`)

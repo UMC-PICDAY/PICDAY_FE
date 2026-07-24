@@ -1,6 +1,45 @@
 import type { CalendarDate } from '@/components/common/Calendar'
 import type { ReviewListItem, ReviewSummary } from '@/types/review'
 
+// ===== 2-1. 홈 / 2-2. 자동완성 (김이준 담당분) =====
+// PICDAY_API_Spec.md 기준. 홈(2-1)·자동완성(2-2) 응답 정의
+export interface StudioSummary {
+  studioId: number
+  studioName: string
+  thumbnailUrl: string
+  locationCategory: string
+  minPrice: number
+  rating: number
+}
+
+export interface BannerStudio {
+  studioId: number
+  studioName: string
+  thumbnailUrl: string
+  locationCategory: string
+}
+
+export interface HomeResult {
+  bannerStudios: BannerStudio[]
+  recentStudios?: StudioSummary[]
+  popularStudios: StudioSummary[]
+  regionalStudios: {
+    locationCategory: string
+    studios: StudioSummary[]
+  }
+}
+
+export interface AutocompleteSuggestion {
+  studioId: number
+  studioName: string
+  locationCategory: string
+}
+
+export interface AutocompleteResult {
+  keyword: string
+  suggestions: AutocompleteSuggestion[]
+}
+
 // ===== 2-3. GET /api/v1/studios/search =====
 
 /**

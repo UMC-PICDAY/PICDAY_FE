@@ -1,8 +1,8 @@
 /**
  * Figma G-1 위시리스트 (라우트: /wishlist) — 비로그인 유도/빈 목록/카드 목록 3가지 상태를 한 페이지에서 분기
  */
-import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import NavigationBar from '@/components/layout/NavigationBar'
 import TabBarUser from '@/components/layout/TabBarUser'
@@ -11,26 +11,37 @@ import CardStudioFavorite from '@/components/cards/CardStudioFavorite'
 import NoticeLogin from '@/components/common/NoticeLogin'
 import { IcFavorite } from '@/components/icons'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { getWishlists, removeWishlist } from '@/services/wishlist'
+import type { WishlistResult } from '@/types/wishlist'
 
-// API 명세가 아직 없어서 목업 데이터로 대체 (실제 API 연동 시 찜한 사진관 목록으로 교체)
-const INITIAL_WISHLIST_ITEMS = [
-  { id: 'wishlist-1', name: '데이지 스튜디오', location: '홍대', category: '개인화보', price: '₩30,000~', favorited: true },
-  { id: 'wishlist-2', name: '데이지 스튜디오', location: '홍대', category: '개인화보', price: '₩30,000~', favorited: true },
-  { id: 'wishlist-3', name: '데이지 스튜디오', location: '홍대', category: '개인화보', price: '₩30,000~', favorited: true },
-  { id: 'wishlist-4', name: '데이지 스튜디오', location: '홍대', category: '개인화보', price: '₩30,000~', favorited: true },
-  { id: 'wishlist-5', name: '데이지 스튜디오', location: '홍대', category: '개인화보', price: '₩30,000~', favorited: true },
-]
+const WISHLIST_QUERY_KEY = ['wishlists']
+
+const formatPrice = (minPrice: number | null) =>
+  minPrice === null ? undefined : `₩${minPrice.toLocaleString()}~`
 
 const WishlistPage = () => {
   const navigate = useNavigate()
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
-  const [wishlistItems, setWishlistItems] = useState(INITIAL_WISHLIST_ITEMS)
+  const queryClient = useQueryClient()
 
-  // 하트를 눌러도 목록에서 바로 제거하지 않고 빈 하트로만 바꿔서, 다시 눌러 되돌릴 수 있게 함
-  const toggleFavorite = (id: string) => {
-    setWishlistItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, favorited: !item.favorited } : item)),
+  const { data } = useQuery({
+    queryKey: WISHLIST_QUERY_KEY,
+    queryFn: () => getWishlists(),
+    enabled: isLoggedIn,
+  })
+
+  const wishlistItems = data?.items ?? []
+
+  const handleRemove = async (studioId: number) => {
+    queryClient.setQueryData<WishlistResult>(WISHLIST_QUERY_KEY, (prev) =>
+      prev ? { ...prev, items: prev.items.filter((item) => item.studioId !== studioId) } : prev,
     )
+
+    try {
+      await removeWishlist(studioId)
+    } catch {
+      queryClient.invalidateQueries({ queryKey: WISHLIST_QUERY_KEY })
+    }
   }
 
   return (
@@ -61,15 +72,15 @@ const WishlistPage = () => {
         <div className="grid w-full grid-cols-2 gap-4 px-5 py-[10px]">
           {wishlistItems.map((item) => (
             <CardStudioFavorite
-              key={item.id}
-              variant={item.favorited ? 'active' : 'default'}
-              name={item.name}
-              location={item.location}
-              category={item.category}
-              price={item.price}
+              key={item.wishlistId}
+              variant="active"
+              imageSrc={item.thumbnail}
+              name={item.studioName}
+              location={item.region ?? undefined}
+              price={formatPrice(item.minPrice)}
               className="relative flex w-full flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px] cursor-pointer"
-              onClick={() => navigate(`/studios/${item.id}`)} // C-5 사진관 상세로 이동
-              onFavoriteClick={() => toggleFavorite(item.id)}
+              onClick={() => navigate(`/studios/${item.studioId}`)} // C-5 사진관 상세로 이동
+              onFavoriteClick={() => handleRemove(item.studioId)}
             />
           ))}
         </div>

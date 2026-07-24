@@ -2,32 +2,25 @@
  * Figma A-3 자체 회원가입 (라우트: /signup)
  * 약관 상세(서비스/개인정보/만14세/마케팅)는 Agreement의 onItemDetailClick으로 A-3 하위 화면인 /terms/:termType로 이동
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { FocusEventHandler } from 'react'
 import { useNavigate } from 'react-router'
 
 import NavigationBar from '@/components/layout/NavigationBar'
 import InputField from '@/components/common/InputField'
 import Agreement from '@/components/common/Agreement'
 import Button from '@/components/common/Button'
+import Toast from '@/components/common/Toast'
 import { useValidatedField } from '@/hooks/useValidatedField'
-
-type TermKey = 'service' | 'privacy' | 'age' | 'marketing'
-
-const REQUIRED_TERMS: TermKey[] = ['service', 'privacy', 'age']
-
-const TERM_ITEMS: { key: TermKey; label: string }[] = [
-  { key: 'service', label: '서비스 이용 약관 동의 (필수)' },
-  { key: 'privacy', label: '개인정보 수집 및 이용 동의 (필수)' },
-  { key: 'age', label: '만 14세 이상 확인 (필수)' },
-  { key: 'marketing', label: '마케팅 알림 수신 동의 (선택)' },
-]
+import { checkLoginIdAvailable, signup } from '@/services/auth'
+import { ApiError } from '@/types/common'
+import { REQUIRED_TERMS, TERM_ITEMS } from '@/constants/terms'
+import type { TermKey } from '@/constants/terms'
 
 // 영문 소문자로 시작, 소문자/숫자만 허용, 4~12자 (대문자·공백·특수문자·숫자시작·숫자만 금지)
 const ID_REGEX = /^[a-z][a-z0-9]{3,11}$/
 // 영문, 숫자, 특수문자를 모두 포함한 8~20자
 const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,20}$/
-// API 없어서 이미 사용 중인 아이디를 목업으로 하드코딩 (실제로는 서버에서 중복 확인)
-const TAKEN_IDS = ['daisy1234', 'test1234']
 // 일반적인 이메일 형식
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // 010/011/016/017/018/019로 시작하는 국내 휴대폰 번호 (하이픈 유무 무관)
@@ -40,7 +33,6 @@ const validateId = (value: string) => {
   if (!ID_REGEX.test(value)) {
     return '대문자, 공백,특수문자가 포함되었거나, 숫자로 시작 또는 숫자로만 이루어진 아이디는 사용할 수 없습니다'
   }
-  if (TAKEN_IDS.includes(value)) return '이미 사용 중인 아이디에요'
   return undefined
 }
 
@@ -62,6 +54,8 @@ const validatePhone = (value: string) => {
   return undefined
 }
 
+type IdAvailability = 'idle' | 'checking' | 'available' | 'taken'
+
 const SignUpPage = () => {
   const navigate = useNavigate()
   const [terms, setTerms] = useState<Record<TermKey, boolean>>({
@@ -70,6 +64,9 @@ const SignUpPage = () => {
     age: false,
     marketing: false,
   })
+  const [idAvailability, setIdAvailability] = useState<IdAvailability>('idle')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const name = useValidatedField(validateName)
   const id = useValidatedField(validateId)
@@ -77,15 +74,27 @@ const SignUpPage = () => {
   const email = useValidatedField(validateEmail)
   const phone = useValidatedField(validatePhone)
 
+  useEffect(() => {
+    setIdAvailability('idle')
+  }, [id.fieldProps.value])
+
+  useEffect(() => {
+    if (!toastMessage) return
+    const timer = setTimeout(() => setToastMessage(null), 3000)
+    return () => clearTimeout(timer)
+  }, [toastMessage])
+
   const isAllAgreed = TERM_ITEMS.every(({ key }) => terms[key])
 
   const canSubmit =
     REQUIRED_TERMS.every((key) => terms[key]) &&
     name.isValid &&
     id.isValid &&
+    idAvailability === 'available' &&
     password.isValid &&
     email.isValid &&
-    phone.isValid
+    phone.isValid &&
+    !isSubmitting
 
   const toggleAll = () => {
     const next = !isAllAgreed
@@ -96,6 +105,43 @@ const SignUpPage = () => {
     setTerms((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
+  const handleIdBlur: FocusEventHandler<HTMLInputElement> = async (event) => {
+    id.fieldProps.onBlur(event)
+    if (!id.isValid || id.fieldProps.value === '') return
+
+    setIdAvailability('checking')
+    try {
+      const { available } = await checkLoginIdAvailable(id.fieldProps.value)
+      setIdAvailability(available ? 'available' : 'taken')
+    } catch {
+      setIdAvailability('idle')
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return
+
+    setIsSubmitting(true)
+    try {
+      await signup({
+        loginId: id.fieldProps.value,
+        name: name.fieldProps.value,
+        password: password.fieldProps.value,
+        email: email.fieldProps.value,
+        phoneNumber: phone.fieldProps.value.replace(/-/g, ''),
+        agreedTermsIds: TERM_ITEMS.filter(({ key }) => terms[key]).map(({ id: termId }) => termId),
+      })
+      navigate('/signup/complete')
+    } catch (error) {
+      setToastMessage(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const idError =
+    id.fieldProps.error ?? (idAvailability === 'taken' ? '이미 사용 중인 아이디에요' : undefined)
+
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
       <NavigationBar title="회원가입" showRight={false} onBack={() => navigate(-1)} />
@@ -105,6 +151,8 @@ const SignUpPage = () => {
         label="아이디"
         placeholder="영문 소문자, 숫자를 포함하여 4~12자로 작성"
         {...id.fieldProps}
+        error={idError}
+        onBlur={handleIdBlur}
       />
       <InputField
         label="비밀번호"
@@ -135,13 +183,16 @@ const SignUpPage = () => {
       />
 
       <div className="sticky bottom-0 mt-auto w-full bg-white p-5">
-        <Button
-          variant={canSubmit ? 'primary' : 'disabled'}
-          onClick={canSubmit ? () => navigate('/signup/complete') : undefined}
-        >
+        <Button variant={canSubmit ? 'primary' : 'disabled'} onClick={canSubmit ? handleSubmit : undefined}>
           회원가입
         </Button>
       </div>
+
+      {toastMessage && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 flex justify-center px-5">
+          <Toast message={toastMessage} />
+        </div>
+      )}
     </div>
   )
 }

@@ -39,3 +39,15 @@ export interface ReviewLikeResult {
   reviewId: number
   likeCount: number
 }
+
+// 5-2. 리뷰 작성 / 이미지 업로드
+export interface UploadImageResult {
+  imageUrl: string
+}
+
+export interface CreateReviewRequest {
+  reservationId: number
+  rating: number
+  content: string
+  imageUrls: string[] | null
+}

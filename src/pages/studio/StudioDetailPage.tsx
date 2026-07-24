@@ -25,6 +25,7 @@ import ReviewCard from '@/pages/studio/components/ReviewCard'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { useStudioDetail } from '@/hooks/useStudio'
+import { addWishlist, removeWishlist } from '@/services/wishlist'
 
 type OpenSheet = 'info' | 'hairmakeup' | null
 
@@ -62,7 +63,7 @@ const StudioDetailPage = () => {
   const [addressCopied, setAddressCopied] = useState(false)
   const [introExpanded, setIntroExpanded] = useState(false)
 
-  // 상세 로드되면 찜 상태 초기화 (토글은 로컬, 위시리스트 API는 타 도메인)
+  // 상세 로드 시 서버의 찜 상태로 초기화 (토글은 handleToggleFavorite에서 위시리스트 API 호출)
   useEffect(() => {
     if (detail) setFavorited(detail.isWishlisted)
   }, [detail])
@@ -74,6 +75,22 @@ const StudioDetailPage = () => {
   const fullAddress = detail
     ? `${detail.mainAddress} ${detail.subAddress}`
     : ''
+
+  const handleToggleFavorite = async () => {
+    if (!studioId) return
+
+    const next = !favorited
+    setFavorited(next)
+    try {
+      if (next) {
+        await addWishlist(Number(studioId))
+      } else {
+        await removeWishlist(Number(studioId))
+      }
+    } catch {
+      setFavorited(!next)
+    }
+  }
 
   const handleCopyAddress = () => {
     if (!fullAddress) return
@@ -131,7 +148,7 @@ const StudioDetailPage = () => {
           <NavigationBarTransparent
             isFavorited={favorited}
             onBack={() => navigate(-1)}
-            onFavorite={() => setFavorited((prev) => !prev)}
+            onFavorite={handleToggleFavorite}
           />
         </div>
       </div>

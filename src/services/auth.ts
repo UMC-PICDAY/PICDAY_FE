@@ -1,49 +1,52 @@
-import { apiDelete, apiGet, apiPost } from '@/services/client'
+import { apiDelete, apiGet, apiPatch, apiPost } from '@/services/client'
 import type {
-  AuthTokens,
-  AuthUser,
   AvailabilityResult,
-  MessageResult,
+  LoginResult,
+  MeResult,
   SignupResult,
-  SocialAuthUrl,
+  SocialAuthUrlResult,
   SocialLoginResult,
   SocialProvider,
+  SocialSignupCompleteResult,
+  UpdateNicknameResult,
 } from '@/types/auth'
 
+export const signup = (body: {
+  loginId: string
+  name: string
+  password: string
+  email: string
+  phoneNumber: string
+  agreedTermsIds: number[]
+}) => apiPost<SignupResult>('/api/v1/auth/signup', body)
+
+export const checkLoginIdAvailable = (loginId: string) =>
+  apiGet<AvailabilityResult>('/api/v1/auth/loginid/check', { loginid: loginId })
+
+export const login = (loginId: string, password: string) =>
+  apiPost<LoginResult>('/api/v1/auth/login', { loginId, password })
+
+export const logout = () => apiPost<null>('/api/v1/auth/logout')
+
 export const getSocialAuthUrl = (provider: SocialProvider) =>
-  apiGet<SocialAuthUrl>(`/api/auth/${provider}/url`)
+  apiGet<SocialAuthUrlResult>(`/api/v1/auth/${provider}/url`)
 
-export const socialLogin = (provider: SocialProvider, code: string, state: string) =>
-  apiPost<SocialLoginResult>(`/api/auth/${provider}/login`, { code, state })
+export const socialLogin = (provider: SocialProvider, authorizationCode: string, redirectUri: string) =>
+  apiPost<SocialLoginResult>(`/api/v1/auth/${provider}/login`, { authorizationCode, redirectUri })
 
-export const completeSocialSignup = (
-  signupToken: string,
-  nickname: string,
-  agreedTermsIds: string[],
-) =>
-  apiPost<SignupResult>(
-    '/api/auth/signup/complete',
-    { nickname, agreedTermsIds },
+export const completeSocialSignup = (signupToken: string, agreedTermsIds: number[]) =>
+  apiPost<SocialSignupCompleteResult>(
+    '/api/v1/auth/signup/complete',
+    { agreedTermsIds },
     { headers: { Authorization: `Bearer ${signupToken}` } },
   )
 
-export const signup = (email: string, password: string, nickname: string, agreedTermsIds: string[]) =>
-  apiPost<SignupResult>('/api/auth/signup', { email, password, nickname, agreedTermsIds })
+export const getMe = () => apiGet<MeResult>('/api/v1/users/me')
 
-export const login = (email: string, password: string) =>
-  apiPost<AuthTokens>('/api/auth/login', { email, password })
+export const updateNickname = (nickname: string) =>
+  apiPatch<UpdateNicknameResult>('/api/v1/users/me', { nickname })
 
 export const checkNicknameAvailable = (nickname: string) =>
-  apiGet<AvailabilityResult>('/api/auth/nickname/check', { nickname })
+  apiGet<AvailabilityResult>('/api/v1/auth/nickname/check', { nickname })
 
-export const checkEmailAvailable = (email: string) =>
-  apiGet<AvailabilityResult>('/api/auth/email/check', { email })
-
-export const refreshAccessToken = (refreshToken: string) =>
-  apiPost<AuthTokens>('/api/auth/refresh', { refreshToken })
-
-export const logout = () => apiPost<MessageResult>('/api/auth/logout')
-
-export const getMe = () => apiGet<AuthUser>('/api/auth/me')
-
-export const withdraw = () => apiDelete<MessageResult>('/api/auth/me')
+export const withdraw = () => apiDelete<null>('/api/v1/users/me')

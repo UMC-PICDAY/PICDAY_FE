@@ -1,6 +1,10 @@
+// 홈(2-1)·자동완성(2-2)은 PICDAY_API_Spec.md 확정본 기준 (김이준 담당분)
+// 비교(2-9, 2-10)는 전지혜 담당분. 검색·상세·상품·슬롯·헤어메이크업(2-3~2-8)은 남현준 담당분.
 import { apiGet } from '@/services/client'
 import type {
+  AutocompleteResult,
   HairMakeupData,
+  HomeResult,
   StudioDetail,
   StudioProductDetail,
   StudioProductsData,
@@ -9,6 +13,15 @@ import type {
   StudioSearchResult,
   StudioTimeSlot,
 } from '@/types/studio'
+
+// ===== 2-1. 홈 / 2-2. 자동완성 (김이준) =====
+
+export const getHome = () => apiGet<HomeResult>('/api/v1/home')
+
+export const autocompleteStudios = (keyword: string) =>
+  apiGet<AutocompleteResult>('/api/v1/studios/autocomplete', { keyword })
+
+// ===== 2-3 ~ 2-8. 사진관 검색/상세/상품/슬롯/헤어메이크업 (남현준) =====
 
 // 2-3. 사진관 검색
 export const searchStudios = (
@@ -46,3 +59,88 @@ export const getStudioSlots = (
 // 2-8. 헤어메이크업 연계 상세
 export const getStudioHairMakeup = (studioId: string): Promise<HairMakeupData> =>
   apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hairMakeupDetail`)
+
+// ===== 2-9. 비교 목적 / 2-10. 비교 결과 (전지혜) =====
+
+export type ShootingCategory =
+  | 'ID_PHOTO'
+  | 'PROFILE'
+  | 'PERSONAL_PORTRAIT'
+  | 'JOB_PHOTO'
+  | 'FAMILY'
+  | 'FRIENDSHIP'
+
+export interface ComparePurposeStudio {
+  studioId: number
+  studioName: string
+  shootingCategories: ShootingCategory[]
+}
+
+export interface ComparePurposeResponse {
+  studios: ComparePurposeStudio[]
+}
+
+export interface CompareResultParams {
+  studioIds: number[]
+  shootingCategory: ShootingCategory
+}
+
+export interface CompareProductInformation {
+  price: number
+  isMine: boolean
+  comparisonSummary: string
+  hasAdditionalPrice: boolean
+}
+
+export interface CompareStudioLocation {
+  locationCategory: string
+  nearestStation: string
+  walkingMinutes: number
+}
+
+export interface CompareResultStudio {
+  studioId: number
+  studioName: string
+  thumbnailUrl: string
+  rating: number
+  reviewCount: number
+  productsInformation: CompareProductInformation
+  serviceTags: string[]
+  location: CompareStudioLocation
+  earliestReservationDate: string
+}
+
+export interface CompareResultResponse {
+  shootingCategory: ShootingCategory
+  shootingCategoryName: string
+  studios: CompareResultStudio[]
+}
+
+export const getComparePurposes = (studioIds: number[]) => {
+  const searchParams = new URLSearchParams()
+
+  studioIds.forEach((studioId) => {
+    searchParams.append('studioIds', String(studioId))
+  })
+
+  return apiGet<ComparePurposeResponse>(
+    `/api/v1/studios/compare?${searchParams.toString()}`,
+  )
+}
+
+export const getCompareResult = ({
+  studioIds,
+  shootingCategory,
+}: CompareResultParams) => {
+  const searchParams = new URLSearchParams()
+
+  studioIds.forEach((studioId) => {
+    searchParams.append('studioIds', String(studioId))
+  })
+
+  searchParams.append('shootingCategory', shootingCategory)
+
+  return apiGet<CompareResultResponse>(
+    `/api/v1/studios/compare/result?${searchParams.toString()}`,
+  )
+}
