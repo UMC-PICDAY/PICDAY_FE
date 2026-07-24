@@ -43,7 +43,8 @@ const StudioSearchPage = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
-  const mapError = searchParams.get('state') === 'error'
+  const [sdkError, setSdkError] = useState(false)
+  const mapError = searchParams.get('state') === 'error' || sdkError
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
   const { data, isLoading } = useStudioSearch(filters)
@@ -141,7 +142,11 @@ const StudioSearchPage = () => {
       />
 
       <div ref={containerRef} className="relative flex-1 overflow-hidden">
-        <StudioMapCanvas interactive={!isDragging} />
+        <StudioMapCanvas
+          interactive={!isDragging}
+          studios={studios}
+          onLoadError={() => setSdkError(true)}
+        />
 
         {mapError ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-10">

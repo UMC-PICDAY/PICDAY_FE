@@ -23,6 +23,7 @@ import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import HairMakeupSheet from '@/pages/studio/components/HairMakeupSheet'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
+import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { useStudioDetail } from '@/hooks/useStudio'
 
 type OpenSheet = 'info' | 'hairmakeup' | null
@@ -211,9 +212,11 @@ const StudioDetailPage = () => {
       {/* 위치 및 주변 정보 */}
       <section className="px-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">위치 및 주변 정보</h2>
-        <div className="relative flex h-[180px] w-full items-center justify-center rounded-xl bg-gray-20">
-          <IcPin width={48} height={48} className="text-brand-100" />
-        </div>
+        <StudioLocationMap
+          latitude={detail.latitude}
+          longitude={detail.longitude}
+          studioName={detail.studioName}
+        />
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center">
             <IcPin width={20} height={20} className="shrink-0" />
