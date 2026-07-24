@@ -39,7 +39,7 @@ const StudioResultsList = ({
           category={studio.shootingCategory[0] ?? ''}
           secondaryCategory={studio.shootingCategory[1] ?? ''}
           services={studio.serviceTags.map((tag) => SERVICE_LABEL.get(tag) ?? tag)}
-          price={formatPrice(studio.minprice)}
+          price={formatPrice(studio.minPrice)}
           rating={String(studio.rating)}
           reviewCount={String(studio.reviewCount)}
           imageSrc={studio.thumbnailUrls[0] ?? null}

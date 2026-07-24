@@ -35,7 +35,7 @@ export interface StudioSearchItem {
   locationCategory: string
   latitude: number
   longitude: number
-  minprice: number // 명세 응답 표기 그대로 유지 (오타로 보이나 서버 계약)
+  minPrice: number
   rating: number
   reviewCount: number
   shootingCategory: string[]
@@ -49,7 +49,7 @@ export interface StudioRecommendItem {
   studioName: string
   thumbnailUrl: string
   locationCategory: string
-  minprice: number
+  minPrice: number
   rating: number
   shootingCategory: string[]
 }

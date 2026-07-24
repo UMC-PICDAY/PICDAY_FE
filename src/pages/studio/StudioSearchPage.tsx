@@ -177,7 +177,7 @@ const StudioSearchPage = () => {
                         location={studio.locationCategory}
                         category={studio.shootingCategory[0] ?? ''}
                         secondaryCategory={studio.shootingCategory[1]}
-                        price={`₩${studio.minprice.toLocaleString()}~`}
+                        price={`₩${studio.minPrice.toLocaleString()}~`}
                         rating={`★${studio.rating}`}
                         onClick={() => navigate(`/studios/${studio.studioId}`)}
                       />
