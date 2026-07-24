@@ -106,7 +106,7 @@ const StudioDetailPage = () => {
   if (searchParams.get('state') === 'error') {
     return (
       <div className="flex min-h-dvh flex-col bg-white">
-        <NavigationBar variant="default" showRight={false} />
+        <NavigationBar variant="default" showRight={false} onBack={() => navigate(-1)} />
         <div className="flex flex-1 items-center justify-center">
           <ErrorNotice
             icon={<IcError width={48} height={48} className="text-brand-80" />}
@@ -121,7 +121,7 @@ const StudioDetailPage = () => {
   if (!detail) {
     return (
       <div className="flex min-h-dvh flex-col bg-white">
-        <NavigationBar variant="default" showRight={false} />
+        <NavigationBar variant="default" showRight={false} onBack={() => navigate(-1)} />
       </div>
     )
   }
