@@ -42,8 +42,11 @@ const SearchAutoCompletePage = () => {
   }, [keyword, isTyping])
 
   const handleConfirm = () => {
-    const value = isTyping ? suggestions[selectedSuggestion!].studioName : selectedRegion!
-    setKeywordDraft(value)
+    if (isTyping) {
+      setKeywordDraft(suggestions[selectedSuggestion!].studioName, 'name')
+    } else {
+      setKeywordDraft(selectedRegion!, 'region')
+    }
     navigate('/search')
   }
 
