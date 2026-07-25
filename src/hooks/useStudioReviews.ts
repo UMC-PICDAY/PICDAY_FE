@@ -58,19 +58,29 @@ export const useStudioReviews = ({
   const likeMutation = useMutation({
     mutationFn: ({ reviewId, nextLiked }: LikeVariables) =>
       nextLiked ? likeReview(reviewId) : unlikeReview(reviewId),
+    // 롤백은 목록 전체가 아니라 해당 리뷰만 되돌린다. 목록 스냅샷을 복원하면
+    // 그 사이 다른 리뷰에 반영된 낙관적 변경까지 함께 지워지기 때문이다.
     onMutate: async ({ reviewId, nextLiked }) => {
       await queryClient.cancelQueries({ queryKey })
-      const previous = queryClient.getQueryData<ReviewListData>(queryKey)
+      const previous = queryClient
+        .getQueryData<ReviewListData>(queryKey)
+        ?.items.find((review) => review.reviewId === reviewId)
       queryClient.setQueryData<ReviewListData>(queryKey, (old) =>
         patchReview(old, reviewId, (likeCount) => ({
           isLiked: nextLiked,
           likeCount: Math.max(0, likeCount + (nextLiked ? 1 : -1)),
         })),
       )
-      return { previous }
+      return previous
+        ? { previous: { isLiked: previous.isLiked, likeCount: previous.likeCount } }
+        : {}
     },
-    onError: (_error, _variables, context) => {
-      if (context?.previous) queryClient.setQueryData(queryKey, context.previous)
+    onError: (_error, { reviewId }, context) => {
+      const previous = context?.previous
+      if (!previous) return
+      queryClient.setQueryData<ReviewListData>(queryKey, (old) =>
+        patchReview(old, reviewId, () => previous),
+      )
     },
     // 서버가 확정한 likeCount로 보정
     onSuccess: (result, { nextLiked }) => {
@@ -90,6 +100,9 @@ export const useStudioReviews = ({
     isError: query.isError,
     toggleLike: (reviewId: number, nextLiked: boolean) =>
       likeMutation.mutate({ reviewId, nextLiked }),
-    likePending: likeMutation.isPending,
+    // 처리 중인 리뷰만 잠그기 위해 대상 id를 넘긴다(전체 잠금 방지).
+    likePendingReviewId: likeMutation.isPending
+      ? likeMutation.variables.reviewId
+      : null,
   }
 }
