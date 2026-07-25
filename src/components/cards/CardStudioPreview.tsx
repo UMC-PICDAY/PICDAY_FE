@@ -114,7 +114,7 @@ const CardStudioPreview = ({
             )}
 
             <div
-              className="absolute top-[10px] right-[10px]"
+              className="absolute right-[10px] top-[10px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[rgba(252,252,252,0.75)]"
               onClick={(event) => event.stopPropagation()}
             >
               <FavoriteButton active={isFavorite} onClick={onFavoriteClick} />
