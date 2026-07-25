@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router'
 
 import Button from '@/components/common/Button'
 import { IcUser } from '@/components/icons'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 const SignUpCompletePage = () => {
   const navigate = useNavigate()
+  // 회원가입 직후 자동 로그인이 성공했으면 바로 홈으로, 실패했을 때만 로그인 화면으로 보낸다.
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
@@ -21,8 +24,11 @@ const SignUpCompletePage = () => {
       </div>
 
       <div className="w-full p-5">
-        <Button variant="primary" onClick={() => navigate('/login')}>
-          로그인하러 가기
+        <Button
+          variant="primary"
+          onClick={() => navigate(isLoggedIn ? '/home' : '/login')}
+        >
+          {isLoggedIn ? '홈으로 가기' : '로그인하러 가기'}
         </Button>
       </div>
     </div>

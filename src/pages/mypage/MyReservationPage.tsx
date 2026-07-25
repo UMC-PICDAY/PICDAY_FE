@@ -22,7 +22,7 @@ import FilterBar1 from '@/components/common/FilterBar1'
 import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import { IcEvent2 } from '@/components/icons'
-import TabBarUser from '@/components/layout/TabBarUser'
+import AppTabBar from '@/components/layout/AppTabBar'
 import {
   getMyReservations,
   type ReservationListItem,
@@ -421,22 +421,7 @@ const MyReservationPage = () => {
       </section>
 
       <div className="sticky bottom-0 mt-auto w-full">
-        <TabBarUser
-          activeTab="mypage"
-          onTabChange={(tab) => {
-            if (tab === 'search') {
-              navigate('/home')
-            }
-
-            if (tab === 'wishlist') {
-              navigate('/wishlist')
-            }
-
-            if (tab === 'mypage') {
-              navigate('/mypage')
-            }
-          }}
-        />
+        <AppTabBar activeTab="mypage" />
       </div>
     </div>
   )

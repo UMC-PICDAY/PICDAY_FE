@@ -18,7 +18,7 @@ import InputField2 from '@/components/common/InputField2'
 import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import Toggle from '@/components/common/Toggle'
-import TabBarUser from '@/components/layout/TabBarUser'
+import AppTabBar from '@/components/layout/AppTabBar'
 import {
   checkNicknameAvailable,
   getMe,
@@ -389,22 +389,7 @@ const ProfileSettingPage = () => {
       </section>
 
       <div className="sticky bottom-0 mt-auto w-full">
-        <TabBarUser
-          activeTab="mypage"
-          onTabChange={(tab) => {
-            if (tab === 'search') {
-              navigate('/home')
-            }
-
-            if (tab === 'wishlist') {
-              navigate('/wishlist')
-            }
-
-            if (tab === 'mypage') {
-              navigate('/mypage')
-            }
-          }}
-        />
+        <AppTabBar activeTab="mypage" />
       </div>
 
       {withdrawStep !== 'none' && (

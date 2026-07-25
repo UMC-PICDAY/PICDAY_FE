@@ -8,8 +8,8 @@ import FilterBar2 from '@/components/common/FilterBar2'
 import MapButton from '@/components/common/MapButton'
 import Notice2 from '@/components/common/Notice2'
 import { IcError, IcFilter, IcPin } from '@/components/icons'
+import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
-import TabBarUser from '@/components/layout/TabBarUser'
 
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import StudioMapCanvas from '@/pages/studio/components/StudioMapCanvas'
@@ -216,7 +216,7 @@ const StudioSearchPage = () => {
           <StudioResultsBottomSheet
             {...sheetShellProps}
             header={<p className="py-2.5 font-b10 text-gray-40">검색 결과</p>}
-            footer={<TabBarUser activeTab="search" />}
+            footer={<AppTabBar activeTab="search" />}
           >
             <div className="flex justify-center py-[50px]">
               <ErrorNotice
@@ -230,7 +230,7 @@ const StudioSearchPage = () => {
           <StudioResultsBottomSheet
             {...sheetShellProps}
             header={<p className="py-2.5 font-b10 text-gray-40">검색 결과 {totalCount}곳</p>}
-            footer={<TabBarUser activeTab="search" />}
+            footer={<AppTabBar activeTab="search" />}
           >
             <div className="flex flex-col pb-6">
               <div className="flex justify-center pb-[50px] pt-2.5">
@@ -283,7 +283,7 @@ const StudioSearchPage = () => {
                   onRemove={removeCompare}
                   className="flex w-full flex-col items-start"
                 />
-                <TabBarUser activeTab="search" />
+                <AppTabBar activeTab="search" />
               </div>
             }
           >
