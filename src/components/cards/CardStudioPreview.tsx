@@ -38,7 +38,6 @@
  */
 
 import { IcStar } from '@/components/icons'
-import Button from '@/components/common/Button'
 import FavoriteButton from '@/components/common/FavoriteButton'
 
 import firstImage from '@/assets/images/CardImage1.png'
@@ -87,6 +86,8 @@ const CardStudioPreview = ({
   onFavoriteClick,
   onCompareClick,
 }: Props) => {
+  const isCompareSelected = compareButtonLabel === '비교취소'
+
   return (
     <div
       role={onClick ? 'button' : undefined}
@@ -174,14 +175,20 @@ const CardStudioPreview = ({
             </p>
 
             {showCompareButton && (
-              <div
-                className="w-[92px] [&>button]:h-[40px] [&>button]:border [&>button]:border-gray-20 [&>button]:bg-white [&>button]:px-[16px] [&>button]:py-0 [&>button]:text-gray-40"
-                onClick={(event) => event.stopPropagation()}
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onCompareClick?.()
+                }}
+                className={`flex w-[89px] shrink-0 items-center justify-center rounded-[8px] px-[20px] py-[10px] ${
+                  isCompareSelected
+                    ? 'bg-brand-100 font-b7 text-white'
+                    : 'border border-gray-20 bg-white font-b8 text-gray-40'
+                }`}
               >
-                <Button variant="secondary" onClick={onCompareClick}>
-                  {compareButtonLabel}
-                </Button>
-              </div>
+                {compareButtonLabel}
+              </button>
             )}
           </div>
         </div>
