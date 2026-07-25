@@ -7,6 +7,7 @@ import MiniTitle from '@/components/common/MiniTitle'
 import SearchField from '@/components/common/SearchField'
 import FilterChip from '@/components/common/FilterChip'
 import Button from '@/components/common/Button'
+import { getLocationLabel } from '@/constants/locationCategory'
 import { useSearchDraftStore } from '@/stores/useSearchDraftStore'
 import { autocompleteStudios } from '@/services/studio'
 import type { AutocompleteSuggestion } from '@/types/studio'
@@ -76,7 +77,7 @@ const SearchAutoCompletePage = () => {
                 variant="result"
                 position={index === 0 ? 'top' : index === suggestions.length - 1 ? 'bottom' : 'middle'}
                 resultLabel={suggestion.studioName}
-                resultMeta={suggestion.locationCategory}
+                resultMeta={getLocationLabel(suggestion.locationCategory)}
                 selected={selectedSuggestion === index}
                 onResultClick={() => setSelectedSuggestion(index)}
               />
