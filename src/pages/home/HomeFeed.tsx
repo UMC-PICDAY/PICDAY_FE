@@ -48,7 +48,11 @@ const HomeFeed = () => {
   const activeRenderedIndexRef = useRef(1)
 
   // 위치 권한이 없거나 응답이 늦어도 홈이 무한정 안 뜨지 않도록, 짧은 타임아웃 안에 시도만 하고
-  // 못 받으면 좌표 없이(기본 지역 기준) 홈을 요청한다.
+  // 못 받으면 좌표 없이(기본 지역 기준) 먼저 홈을 요청한다.
+  // getCurrentPosition의 timeout 옵션은 권한 팝업이 떠 있는 동안은 안 흐르는 브라우저가 있어서
+  // (사용자가 팝업에 응답을 안 하면 콜백도 timeout도 영영 안 옴), 별도 타이머로 locationSettled만
+  // 강제로 풀어준다. coords는 이 타이머와 무관하게 승인 응답이 오면 그때 반영 — 늦게 승인해도
+  // queryKey가 바뀌면서 위치 기준으로 자동 재조회된다.
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationSettled, setLocationSettled] = useState(false)
 
@@ -57,6 +61,8 @@ const HomeFeed = () => {
       setLocationSettled(true)
       return
     }
+
+    const fallbackTimer = window.setTimeout(() => setLocationSettled(true), GEOLOCATION_TIMEOUT_MS)
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -69,6 +75,8 @@ const HomeFeed = () => {
       () => setLocationSettled(true),
       { timeout: GEOLOCATION_TIMEOUT_MS },
     )
+
+    return () => window.clearTimeout(fallbackTimer)
   }, [])
 
   const { data } = useQuery({
