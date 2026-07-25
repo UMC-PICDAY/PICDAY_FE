@@ -7,7 +7,7 @@ import CompareActionBar from '@/components/common/CompareActionBar'
 import FilterBar2 from '@/components/common/FilterBar2'
 import MapButton from '@/components/common/MapButton'
 import Notice2 from '@/components/common/Notice2'
-import { IcFilter, IcPin } from '@/components/icons'
+import { IcError, IcFilter, IcPin } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 import TabBarUser from '@/components/layout/TabBarUser'
 
@@ -45,12 +45,11 @@ const StudioSearchPage = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
-  const [sdkError, setSdkError] = useState(false)
-  const mapError = searchParams.get('state') === 'error' || sdkError
+  const [mapError, setMapError] = useState(false)
   const queryClient = useQueryClient()
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
-  const { data, isLoading } = useStudioSearch(filters)
+  const { data, isLoading, isError: searchError, refetch } = useStudioSearch(filters)
   const result = data ?? null
   const loading = isLoading
 
@@ -151,6 +150,12 @@ const StudioSearchPage = () => {
     )
   }
 
+  // 지도 재시도. 카카오 SDK 로더는 싱글턴이라 실패 후 리마운트로는 다시 받아오지
+  // 못하므로 문서를 새로 로드해 스크립트부터 다시 받는다.
+  const handleMapRetry = () => {
+    window.location.reload()
+  }
+
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-white">
       <NavigationBar
@@ -177,7 +182,7 @@ const StudioSearchPage = () => {
         <StudioMapCanvas
           interactive={!isDragging}
           studios={studios}
-          onLoadError={() => setSdkError(true)}
+          onLoadError={() => setMapError(true)}
         />
 
         {mapError ? (
@@ -185,8 +190,24 @@ const StudioSearchPage = () => {
             <ErrorNotice
               icon={<IcPin width={48} height={48} className="text-brand-80" />}
               title="지도를 불러오지 못했어요"
+              onRetry={handleMapRetry}
             />
           </div>
+        ) : searchError ? (
+          // 조회 실패는 '결과 0곳'과 구분해서 재시도 가능한 에러로 보여준다.
+          <StudioResultsBottomSheet
+            {...sheetShellProps}
+            header={<p className="py-2.5 font-b10 text-gray-40">검색 결과</p>}
+            footer={<TabBarUser activeTab="search" />}
+          >
+            <div className="flex justify-center py-[50px]">
+              <ErrorNotice
+                icon={<IcError width={48} height={48} className="text-brand-80" />}
+                title="사진관을 불러오지 못했어요"
+                onRetry={() => refetch()}
+              />
+            </div>
+          </StudioResultsBottomSheet>
         ) : isEmpty ? (
           <StudioResultsBottomSheet
             {...sheetShellProps}
