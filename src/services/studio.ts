@@ -16,7 +16,13 @@ import type {
 
 // ===== 2-1. 홈 / 2-2. 자동완성 (김이준) =====
 
-export const getHome = () => apiGet<HomeResult>('/api/v1/home')
+export interface HomeParams {
+  latitude?: number
+  longitude?: number
+}
+
+// latitude·longitude가 모두 있으면 위치 기준, 없으면 기본 지역(홍대) 기준으로 응답
+export const getHome = (params?: HomeParams) => apiGet<HomeResult>('/api/v1/home', params)
 
 export const autocompleteStudios = (keyword: string) =>
   apiGet<AutocompleteResult>('/api/v1/studios/autocomplete', { keyword })

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type {
   PointerEvent as ReactPointerEvent,
   KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
   ReactNode,
   RefObject,
 } from 'react'
@@ -22,6 +23,7 @@ interface ListHandlers {
   onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void
   onPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void
   onPointerCancel: () => void
+  onClickCapture: (event: ReactMouseEvent<HTMLDivElement>) => void
 }
 
 interface StudioResultsBottomSheetProps {
@@ -91,7 +93,15 @@ const StudioResultsBottomSheet = ({
         <span className="h-1 w-11 rounded-full bg-gray-20" />
       </button>
 
-      {showContent ? <div className="shrink-0 px-5">{header}</div> : null}
+      {/* 헤더도 손잡이와 같은 드래그 표면으로 둬서 조작 영역을 넓힌다. */}
+      {showContent ? (
+        <div
+          className="shrink-0 cursor-grab touch-none px-5 active:cursor-grabbing"
+          {...handleHandlers}
+        >
+          {header}
+        </div>
+      ) : null}
 
       <div
         ref={listRef}
