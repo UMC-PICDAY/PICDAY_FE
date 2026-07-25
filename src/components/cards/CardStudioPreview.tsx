@@ -33,6 +33,7 @@
  * 비교 추가 버튼 표시
  *   <CardStudioPreview
  *     showCompareButton={true}
+ *     isCompareSelected={true}
  *     onCompareClick={handleCompareClick}
  *   />
  */
@@ -62,6 +63,7 @@ interface Props {
   isFavorite?: boolean
   showCompareButton?: boolean
   compareButtonLabel?: string
+  isCompareSelected?: boolean
   onClick?: () => void
   onFavoriteClick?: () => void
   onCompareClick?: () => void
@@ -82,12 +84,11 @@ const CardStudioPreview = ({
   isFavorite = true,
   showCompareButton = false,
   compareButtonLabel = '비교추가',
+  isCompareSelected = false,
   onClick,
   onFavoriteClick,
   onCompareClick,
 }: Props) => {
-  const isCompareSelected = compareButtonLabel === '비교취소'
-
   return (
     <div
       role={onClick ? 'button' : undefined}
