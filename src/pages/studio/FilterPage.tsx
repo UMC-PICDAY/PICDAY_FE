@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import FilterChip from '@/components/common/FilterChip'
 import RangeSlider from '@/components/common/RangeSlider'
 import NavigationBar from '@/components/layout/NavigationBar'
+import { useStudioSearch } from '@/hooks/useStudio'
 import {
   hasBaseSearchCondition,
   parseStudioSearchParams,
@@ -42,7 +43,25 @@ const FilterPage = () => {
     Math.min(PRICE_MAX, initialFilters.maxPrice ?? PRICE_MAX),
   ])
 
-  const canApply = hasBaseSearchCondition({ ...initialFilters, concepts: purposes })
+  // 선택 중인 필터를 그대로 반영한 조건 — 결과 수 미리보기와 적용에 함께 쓴다.
+  const draftFilters = {
+    ...initialFilters,
+    concepts: purposes,
+    services,
+    minRating: rating,
+    minPrice: price[0] === PRICE_MIN ? undefined : price[0],
+    maxPrice: price[1] === PRICE_MAX ? undefined : price[1],
+  }
+
+  const canApply = hasBaseSearchCondition(draftFilters)
+
+  const { data: preview, isLoading: isPreviewLoading } = useStudioSearch(draftFilters)
+  const totalCount = preview?.totalCount
+
+  const applyLabel =
+    canApply && !isPreviewLoading && totalCount !== undefined
+      ? `사진관 ${totalCount}곳 보기`
+      : '사진관 보기'
 
   const handleReset = () => {
     setPurposes([])
@@ -54,21 +73,18 @@ const FilterPage = () => {
   const handleApply = () => {
     if (!canApply) return
 
-    const nextFilters = {
-      ...initialFilters,
-      concepts: purposes,
-      services,
-      minRating: rating,
-      minPrice: price[0] === PRICE_MIN ? undefined : price[0],
-      maxPrice: price[1] === PRICE_MAX ? undefined : price[1],
-    }
-    const params = serializeStudioSearchParams(nextFilters, searchParams)
+    const params = serializeStudioSearchParams(draftFilters, searchParams)
     navigate({ pathname: '/studios', search: `?${params.toString()}` })
   }
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <NavigationBar variant="default" title="필터" showLeft={false} />
+      <NavigationBar
+        variant="default"
+        title="필터"
+        showLeft={false}
+        onClose={() => navigate(-1)}
+      />
 
       <main className="flex-1 px-5 pb-6 pt-2">
         {/* 촬영 목적 */}
@@ -153,7 +169,7 @@ const FilterPage = () => {
           disabled={!canApply}
           className="flex h-12 items-center justify-center rounded-lg bg-brand-100 px-8 font-b5 text-white disabled:cursor-not-allowed disabled:bg-gray-20"
         >
-          사진관 24곳 보기
+          {applyLabel}
         </button>
       </div>
     </div>
