@@ -18,9 +18,10 @@ const SearchPage = () => {
   const { keyword, keywordType, date, isDateUndecided, purpose } = useSearchDraftStore()
 
   const dateLabel = isDateUndecided ? '날짜 미정' : date ? formatSearchDate(date) : undefined
-  // 지역칩 '전체'(keywordType 'all')는 검색창 표시용일 뿐 검색 조건이 아니므로 세지 않는다.
+  // 지역칩 '전체'(keywordType 'all')와 '날짜 미정'(date null)은 표시용일 뿐
+  // 검색 조건이 아니므로, 라벨이 아니라 실제 값으로 판단한다.
   const hasKeywordFilter = keywordType === 'region' || keywordType === 'name'
-  const hasAnyFilter = hasKeywordFilter || dateLabel !== undefined || purpose !== null
+  const hasAnyFilter = hasKeywordFilter || date !== null || purpose !== null
 
   const handleSearch = () => {
     const isRegion = keywordType === 'region' && keyword !== ''
