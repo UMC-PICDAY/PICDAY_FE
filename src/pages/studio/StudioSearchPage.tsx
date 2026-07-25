@@ -58,6 +58,13 @@ const StudioSearchPage = () => {
   const isEmpty =
     !loading && result !== null && (result.hasResult === false || studios.length === 0)
 
+  // 기본 검색 조건이 없으면 퀵필터를 걸 대상이 없다. 막힌 상태를 칩에도 드러낸다.
+  const canQuickFilter = hasBaseSearchCondition(filters)
+  const quickFilterItems = QUICK_FILTER_ITEMS.map((item) => ({
+    ...item,
+    disabled: !canQuickFilter,
+  }))
+
   const { items: compareItems, toggle: toggleCompare, remove: removeCompare } = useCompareStore()
   const selectedIds = new Set(compareItems.map((item) => item.studioId))
 
@@ -134,12 +141,13 @@ const StudioSearchPage = () => {
   }
 
   const handleQuickFilterChange = (value: string) => {
-    if (!hasBaseSearchCondition(filters)) return
+    if (!canQuickFilter) return
 
     const nextFilters = isStudioServiceTag(value)
       ? { ...filters, services: toggleStudioService(filters.services, value) }
       : isStudioSort(value)
-        ? { ...filters, sort: value }
+        ? // 서비스 칩과 동일하게 같은 정렬을 다시 누르면 해제한다.
+          { ...filters, sort: filters.sort === value ? undefined : value }
         : filters
     setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
   }
@@ -173,7 +181,7 @@ const StudioSearchPage = () => {
         }
       />
       <FilterBar2
-        items={QUICK_FILTER_ITEMS}
+        items={quickFilterItems}
         value={[...(filters.sort ? [filters.sort] : []), ...filters.services]}
         onChange={handleQuickFilterChange}
       />
