@@ -29,10 +29,10 @@ interface Props {
 }
 
 const colorClass = {
-  primary: 'bg-brand-100 text-white cursor-pointer',
-  secondary: 'bg-gray-10 text-gray-80 cursor-pointer',
+  primary: 'border-none bg-brand-100 text-white cursor-pointer',
+  secondary: 'border-none bg-gray-10 text-gray-80 cursor-pointer',
   outline: 'border border-gray-20 bg-white text-gray-60 cursor-pointer',
-  disabled: 'bg-gray-20 text-white cursor-not-allowed',
+  disabled: 'border-none bg-gray-20 text-white cursor-not-allowed',
 }
 
 const paddingClass = {
@@ -45,7 +45,7 @@ const Button = ({ children, variant = 'primary', size = 'lg', fullWidth = true, 
 
   return (
     <button
-      className={`inline-flex items-center justify-center whitespace-nowrap border-none rounded-[12px] ${
+      className={`inline-flex items-center justify-center whitespace-nowrap rounded-[12px] ${
         fullWidth ? 'w-full' : ''
       } ${paddingClass[size]} ${colorClass[variant]} ${fontClass}`}
       disabled={variant === 'disabled'}
