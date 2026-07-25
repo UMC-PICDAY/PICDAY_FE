@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 
 import CardStudioSmall from '@/components/cards/CardStudioSmall'
@@ -43,6 +43,12 @@ const QUICK_FILTER_ITEMS = [
 
 const StudioSearchPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const comparePurpose = (
+    location.state as {
+      purpose?: '증명' | '프로필' | '개인화보' | '취업' | '가족' | '우정'
+    } | null
+  )?.purpose
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
   const [sdkError, setSdkError] = useState(false)
@@ -97,7 +103,11 @@ const StudioSearchPage = () => {
   const handleCompare = () => {
     if (compareItems.length < 2) return
     navigate('/compare', {
-      state: { studioIds: compareItems.map((item) => item.studioId) },
+      state: {
+        studioIds: compareItems.map((item) => item.studioId),
+        purpose: comparePurpose,
+        studioSearch: location.search,
+      },
     })
   }
 
