@@ -4,7 +4,7 @@ import type { ReviewListItem, ReviewSummary } from '@/types/review'
 // ===== 2-1. 홈 / 2-2. 자동완성 (김이준 담당분) =====
 // PICDAY_API_Spec.md 기준. 홈(2-1)·자동완성(2-2) 응답 정의
 export interface StudioSummary {
-  studioId: string
+  studioId: number
   studioName: string
   thumbnailUrl: string
   locationCategory: string
@@ -13,7 +13,7 @@ export interface StudioSummary {
 }
 
 export interface BannerStudio {
-  studioId: string
+  studioId: number
   studioName: string
   thumbnailUrl: string
   locationCategory: string
@@ -30,7 +30,7 @@ export interface HomeResult {
 }
 
 export interface AutocompleteSuggestion {
-  studioId: string
+  studioId: number
   studioName: string
   locationCategory: string
 }
