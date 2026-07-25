@@ -14,9 +14,9 @@ import {
   IcStar,
   IcWifi,
 } from '@/components/icons'
+import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
 import NavigationBarTransparent from '@/components/layout/NavigationBarTransparent'
-import TabBarUser from '@/components/layout/TabBarUser'
 
 import BottomSheet from '@/pages/studio/components/BottomSheet'
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
@@ -113,7 +113,7 @@ const StudioDetailPage = () => {
             title="정보를 불러오지 못했어요"
           />
         </div>
-        <TabBarUser activeTab="search" />
+        <AppTabBar activeTab="search" />
       </div>
     )
   }

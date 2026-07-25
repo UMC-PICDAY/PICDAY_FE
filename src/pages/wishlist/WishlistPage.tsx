@@ -4,9 +4,8 @@
 import { useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
+import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
-import TabBarUser from '@/components/layout/TabBarUser'
-import TabBarGuest from '@/components/layout/TabBarGuest'
 import CardStudioFavorite from '@/components/cards/CardStudioFavorite'
 import NoticeLogin from '@/components/common/NoticeLogin'
 import { IcFavorite } from '@/components/icons'
@@ -87,25 +86,7 @@ const WishlistPage = () => {
       )}
 
       <div className="sticky bottom-0 mt-auto w-full">
-        {isLoggedIn ? (
-          <TabBarUser
-            activeTab="wishlist"
-            onTabChange={(tab) => {
-              if (tab === 'search') navigate('/home')
-              if (tab === 'wishlist') navigate('/wishlist')
-              if (tab === 'mypage') navigate('/mypage')
-            }}
-          />
-        ) : (
-          <TabBarGuest
-            activeTab="wishlist"
-            onTabChange={(tab) => {
-              if (tab === 'search') navigate('/')
-              if (tab === 'wishlist') navigate('/wishlist')
-              if (tab === 'login') navigate('/login')
-            }}
-          />
-        )}
+        <AppTabBar activeTab="wishlist" />
       </div>
     </div>
   )
