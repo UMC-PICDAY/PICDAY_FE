@@ -68,7 +68,12 @@ const FilterPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <NavigationBar variant="default" title="필터" showLeft={false} />
+      <NavigationBar
+        variant="default"
+        title="필터"
+        showLeft={false}
+        onClose={() => navigate(-1)}
+      />
 
       <main className="flex-1 px-5 pb-6 pt-2">
         {/* 촬영 목적 */}
