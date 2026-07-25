@@ -2,7 +2,8 @@ import { create } from 'zustand'
 
 import type { CalendarDate } from '@/components/common/Calendar'
 
-export type SearchKeywordType = 'region' | 'name'
+/** 'all'은 지역칩 '전체' — 검색창에는 표시하되 지역 필터로는 쓰지 않는다. */
+export type SearchKeywordType = 'region' | 'name' | 'all'
 
 interface SearchDraftState {
   keyword: string

@@ -18,10 +18,12 @@ const SearchPage = () => {
   const { keyword, keywordType, date, isDateUndecided, purpose } = useSearchDraftStore()
 
   const dateLabel = isDateUndecided ? '날짜 미정' : date ? formatSearchDate(date) : undefined
-  const hasAnyFilter = keyword.trim().length > 0 || dateLabel !== undefined || purpose !== null
+  // 지역칩 '전체'(keywordType 'all')는 검색창 표시용일 뿐 검색 조건이 아니므로 세지 않는다.
+  const hasKeywordFilter = keywordType === 'region' || keywordType === 'name'
+  const hasAnyFilter = hasKeywordFilter || dateLabel !== undefined || purpose !== null
 
   const handleSearch = () => {
-    const isRegion = keywordType === 'region' && keyword !== '' && keyword !== '전체'
+    const isRegion = keywordType === 'region' && keyword !== ''
 
     const filters: StudioSearchFilters = {
       location: isRegion ? keyword : undefined,
