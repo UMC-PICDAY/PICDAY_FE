@@ -293,8 +293,8 @@ const ReservationDetailPage = () => {
 
   const formattedReservationDate =
     formatReservationDateTime(
-      reservation.reservationDate,
-      reservation.reservationTime,
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
     )
 
   const formattedTotalPrice =
@@ -312,7 +312,7 @@ const ReservationDetailPage = () => {
 
       <Profile
         variant="bookingInfo"
-        studioName={reservation.studioName}
+        studioName={reservation.studio.name}
         reservationDate={
           formattedReservationDate
         }
@@ -324,7 +324,9 @@ const ReservationDetailPage = () => {
           receiptItems={[
             {
               label: '컨셉',
-              value: reservation.conceptName,
+              value:
+                reservation.studioProduct
+                  .name,
             },
           ]}
           totalAmount={`₩${formattedTotalPrice}`}
@@ -365,13 +367,25 @@ const ReservationDetailPage = () => {
         {isShooting && (
           <Button
             variant="primary"
-            onClick={() =>
+            onClick={() => {
+              if (
+                reservation.reviewId !==
+                null
+              ) {
+                navigate(
+                  `/mypage/reviews/${reservation.reviewId}`,
+                )
+                return
+              }
+
               navigate(
                 `/mypage/reservations/${reservationId}/review`,
               )
-            }
+            }}
           >
-            리뷰 작성
+            {reservation.reviewId !== null
+              ? '내 리뷰 보기'
+              : '리뷰 작성'}
           </Button>
         )}
 

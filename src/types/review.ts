@@ -36,15 +36,6 @@ export interface ReviewListData {
   items: ReviewListItem[]
 }
 
-// 리뷰 키워드
-export type ReviewKeyword =
-  | 'KIND_SERVICE'
-  | 'DETAILED_RETOUCH'
-  | 'ON_TIME'
-  | 'COMFORTABLE_MOOD'
-  | 'REASONABLE_PRICE'
-  | 'SATISFYING_RESULT'
-
 // 5-5 / 5-6. 추천 / 추천 취소 응답 data
 export interface ReviewLikeResult {
   reviewId: number
@@ -67,7 +58,6 @@ export interface CreateReviewRequest {
 export interface UpdateReviewRequest {
   rating?: number
   content?: string
-  keywords?: ReviewKeyword[]
   imageUrls?: string[] | null
 }
 
