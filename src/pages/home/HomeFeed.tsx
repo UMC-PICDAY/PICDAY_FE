@@ -7,6 +7,7 @@ import SearchField from '@/components/common/SearchField'
 import Title from '@/components/common/Title'
 import CardStudioLarge from '@/components/cards/CardStudioLarge'
 import CardStudio from '@/components/cards/CardStudio'
+import { getLocationLabel } from '@/constants/locationCategory'
 import { getHome } from '@/services/studio'
 import type { StudioSummary } from '@/types/studio'
 
@@ -38,13 +39,43 @@ const centerItemAt = (container: HTMLDivElement, renderedIndex: number) => {
  * Figma A-1(비로그인 홈)/B-1(로그인 후 홈) 공통 컨텐츠 (검색창 + 캐러셀 + 사진관 리스트 3종)
  * 두 홈은 하단 탭바만 다르고 이 영역은 동일해서 공유함
  */
+const GEOLOCATION_TIMEOUT_MS = 3000
+
 const HomeFeed = () => {
   const navigate = useNavigate()
   const largeCardScrollRef = useRef<HTMLDivElement>(null)
   const [activeRenderedIndex, setActiveRenderedIndex] = useState(1)
   const activeRenderedIndexRef = useRef(1)
 
-  const { data } = useQuery({ queryKey: ['home'], queryFn: getHome })
+  // 위치 권한이 없거나 응답이 늦어도 홈이 무한정 안 뜨지 않도록, 짧은 타임아웃 안에 시도만 하고
+  // 못 받으면 좌표 없이(기본 지역 기준) 홈을 요청한다.
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locationSettled, setLocationSettled] = useState(false)
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationSettled(true)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+        setLocationSettled(true)
+      },
+      () => setLocationSettled(true),
+      { timeout: GEOLOCATION_TIMEOUT_MS },
+    )
+  }, [])
+
+  const { data } = useQuery({
+    queryKey: ['home', coords],
+    queryFn: () => getHome(coords ?? undefined),
+    enabled: locationSettled,
+  })
 
   const bannerStudios = data?.bannerStudios ?? []
   // recentStudios는 로그인 사용자에게만 응답에 포함됨 — 없으면 섹션 자체를 숨김
@@ -67,7 +98,7 @@ const HomeFeed = () => {
       variant: (renderedIndex === activeRenderedIndex ? 'center' : 'default') as 'center' | 'default',
       imageSrc: banner?.thumbnailUrl,
       name: banner?.studioName,
-      location: banner?.locationCategory,
+      location: banner ? getLocationLabel(banner.locationCategory) : undefined,
       countCurrent: String(getRealCardNumber(renderedIndex, bannerCount)).padStart(2, '0'),
       countTotal: String(bannerCount).padStart(2, '0'),
       onClick: banner ? () => navigate(`/studios/${banner.studioId}`) : undefined,
@@ -145,7 +176,7 @@ const HomeFeed = () => {
         <CardStudio
           imageSrc={studio.thumbnailUrl}
           name={studio.studioName}
-          location={studio.locationCategory}
+          location={getLocationLabel(studio.locationCategory)}
           price={formatPrice(studio.minPrice)}
           rating={studio.rating.toFixed(1)}
           onClick={() => navigate(`/studios/${studio.studioId}`)}
@@ -184,7 +215,10 @@ const HomeFeed = () => {
 
       {regionalStudios && (
         <>
-          <Title variant="onlyTitle" title={`${regionalStudios.locationCategory}의 사진관`} />
+          <Title
+            variant="onlyTitle"
+            title={`${getLocationLabel(regionalStudios.locationCategory)}의 사진관`}
+          />
           <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(regionalStudios.studios)}</div>
         </>
       )}
