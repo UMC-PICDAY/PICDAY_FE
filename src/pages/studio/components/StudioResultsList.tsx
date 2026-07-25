@@ -49,6 +49,7 @@ const StudioResultsList = ({
           isFavorite={studio.isWishlisted}
           showCompareButton={showCompareButton}
           compareButtonLabel={isSelected ? '비교취소' : '비교추가'}
+          isCompareSelected={isSelected}
           onCompareClick={() => onCompareToggle?.(studio)}
           onFavoriteClick={() => onFavoriteToggle?.(studio)}
           onClick={() => onSelect?.(studio.studioId)}
