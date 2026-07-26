@@ -25,6 +25,11 @@ import cardImage7 from '@/assets/images/CardImage7.png'
 
 // ===== 2-1. 홈 / 2-2. 자동완성 (김이준) =====
 
+export interface HomeParams {
+  latitude?: number
+  longitude?: number
+}
+
 // 백엔드 미배포 데모용 mock — services/client.ts의 withMockFallback 참고
 const MOCK_HOME_DATA: HomeResult = {
   bannerStudios: [
@@ -46,8 +51,9 @@ const MOCK_HOME_DATA: HomeResult = {
   },
 }
 
-export const getHome = () =>
-  withMockFallback(() => apiGet<HomeResult>('/api/v1/home'), MOCK_HOME_DATA)
+// latitude·longitude가 모두 있으면 위치 기준, 없으면 기본 지역(홍대) 기준으로 응답
+export const getHome = (params?: HomeParams) =>
+  withMockFallback(() => apiGet<HomeResult>('/api/v1/home', params), MOCK_HOME_DATA)
 
 const MOCK_AUTOCOMPLETE_DATA: AutocompleteResult = {
   keyword: '',

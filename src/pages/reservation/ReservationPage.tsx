@@ -48,6 +48,7 @@ interface InfoFieldProps {
   label: string
   value: string
   type?: 'text' | 'tel'
+  errorMessage?: string
   onChange: (
     event: ChangeEvent<HTMLInputElement>,
   ) => void
@@ -145,6 +146,9 @@ const AGREEMENT_ITEMS: AgreementItem[] = [
   },
 ]
 
+// 010/011/016/017/018/019로 시작하는 국내 휴대폰 번호 (하이픈 유무 무관)
+const PHONE_REGEX = /^01[016789]\d{7,8}$/
+
 const INITIAL_AGREEMENT =
   AGREEMENT_ITEMS.reduce<Record<string, boolean>>(
     (nextAgreement, item) => ({
@@ -222,9 +226,20 @@ const ReservationPage = () => {
     ({ key }) => agreement[key],
   ).map(({ id }) => id)
 
+  const normalizedPhone = reserverPhone.replace(
+    /\D/g,
+    '',
+  )
+
+  const isPhoneValid = PHONE_REGEX.test(
+    normalizedPhone,
+  )
+
+  const showPhoneError =
+    reserverPhone.trim().length > 0 && !isPhoneValid
+
   const hasReserverInfo =
-    reserverName.trim().length > 0 &&
-    reserverPhone.trim().length > 0
+    reserverName.trim().length > 0 && isPhoneValid
 
   const canPay =
     Boolean(selectedPaymentMethod) &&
@@ -298,8 +313,7 @@ const ReservationPage = () => {
           reservation.studioProductId,
         timeSlotId: reservation.timeSlotId,
         reserveeName: reserverName.trim(),
-        reserveePhone:
-          reserverPhone.replace(/\D/g, ''),
+        reserveePhone: normalizedPhone,
         paymentMethod: selectedPaymentMethod,
         agreedTermIds,
       })
@@ -423,6 +437,11 @@ const ReservationPage = () => {
               label="연락처"
               type="tel"
               value={reserverPhone}
+              errorMessage={
+                showPhoneError
+                  ? '올바른 휴대폰 번호를 입력해 주세요'
+                  : undefined
+              }
               onChange={(event) =>
                 setReserverPhone(
                   event.target.value,
@@ -665,6 +684,7 @@ const InfoField = ({
   label,
   value,
   type = 'text',
+  errorMessage,
   onChange,
 }: InfoFieldProps) => (
   <label className="flex flex-col gap-[5px]">
@@ -679,8 +699,18 @@ const InfoField = ({
       autoComplete={
         type === 'tel' ? 'tel' : 'name'
       }
-      className="font-b7 w-full rounded-lg bg-[rgba(254,228,235,0.3)] px-3 py-[10px] text-gray-80 outline-none placeholder:text-gray-40 focus:ring-1 focus:ring-brand-100"
+      className={`font-b7 w-full rounded-lg bg-[rgba(254,228,235,0.3)] px-3 py-[10px] text-gray-80 outline-none placeholder:text-gray-40 ${
+        errorMessage
+          ? 'ring-1 ring-[#FF3B5B]'
+          : ''
+      }`}
     />
+
+    {errorMessage && (
+      <p className="font-cap1 text-[#FF3B5B]">
+        {errorMessage}
+      </p>
+    )}
   </label>
 )
 

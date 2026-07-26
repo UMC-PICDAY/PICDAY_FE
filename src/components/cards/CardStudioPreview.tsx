@@ -33,12 +33,12 @@
  * 비교 추가 버튼 표시
  *   <CardStudioPreview
  *     showCompareButton={true}
+ *     isCompareSelected={true}
  *     onCompareClick={handleCompareClick}
  *   />
  */
 
 import { IcStar } from '@/components/icons'
-import Button from '@/components/common/Button'
 import FavoriteButton from '@/components/common/FavoriteButton'
 
 import firstImage from '@/assets/images/CardImage1.png'
@@ -63,6 +63,7 @@ interface Props {
   isFavorite?: boolean
   showCompareButton?: boolean
   compareButtonLabel?: string
+  isCompareSelected?: boolean
   onClick?: () => void
   onFavoriteClick?: () => void
   onCompareClick?: () => void
@@ -83,6 +84,7 @@ const CardStudioPreview = ({
   isFavorite = true,
   showCompareButton = false,
   compareButtonLabel = '비교추가',
+  isCompareSelected = false,
   onClick,
   onFavoriteClick,
   onCompareClick,
@@ -114,7 +116,7 @@ const CardStudioPreview = ({
             )}
 
             <div
-              className="absolute top-[10px] right-[10px]"
+              className="absolute right-[10px] top-[10px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[rgba(252,252,252,0.75)]"
               onClick={(event) => event.stopPropagation()}
             >
               <FavoriteButton active={isFavorite} onClick={onFavoriteClick} />
@@ -174,14 +176,20 @@ const CardStudioPreview = ({
             </p>
 
             {showCompareButton && (
-              <div
-                className="w-[92px] [&>button]:h-[40px] [&>button]:border [&>button]:border-gray-20 [&>button]:bg-white [&>button]:px-[16px] [&>button]:py-0 [&>button]:text-gray-40"
-                onClick={(event) => event.stopPropagation()}
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onCompareClick?.()
+                }}
+                className={`flex w-[89px] shrink-0 items-center justify-center rounded-[8px] px-[20px] py-[10px] ${
+                  isCompareSelected
+                    ? 'bg-brand-100 font-b7 text-white'
+                    : 'border border-gray-20 bg-white font-b8 text-gray-40'
+                }`}
               >
-                <Button variant="secondary" onClick={onCompareClick}>
-                  {compareButtonLabel}
-                </Button>
-              </div>
+                {compareButtonLabel}
+              </button>
             )}
           </div>
         </div>

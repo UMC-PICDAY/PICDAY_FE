@@ -26,7 +26,7 @@ const ReviewDetailPage = () => {
   const [sortOpen, setSortOpen] = useState(false)
   const [sortValue, setSortValue] = useState<ReviewSort>('recent')
 
-  const { summary, reviews, toggleLike, likePending } = useStudioReviews({
+  const { summary, reviews, toggleLike, likePendingReviewId } = useStudioReviews({
     studioId,
     sort: sortValue,
     photoOnly,
@@ -155,7 +155,7 @@ const ReviewDetailPage = () => {
             helpfulText={`${review.likeCount}명에게 도움이 된 리뷰예요`}
             likeCount={review.likeCount}
             liked={review.isLiked}
-            likePending={likePending}
+            likePending={likePendingReviewId === review.reviewId}
             onLikeChange={handleLikeChange}
           />
         ))}

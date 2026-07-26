@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardStudioDetail from '@/components/cards/CardStudioDetail'
+import FavoriteButton from '@/components/common/FavoriteButton'
 import Toast from '@/components/common/Toast'
-import { IcFavorite } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import DateChangeSheet from '@/pages/studio/components/DateChangeSheet'
-import { useStudioProducts, useStudioSlots } from '@/hooks/useStudio'
+import { useStudioDetail, useStudioProducts, useStudioSlots } from '@/hooks/useStudio'
+import { addWishlist, removeWishlist } from '@/services/wishlist'
 import type { StudioDateTimeSelection, StudioProduct } from '@/types/studio'
 
 import type { CalendarDate } from '@/components/common/Calendar'
@@ -52,6 +53,7 @@ const ConceptListPage = () => {
     useState<ReservationToast | null>(null)
   // 예약 도메인 복귀 진입(state/query) 1회만 처리
   const entryHandledRef = useRef(false)
+  const [favorited, setFavorited] = useState(false)
 
   const apiDate = dateTimeSelection ? toApiDate(dateTimeSelection.date) : undefined
   const apiTime = dateTimeSelection?.startTime
@@ -61,6 +63,13 @@ const ConceptListPage = () => {
     studioId,
     apiDate && apiTime ? { date: apiDate, time: apiTime } : undefined,
   )
+
+  // 상품 목록 응답엔 찜 상태가 없어, 상세 조회(캐시 공유)에서 초기값을 가져온다.
+  const { data: detail } = useStudioDetail(studioId)
+
+  useEffect(() => {
+    if (detail) setFavorited(detail.isWishlisted)
+  }, [detail])
 
   const slotsQuery = useStudioSlots(
     studioId,
@@ -88,6 +97,22 @@ const ConceptListPage = () => {
 
   const showReservationToast = (message: string) => {
     setReservationToast({ id: Date.now(), message })
+  }
+
+  const handleToggleFavorite = async () => {
+    if (!studioId) return
+
+    const next = !favorited
+    setFavorited(next)
+    try {
+      if (next) {
+        await addWishlist(Number(studioId))
+      } else {
+        await removeWishlist(Number(studioId))
+      }
+    } catch {
+      setFavorited(!next)
+    }
   }
 
   // 예약 생성 중 슬롯 충돌(RESERVATION_4091)로 예약 도메인이 C-7로 되돌려보낼 때:
@@ -160,7 +185,7 @@ const ConceptListPage = () => {
         title={products?.studioName ?? ''}
         date={subtitleDate}
         count={subtitleTime}
-        rightNode={<IcFavorite width={24} height={24} />}
+        rightNode={<FavoriteButton active={favorited} onClick={handleToggleFavorite} />}
         onBack={() => navigate(-1)}
         onSubtitleClick={openDateSheet}
       />

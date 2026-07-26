@@ -12,7 +12,9 @@ import Agreement from '@/components/common/Agreement'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import { useValidatedField } from '@/hooks/useValidatedField'
-import { checkLoginIdAvailable, signup } from '@/services/auth'
+import { checkLoginIdAvailable, login, signup } from '@/services/auth'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { useSignUpDraftStore } from '@/stores/useSignUpDraftStore'
 import { ApiError } from '@/types/common'
 import { REQUIRED_TERMS, TERM_ITEMS } from '@/constants/terms'
 import type { TermKey } from '@/constants/terms'
@@ -58,21 +60,38 @@ type IdAvailability = 'idle' | 'checking' | 'available' | 'taken'
 
 const SignUpPage = () => {
   const navigate = useNavigate()
-  const [terms, setTerms] = useState<Record<TermKey, boolean>>({
-    service: false,
-    privacy: false,
-    age: false,
-    marketing: false,
-  })
+  const authLogin = useAuthStore((state) => state.login)
+  const signUpDraft = useSignUpDraftStore.getState()
+  const [terms, setTerms] = useState<Record<TermKey, boolean>>(signUpDraft.terms)
   const [idAvailability, setIdAvailability] = useState<IdAvailability>('idle')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  const name = useValidatedField(validateName)
-  const id = useValidatedField(validateId)
-  const password = useValidatedField(validatePassword)
-  const email = useValidatedField(validateEmail)
-  const phone = useValidatedField(validatePhone)
+  // 약관 상세(/terms/:termType)로 갔다가 뒤로가기로 돌아와도 입력값이 날아가지 않도록,
+  // draft 스토어에 있던 값으로 시작하고 아래 useEffect에서 계속 동기화한다.
+  const name = useValidatedField(validateName, signUpDraft.name)
+  const id = useValidatedField(validateId, signUpDraft.loginId)
+  const password = useValidatedField(validatePassword, signUpDraft.password)
+  const email = useValidatedField(validateEmail, signUpDraft.email)
+  const phone = useValidatedField(validatePhone, signUpDraft.phone)
+
+  useEffect(() => {
+    useSignUpDraftStore.setState({
+      name: name.fieldProps.value,
+      loginId: id.fieldProps.value,
+      password: password.fieldProps.value,
+      email: email.fieldProps.value,
+      phone: phone.fieldProps.value,
+      terms,
+    })
+  }, [
+    name.fieldProps.value,
+    id.fieldProps.value,
+    password.fieldProps.value,
+    email.fieldProps.value,
+    phone.fieldProps.value,
+    terms,
+  ])
 
   useEffect(() => {
     setIdAvailability('idle')
@@ -131,6 +150,18 @@ const SignUpPage = () => {
         phoneNumber: phone.fieldProps.value.replace(/-/g, ''),
         agreedTermsIds: TERM_ITEMS.filter(({ key }) => terms[key]).map(({ id: termId }) => termId),
       })
+
+      // 자체 가입 API는 토큰을 안 줘서(회원가입만으로는 로그인 상태가 안 됨), 방금 입력한
+      // 아이디/비밀번호로 바로 로그인해서 소셜 가입과 동일하게 가입 직후 로그인 상태로 만든다.
+      // 이 로그인 호출만 실패해도 회원가입 자체는 이미 끝난 상태이니 완료 화면으로는 그대로 이동한다.
+      try {
+        const { token } = await login(id.fieldProps.value, password.fieldProps.value)
+        authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
+      } catch (loginError) {
+        console.error('가입 직후 자동 로그인 실패:', loginError)
+      }
+
+      useSignUpDraftStore.getState().reset()
       navigate('/signup/complete')
     } catch (error) {
       setToastMessage(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')

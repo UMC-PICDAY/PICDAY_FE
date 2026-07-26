@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
 import Toast from '@/components/common/Toast'
@@ -14,9 +14,9 @@ import {
   IcStar,
   IcWifi,
 } from '@/components/icons'
+import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
 import NavigationBarTransparent from '@/components/layout/NavigationBarTransparent'
-import TabBarUser from '@/components/layout/TabBarUser'
 
 import BottomSheet from '@/pages/studio/components/BottomSheet'
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
@@ -56,8 +56,7 @@ const Divider = () => <div className="h-1.5 w-full bg-gray-10" />
 const StudioDetailPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
-  const [searchParams] = useSearchParams()
-  const { data: detail } = useStudioDetail(studioId)
+  const { data: detail, isError, refetch } = useStudioDetail(studioId)
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
@@ -103,7 +102,7 @@ const StudioDetailPage = () => {
       .catch(() => {})
   }
 
-  if (searchParams.get('state') === 'error') {
+  if (isError) {
     return (
       <div className="flex min-h-dvh flex-col bg-white">
         <NavigationBar variant="default" showRight={false} onBack={() => navigate(-1)} />
@@ -111,9 +110,10 @@ const StudioDetailPage = () => {
           <ErrorNotice
             icon={<IcError width={48} height={48} className="text-brand-80" />}
             title="정보를 불러오지 못했어요"
+            onRetry={() => refetch()}
           />
         </div>
-        <TabBarUser activeTab="search" />
+        <AppTabBar activeTab="search" />
       </div>
     )
   }
