@@ -23,6 +23,7 @@
  *     onDetailClick={handleDetailClick}
  *     onReserveClick={handleReserveClick}
  *   />
+ *   onDetailClick은 '상세보기' 버튼과 카드 이미지 탭에 함께 연결됩니다
  */
 
 import { IcCheck, IcRight } from '@/components/icons'
@@ -68,7 +69,12 @@ const CardStudioDetail = ({
         'relative flex w-[345px] flex-col items-center justify-center overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]'
       }
     >
-      <div className="relative h-[230px] w-[345px] shrink-0 overflow-hidden bg-white">
+      <button
+        type="button"
+        onClick={onDetailClick}
+        aria-label={`${name} 상세보기`}
+        className="relative h-[230px] w-[345px] shrink-0 cursor-pointer overflow-hidden border-none bg-white p-0"
+      >
         {imageSrc ? (
           <img alt={name} className="h-full w-full object-cover" src={imageSrc} />
         ) : (
@@ -80,15 +86,15 @@ const CardStudioDetail = ({
             {currentImage}/{totalImages}
           </p>
         </div>
-      </div>
+      </button>
 
       <div className="flex w-full shrink-0 flex-col items-start gap-[8px] bg-[rgba(252,252,252,0.75)] px-[12px] py-[10px]">
-        <div className="flex shrink-0 flex-col items-start gap-[4px]">
-          <p className="h-[21px] w-[321px] truncate text-[var(--font-b5-size)] font-[var(--font-b5-weight)] leading-[var(--font-b5-line-height)] tracking-[var(--font-b5-letter-spacing)] text-black">
+        <div className="flex w-full shrink-0 flex-col items-start gap-[4px]">
+          <p className="w-full text-[var(--font-b5-size)] font-[var(--font-b5-weight)] leading-[var(--font-b5-line-height)] tracking-[var(--font-b5-letter-spacing)] text-black">
             {name}
           </p>
 
-          <p className="whitespace-nowrap pr-[4px] text-[var(--font-cap3-size)] font-[400] leading-[var(--font-cap3-line-height)] tracking-[var(--font-cap3-letter-spacing)] text-gray-40">
+          <p className="w-full pr-[4px] text-[var(--font-cap3-size)] font-[400] leading-[var(--font-cap3-line-height)] tracking-[var(--font-cap3-letter-spacing)] text-gray-40">
             {description}
           </p>
         </div>
@@ -97,7 +103,7 @@ const CardStudioDetail = ({
           <div className="flex w-full shrink-0 items-start">
             <IcCheck width={16} height={16} className="shrink-0 text-gray-80" />
 
-            <p className="min-w-0 truncate pr-[4px] text-[var(--font-cap1-size)] font-[var(--font-cap1-weight)] leading-[var(--font-cap1-line-height)] tracking-[var(--font-cap1-letter-spacing)] text-gray-80">
+            <p className="min-w-0 flex-1 pr-[4px] text-[var(--font-cap1-size)] font-[var(--font-cap1-weight)] leading-[var(--font-cap1-line-height)] tracking-[var(--font-cap1-letter-spacing)] text-gray-80">
               {optionText}
             </p>
           </div>
