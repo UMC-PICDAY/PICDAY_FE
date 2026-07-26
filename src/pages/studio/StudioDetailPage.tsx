@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
@@ -61,11 +61,36 @@ const StudioDetailPage = () => {
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
   const [introExpanded, setIntroExpanded] = useState(false)
+  const [introOverflow, setIntroOverflow] = useState(false)
+  const introRef = useRef<HTMLParagraphElement>(null)
 
   // 상세 로드 시 서버의 찜 상태로 초기화 (토글은 handleToggleFavorite에서 위시리스트 API 호출)
   useEffect(() => {
     if (detail) setFavorited(detail.isWishlisted)
   }, [detail])
+
+  // 소개 글이 3줄을 넘길 때만 더보기/접기 버튼 노출
+  // (펼친 상태에서는 clamp가 풀려 측정이 불가하므로 접힌 상태에서만 측정)
+  useEffect(() => {
+    const el = introRef.current
+    if (!el || introExpanded) return
+
+    let alive = true
+    const measure = () => {
+      if (alive) setIntroOverflow(el.scrollHeight > el.clientHeight + 1)
+    }
+
+    measure()
+    document.fonts?.ready.then(measure)
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+
+    return () => {
+      alive = false
+      observer.disconnect()
+    }
+  }, [detail?.introduction, introExpanded])
 
   const closeSheet = () => setOpenSheet(null)
   const goToReviews = () => navigate(`/studios/${studioId}/reviews`)
@@ -258,16 +283,17 @@ const StudioDetailPage = () => {
       {/* 사진관 소개 */}
       <section className="px-5 pb-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">사진관 소개</h2>
-        <p className={`font-b6 text-gray-80${introExpanded ? '' : ' line-clamp-3'}`}>
+        <p ref={introRef} className={`font-b6 text-gray-80${introExpanded ? '' : ' line-clamp-3'}`}>
           {detail.introduction}
         </p>
-        {!introExpanded && (
+        {introOverflow && (
           <button
             type="button"
-            onClick={() => setIntroExpanded(true)}
+            onClick={() => setIntroExpanded((prev) => !prev)}
+            aria-expanded={introExpanded}
             className="mt-5 flex w-full items-center justify-center rounded-lg border border-brand-100 px-5 py-3 font-b3 text-brand-100"
           >
-            더보기
+            {introExpanded ? '접기' : '더보기'}
           </button>
         )}
       </section>
