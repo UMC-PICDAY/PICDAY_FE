@@ -157,7 +157,7 @@ const StudioDetailPage = () => {
       <div className="px-5 py-3">
         <h1 className="py-2 font-h3 text-black">{detail.studioName}</h1>
         <div className="flex items-center pb-1 font-b6 text-gray-60">
-          <IcPin width={20} height={20} className="shrink-0" />
+          <IcPin width={20} height={20} className="shrink-0 text-brand-100" />
           <span>
             {detail.nearestStation} 도보 {detail.walkingMinute}분
           </span>
@@ -179,7 +179,7 @@ const StudioDetailPage = () => {
       <Divider />
 
       {/* 촬영 컨셉 */}
-      <section className="px-5">
+      <section className="px-5 pb-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">촬영 컨셉</h2>
         <CardPortfolioGrid
           className="flex w-full items-center justify-center gap-2"
@@ -236,7 +236,7 @@ const StudioDetailPage = () => {
         />
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center">
-            <IcPin width={20} height={20} className="shrink-0" />
+            <IcPin width={20} height={20} className="shrink-0 text-brand-100" />
             <span className="font-b4 text-black">{fullAddress}</span>
           </div>
           <button
@@ -256,7 +256,7 @@ const StudioDetailPage = () => {
       <Divider />
 
       {/* 사진관 소개 */}
-      <section className="px-5">
+      <section className="px-5 pb-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">사진관 소개</h2>
         <p className={`font-b6 text-gray-80${introExpanded ? '' : ' line-clamp-3'}`}>
           {detail.introduction}
