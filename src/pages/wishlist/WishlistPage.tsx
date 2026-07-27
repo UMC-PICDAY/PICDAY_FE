@@ -16,7 +16,7 @@ import type { WishlistResult } from '@/types/wishlist'
 const WISHLIST_QUERY_KEY = ['wishlists']
 
 const formatPrice = (minPrice: number | null) =>
-  minPrice === null ? undefined : `₩${minPrice.toLocaleString()}~`
+  minPrice === null ? '가격 정보 없음' : `₩${minPrice.toLocaleString()}~`
 
 const WishlistPage = () => {
   const navigate = useNavigate()
