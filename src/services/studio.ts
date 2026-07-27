@@ -224,39 +224,40 @@ export const searchStudios = (
 const MOCK_STUDIO_DETAIL: StudioDetail = {
   studioId: 1,
   studioName: '데이지 스튜디오',
-  thumbnailUrl: cardImage1,
+  imageUrls: [cardImage1],
   isWishlisted: false,
-  locationCategory: '홍대',
-  mainAddress: '서울 마포구',
-  subAddress: '동교동 (홍대입구)',
-  latitude: 37.5563,
-  longitude: 126.9236,
-  nearestStation: '홍대입구역',
-  walkingMinute: 5,
-  stationDetail: [2, 11, 12],
-  conceptPreview: [
-    { productId: 1, productName: '개인화보', thumbnailUrl: cardImage2, price: 55000, isMinPrice: true },
-    { productId: 2, productName: '프로필', thumbnailUrl: cardImage3, price: 70000, isMinPrice: false },
+  location: {
+    locationCategory: '홍대',
+    district: '서울 마포구',
+    address: '서울 마포구 동교동 (홍대입구)',
+    latitude: 37.5563,
+    longitude: 126.9236,
+    nearestStation: '홍대입구역',
+    walkingMinutes: 5,
+    stationLineCodes: [2, 11, 12],
+  },
+  representativeProducts: [
+    { studioProductId: 1, productName: '개인화보', thumbnailUrl: cardImage2, price: 55000 },
+    { studioProductId: 2, productName: '프로필', thumbnailUrl: cardImage3, price: 70000 },
   ],
-  studioService: [
-    { serviceCode: 'HAIR_MAKEUP', serviceName: '헤어·메이크업' },
-    { serviceCode: 'PARKING', serviceName: '주차' },
-    { serviceCode: 'COSTUME', serviceName: '의상 비치' },
-    { serviceCode: 'WIFI', serviceName: '와이파이' },
-  ],
-  hairMakeupPartnersCount: 4,
+  serviceCodes: ['HAIR_MAKEUP', 'PARKING', 'COSTUME', 'WIFI'],
+  hairMakeupPartnerCount: 4,
   introduction:
     '홍대 감성의 자연광 셀프/개인화보 전문 스튜디오입니다. 넓은 촬영 공간과 다양한 컨셉존을 갖추고 있어 원하는 분위기의 사진을 남길 수 있습니다.',
-  notice: '예약 변경은 촬영 3일 전까지 가능합니다.',
-  studioInfo: [
-    { infoSectionId: 1, content: '운영시간: 매일 12:00 - 20:00\n휴무일: 연중무휴' },
-    { infoSectionId: 2, content: '건물 내 주차 가능, 2시간 무료' },
-  ],
-  review: {
-    summary: { avgRating: 4.9, totalCount: 721, photoReviewCount: 200 },
-    page: 1,
-    size: 10,
-    items: [],
+  notice: {
+    title: '예약 및 촬영 안내',
+    items: ['예약 변경은 촬영 3일 전까지 가능합니다.'],
+  },
+  studioInfo: {
+    operation: ['운영시간: 매일 12:00 - 20:00', '휴무일: 연중무휴'],
+    parking: ['건물 내 주차 가능, 2시간 무료'],
+    shootingGuide: [],
+    refundGuide: [],
+  },
+  reviewSummary: {
+    averageRating: 4.9,
+    reviewCount: 721,
+    previewReview: null,
   },
 }
 
