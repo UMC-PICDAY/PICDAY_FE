@@ -1,8 +1,7 @@
 import { IcClose } from '@/components/icons'
-import type { StudioInfoSection } from '@/types/studio'
 
 interface StudioInfoSheetProps {
-  sections: StudioInfoSection[]
+  sections: string[]
   onClose?: () => void
 }
 
@@ -16,18 +15,14 @@ const StudioInfoSheet = ({ sections, onClose }: StudioInfoSheetProps) => (
     </div>
 
     <div className="py-2.5">
-      {sections.map((section) => (
-        <div key={section.infoSectionId} className="py-2">
-          <ul className="flex flex-col gap-1">
-            {section.content.split('\n').map((line, index) => (
-              <li key={index} className="flex items-start gap-1.5">
-                <span className="mt-[7px] size-1 shrink-0 rounded-full bg-brand-100" />
-                <span className="font-b8 text-gray-80">{line}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      <ul className="flex flex-col gap-1">
+        {sections.map((line, index) => (
+          <li key={index} className="flex items-start gap-1.5">
+            <span className="mt-[7px] size-1 shrink-0 rounded-full bg-brand-100" />
+            <span className="font-b8 text-gray-80">{line}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   </div>
 )

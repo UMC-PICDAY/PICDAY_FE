@@ -1,5 +1,4 @@
 import type { CalendarDate } from '@/components/common/Calendar'
-import type { ReviewListItem, ReviewSummary } from '@/types/review'
 
 // ===== 2-1. 홈 / 2-2. 자동완성 (김이준 담당분) =====
 // PICDAY_API_Spec.md 기준. 홈(2-1)·자동완성(2-2) 응답 정의
@@ -125,52 +124,68 @@ export interface CompareStudio {
 
 // ===== 2-4. GET /api/v1/studios/{studioId} =====
 
-export interface StudioConceptPreview {
-  productId: number
+export interface StudioRepresentativeProduct {
+  studioProductId?: number
   productName: string
-  thumbnailUrl: string
+  thumbnailUrl?: string | null
   price: number
-  isMinPrice: boolean
 }
 
-export interface StudioServiceItem {
-  serviceCode: string
-  serviceName: string
+// 실제 응답 enum(swagger 기준). FE에서 아이콘/라벨을 매핑해서 씀 (StudioDetailPage 참고)
+export type StudioServiceCode = 'HAIR_MAKEUP' | 'PARKING' | 'COSTUME' | 'WIFI'
+
+export interface StudioLocationDetail {
+  locationCategory: string
+  district: string
+  address: string
+  latitude: number
+  longitude: number
+  nearestStation: string
+  walkingMinutes: number
+  stationLineCodes: number[] // 1~9: n호선 / 11: 공항철도 / 12: 경의중앙선 / 13: 신분당선
 }
 
-export interface StudioInfoSection {
-  infoSectionId: number
+export interface StudioInfoDetail {
+  operation: string[]
+  parking: string[]
+  shootingGuide: string[]
+  refundGuide: string[]
+}
+
+export interface StudioNotice {
+  title: string
+  items: string[]
+}
+
+export interface StudioReviewPreviewItem {
+  reviewId?: number
+  writerNickname: string
+  rating: number
   content: string
+  imageUrls: string[]
+  isBest: boolean
+  createdAt?: string
 }
 
-// data.review — 5-1 리뷰 목록 API의 요약/items와 동일 구조
-export interface StudioReviewPreview {
-  summary: ReviewSummary
-  page: number
-  size: number
-  items: ReviewListItem[]
+export interface StudioReviewSummaryPreview {
+  averageRating?: number | null
+  reviewCount: number
+  previewReview?: StudioReviewPreviewItem | null
 }
 
 export interface StudioDetail {
   studioId: number
   studioName: string
-  thumbnailUrl: string
+  imageUrls: string[]
   isWishlisted: boolean
-  locationCategory: string
-  mainAddress: string
-  subAddress: string
-  latitude: number
-  longitude: number
-  nearestStation: string
-  walkingMinute: number
-  stationDetail: number[] // 1~9: n호선 / 11: 공항철도 / 12: 경의중앙선 / 13: 신분당선
-  conceptPreview: StudioConceptPreview[]
-  studioService: StudioServiceItem[]
-  hairMakeupPartnersCount: number
-  introduction: string
-  notice: string
-  studioInfo: StudioInfoSection[]
-  review: StudioReviewPreview
+  location: StudioLocationDetail
+  representativeProducts: StudioRepresentativeProduct[]
+  serviceCodes: StudioServiceCode[]
+  introduction?: string | null
+  notice?: StudioNotice | null
+  studioInfo: StudioInfoDetail
+  hairMakeupPartnerCount: number
+  reviewSummary: StudioReviewSummaryPreview
 }
 
 // ===== 2-5. GET /api/v1/studios/{studioId}/products =====
