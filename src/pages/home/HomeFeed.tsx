@@ -14,7 +14,8 @@ import type { StudioSummary } from '@/types/studio'
 const HORIZONTAL_SCROLL_CLASS =
   'flex w-full gap-3 overflow-x-auto px-5 pb-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
-const formatPrice = (minPrice: number) => `₩${minPrice.toLocaleString()}~`
+const formatPrice = (minPrice: number | null) =>
+  minPrice === null ? '가격 정보 없음' : `₩${minPrice.toLocaleString()}~`
 
 // 앞뒤로 마지막/첫 배너를 하나씩 복제해 무한 순환처럼 보이게 함 (index 0 = 복제된 마지막, 1~N = 실제, N+1 = 복제된 1번)
 const getRealCardNumber = (renderedIndex: number, bannerCount: number) => {

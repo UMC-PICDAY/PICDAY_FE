@@ -6,16 +6,16 @@ import type { ReviewListItem, ReviewSummary } from '@/types/review'
 export interface StudioSummary {
   studioId: number
   studioName: string
-  thumbnailUrl: string
+  thumbnailUrl: string | null
   locationCategory: string
-  minPrice: number
+  minPrice: number | null
   rating: number
 }
 
 export interface BannerStudio {
   studioId: number
   studioName: string
-  thumbnailUrl: string
+  thumbnailUrl: string | null
   locationCategory: string
 }
 
