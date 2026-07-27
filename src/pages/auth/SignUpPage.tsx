@@ -200,13 +200,13 @@ const SignUpPage = () => {
         {...password.fieldProps}
       />
       <InputField
-        label="이메일"
+        label="이메일 (필수)"
         placeholder="이메일을 입력해 주세요"
         type="email"
         {...email.fieldProps}
       />
       <InputField
-        label="전화번호"
+        label="전화번호 (필수)"
         placeholder="휴대폰 번호를 입력해 주세요"
         prefix="+82"
         type="tel"
