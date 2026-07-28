@@ -45,9 +45,18 @@ export interface UploadImageResult {
   imageUrl: string
 }
 
+export type ReviewKeyword =
+  | 'KIND_SERVICE'
+  | 'DETAILED_RETOUCH'
+  | 'ON_TIME'
+  | 'COMFORTABLE_MOOD'
+  | 'REASONABLE_PRICE'
+  | 'SATISFYING_RESULT'
+
 export interface CreateReviewRequest {
   reservationId: number
   rating: number
   content: string
+  keywords: ReviewKeyword[]
   imageUrls: string[] | null
 }

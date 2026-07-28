@@ -24,6 +24,8 @@ import {
   createReview,
   uploadImage,
 } from '@/services/review'
+import type { ReviewKeyword } from '@/types/review'
+
 
 const formatShootingDate = (
   reservationDate: string,
@@ -64,7 +66,23 @@ const reviewTags = [
   '편안한 분위기',
   '합리적인 가격',
   '만족스러운 결과물',
-]
+] as const
+
+type ReviewTag =
+  (typeof reviewTags)[number]
+
+const REVIEW_KEYWORD_MAP: Record<
+  ReviewTag,
+  ReviewKeyword
+> = {
+  '친절한 응대': 'KIND_SERVICE',
+  '꼼꼼한 보정': 'DETAILED_RETOUCH',
+  '시간 엄수': 'ON_TIME',
+  '편안한 분위기': 'COMFORTABLE_MOOD',
+  '합리적인 가격': 'REASONABLE_PRICE',
+  '만족스러운 결과물':
+    'SATISFYING_RESULT',
+}
 
 const ReviewWritePage = () => {
   const navigate = useNavigate()
@@ -78,7 +96,7 @@ const ReviewWritePage = () => {
     useState<ReservationDetailData | null>(null)
 
   const [rating, setRating] = useState(5)
-  const [selectedTags, setSelectedTags] = useState<string[]>([
+  const [selectedTags, setSelectedTags] = useState<ReviewTag[]>([
     '친절한 응대',
     '꼼꼼한 보정',
   ])
@@ -127,7 +145,7 @@ const ReviewWritePage = () => {
     }
   }, [])
 
-  const handleTagClick = (tag: string) => {
+  const handleTagClick = (tag: ReviewTag) => {
     setSelectedTags((prev) =>
       prev.includes(tag)
         ? prev.filter((item) => item !== tag)
@@ -218,10 +236,16 @@ const ReviewWritePage = () => {
         (result) => result.imageUrl,
       )
 
+      const mappedKeywords =
+        selectedTags.map(
+          (tag) => REVIEW_KEYWORD_MAP[tag],
+        )
+
       await createReview({
         reservationId: Number(reservationId),
         rating,
         content: trimmedReview,
+        keywords: mappedKeywords,
         imageUrls:
           uploadedImageUrls.length > 0
             ? uploadedImageUrls
@@ -231,10 +255,12 @@ const ReviewWritePage = () => {
       navigate(
         `/mypage/reservations/${reservationId}/review/complete`,
         {
+          //리뷰 완료 페이지로 넘기는 값
           state: {
             review: {
-              studioName: reservation.studioName,
-              conceptName: reservation.conceptName,
+              studioName: reservation.studio.name,
+              conceptName:
+                reservation.studioProduct.name,
               rating,
             },
           },
@@ -262,12 +288,12 @@ const ReviewWritePage = () => {
       <section className="flex w-full flex-col items-start gap-[15px] p-5">
         <div className="flex w-full flex-col items-start rounded-[8px] bg-[rgba(254,228,235,0.3)] px-4 py-3">
           <div className="flex w-full flex-col items-start gap-0.5">
-            <h2 className="font-b3 text-gray-80">{reservation.studioName}</h2>
+            <h2 className="font-b3 text-gray-80">{reservation.studio.name}</h2>
             <p className="font-b8 text-gray-60">
-              {reservation.conceptName} ·{' '}
+              {reservation.studioProduct.name} ·{' '}
               {formatShootingDate(
-                reservation.reservationDate,
-                reservation.reservationTime,
+                reservation.timeSlot.date,
+                reservation.timeSlot.startTime,
               )}
             </p>
           </div>

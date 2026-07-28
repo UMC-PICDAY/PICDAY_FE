@@ -171,11 +171,10 @@ const ChecklistCard = ({
               )}
 
               <span
-                className={`font-b8 ${
-                  item.checked
-                    ? 'text-gray-80'
-                    : 'text-gray-40'
-                }`}
+                className={`font-b8 ${item.checked
+                  ? 'text-gray-80'
+                  : 'text-gray-40'
+                  }`}
               >
                 {item.label}
               </span>
@@ -226,7 +225,7 @@ const ReservationDetailPage = () => {
           setReservation(result)
 
           setChecklistItems(
-            result.checklist.map(
+            (result.checklist ?? []).map(
               (label, index) => ({
                 id: `checklist-${index}`,
                 label,
@@ -256,9 +255,9 @@ const ReservationDetailPage = () => {
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              checked: !item.checked,
-            }
+            ...item,
+            checked: !item.checked,
+          }
           : item,
       ),
     )
@@ -282,7 +281,7 @@ const ReservationDetailPage = () => {
   const isShooting =
     reservation.status === 'COMPLETED'
 
-  const isCanceled =
+  const isCancelled =
     reservation.status === 'CANCELLED'
 
   const statusLabel = isReserved
@@ -293,8 +292,8 @@ const ReservationDetailPage = () => {
 
   const formattedReservationDate =
     formatReservationDateTime(
-      reservation.reservationDate,
-      reservation.reservationTime,
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
     )
 
   const formattedTotalPrice =
@@ -312,10 +311,8 @@ const ReservationDetailPage = () => {
 
       <Profile
         variant="bookingInfo"
-        studioName={reservation.studioName}
-        reservationDate={
-          formattedReservationDate
-        }
+        studioName={reservation.studio.name}
+        reservationDate={formattedReservationDate}
         statusLabel={statusLabel}
       />
 
@@ -324,7 +321,7 @@ const ReservationDetailPage = () => {
           receiptItems={[
             {
               label: '컨셉',
-              value: reservation.conceptName,
+              value: reservation.studioProduct.name,
             },
           ]}
           totalAmount={`₩${formattedTotalPrice}`}
@@ -339,7 +336,7 @@ const ReservationDetailPage = () => {
           />
         )}
 
-        {isCanceled && (
+        {isCancelled && (
           <CancelDetailCard
             totalPrice={
               reservation.totalPrice
@@ -375,11 +372,18 @@ const ReservationDetailPage = () => {
           </Button>
         )}
 
-        {isCanceled && (
+        {isCancelled && (
           <Button
             variant="primary"
             onClick={() =>
-              navigate('/reservation')
+              navigate(
+                `/studios/${reservation.studio.id}/concepts`,
+                {
+                  state: {
+                    openTimeSelectModal: true,
+                  },
+                },
+              )
             }
           >
             재예약

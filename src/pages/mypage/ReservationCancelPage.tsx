@@ -132,18 +132,20 @@ const ReservationCancelPage = () => {
           `/mypage/reservations/${reservationId}/cancel/complete`,
           {
             replace: true,
+
+            //취소 완료 화면으로 넘기는 state
             state: {
               reservation: {
                 reservationId:
                   result.reservationId,
                 studioName:
-                  reservation.studioName,
+                  reservation.studio.name,
                 reservationDate:
-                  reservation.reservationDate,
+                  reservation.timeSlot.date,
                 reservationTime:
-                  reservation.reservationTime,
+                  reservation.timeSlot.startTime,
                 conceptName:
-                  reservation.conceptName,
+                  reservation.studioProduct.name,
                 totalPrice:
                   reservation.totalPrice,
                 cancelledAt:
@@ -208,6 +210,7 @@ const ReservationCancelPage = () => {
     )
   }
 
+  //날짜 포맷
   const formattedTotalPrice =
     reservation.totalPrice.toLocaleString(
       'ko-KR',
@@ -215,8 +218,8 @@ const ReservationCancelPage = () => {
 
   const formattedReservationDate =
     formatReservationDateTime(
-      reservation.reservationDate,
-      reservation.reservationTime,
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
     )
 
   return (
@@ -229,10 +232,11 @@ const ReservationCancelPage = () => {
 
       <div className="pt-[10px]">
         <ReservationDetail
+          //화면 표시 필드
           receiptItems={[
             {
               label: '사진관',
-              value: reservation.studioName,
+              value: reservation.studio.name,
             },
             {
               label: '날짜·시간',
@@ -242,7 +246,7 @@ const ReservationCancelPage = () => {
             {
               label: '컨셉',
               value:
-                reservation.conceptName,
+                reservation.studioProduct.name,
             },
           ]}
           totalAmount={`₩${formattedTotalPrice}`}
@@ -287,9 +291,9 @@ const ReservationCancelPage = () => {
             isSubmitting
               ? undefined
               : () =>
-                  setIsCancelModalOpen(
-                    true,
-                  )
+                setIsCancelModalOpen(
+                  true,
+                )
           }
         >
           {isSubmitting
