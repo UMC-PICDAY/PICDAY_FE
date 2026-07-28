@@ -1,19 +1,5 @@
-import {
-  apiDelete,
-  apiGet,
-  apiPatch,
-  apiPost,
-} from '@/services/client'
-
-import type {
-  CreateReviewRequest,
-  ReviewLikeResult,
-  ReviewListData,
-  ReviewListParams,
-  UpdateReviewRequest,
-  UpdateReviewResult,
-  UploadImageResult,
-} from '@/types/review'
+import { apiDelete, apiGet, apiPatch, apiPost,} from '@/services/client'
+import type { CreateReviewRequest, CreateReviewResult, ReviewDetailData, ReviewLikeResult, ReviewListData, ReviewListParams, UpdateReviewRequest, UpdateReviewResult, UploadImageResult,} from '@/types/review'
 
 // 5-1. 리뷰 목록 조회
 export const getStudioReviews = (
@@ -28,8 +14,11 @@ export const getStudioReviews = (
 // 5-2. 리뷰 작성
 export const createReview = (
   body: CreateReviewRequest,
-): Promise<unknown> =>
-  apiPost<unknown>('/api/v1/reviews', body)
+): Promise<CreateReviewResult> =>
+  apiPost<CreateReviewResult>(
+    '/api/v1/reviews',
+    body,
+  )
 
 // 리뷰 이미지 업로드
 export const uploadImage = (
@@ -43,6 +32,14 @@ export const uploadImage = (
     formData,
   )
 }
+
+// 리뷰 단건 조회
+export const getReview = (
+  reviewId: number,
+): Promise<ReviewDetailData> =>
+  apiGet<ReviewDetailData>(
+    `/api/v1/reviews/${reviewId}`,
+  )
 
 // 5-3. 리뷰 수정
 export const updateReview = (

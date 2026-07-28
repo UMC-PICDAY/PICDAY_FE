@@ -10,7 +10,8 @@ import Review from '@/components/common/Review'
 import TimeChip from '@/components/common/TimeChip'
 import { IcStar, IcStar2 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
-import { deleteReview, updateReview, uploadImage } from '@/services/review'
+import { deleteReview, getReview, updateReview, uploadImage,} from '@/services/review'
+import type { ReviewDetailData, ReviewKeyword,} from '@/types/review'
 
 type PageMode = 'view' | 'edit'
 type ModalType = 'delete' | 'leave' | null
@@ -19,6 +20,24 @@ interface NewReviewImage {
   id: string
   file: File
   previewUrl: string
+}
+
+interface ReviewSnapshot {
+  score: number
+  selectedKeywords: ReviewKeyword[]
+  review: string
+  existingImageUrls: string[]
+}
+
+interface ReviewTagItem {
+  keyword: ReviewKeyword
+  label: string
+}
+
+interface StudioSummaryProps {
+  studioName: string
+  conceptName: string
+  shootingDate: string
 }
 
 const MAX_IMAGE_COUNT = 5
@@ -30,43 +49,74 @@ const ALLOWED_IMAGE_TYPES = [
   'image/webp',
 ]
 
-const REVIEW_TAGS = [
-  '친절한 응대',
-  '꼼꼼한 보정',
-  '시간 엄수',
-  '편안한 분위기',
-  '합리적인 가격',
-  '만족스러운 결과물',
-] as const
-
-type ReviewTag = (typeof REVIEW_TAGS)[number]
-
-interface ReviewSnapshot {
-  score: number
-  selectedTags: ReviewTag[]
-  review: string
-  existingImageUrls: string[]
-}
-
-const INITIAL_REVIEW =
-  '스튜디오 분위기가 너무 예뻐서 촬영하는 내내 설레었어요. 작가님도 친절하시고 포즈 가이드도 상세하게 해주셔서 어색함 없이 자연스럽게 찍을 수 있었습니다.'
-
-const INITIAL_IMAGE_URLS: string[] = []
-
-const INITIAL_SELECTED_TAGS: ReviewTag[] = [
-  '친절한 응대',
-  '꼼꼼한 보정',
-  '시간 엄수',
+const REVIEW_TAGS: ReviewTagItem[] = [
+  {
+    keyword: 'KIND_SERVICE',
+    label: '친절한 응대',
+  },
+  {
+    keyword: 'DETAILED_RETOUCH',
+    label: '꼼꼼한 보정',
+  },
+  {
+    keyword: 'ON_TIME',
+    label: '시간 엄수',
+  },
+  {
+    keyword: 'COMFORTABLE_MOOD',
+    label: '편안한 분위기',
+  },
+  {
+    keyword: 'REASONABLE_PRICE',
+    label: '합리적인 가격',
+  },
+  {
+    keyword: 'SATISFYING_RESULT',
+    label: '만족스러운 결과물',
+  },
 ]
 
-const StudioSummary = ({ editing }: { editing: boolean }) => (
+const formatShootingDate = (shootingDate: string) => {
+  const [year, month, day] = shootingDate.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+
+  const weekday = new Intl.DateTimeFormat('ko-KR', {
+    weekday: 'short',
+  }).format(date)
+
+  return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(
+    2,
+    '0',
+  )} (${weekday}) 촬영`
+}
+
+const formatCreatedAt = (createdAt: string) => {
+  const date = new Date(createdAt)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}.${month}.${day} 작성`
+}
+
+const getReviewTagLabel = (keyword: ReviewKeyword) =>
+  REVIEW_TAGS.find((tag) => tag.keyword === keyword)?.label ?? keyword
+
+const StudioSummary = ({
+  studioName,
+  conceptName,
+  shootingDate,
+}: StudioSummaryProps) => (
   <div className="rounded-[8px] bg-brand-20/30 px-4 py-3">
-    <p className="font-h6 text-gray-80">
-      {editing ? '데이지 스튜디오' : '스튜디오 하루'}
-    </p>
+    <p className="font-h6 text-gray-80">{studioName}</p>
 
     <p className="mt-0.5 font-b8 text-gray-60">
-      개인화보 · {editing ? '2025.06.14' : '2025.07.10'} (일) 촬영
+      {conceptName} · {formatShootingDate(shootingDate)}
     </p>
   </div>
 )
@@ -86,24 +136,24 @@ const MyReviewPage = () => {
   const isValidReviewId =
     Number.isInteger(parsedReviewId) && parsedReviewId > 0
 
+  const [reviewData, setReviewData] = useState<ReviewDetailData | null>(
+    null,
+  )
   const [pageMode, setPageMode] = useState<PageMode>('view')
   const [modal, setModal] = useState<ModalType>(null)
   const [score, setScore] = useState(5)
-
-  const [selectedTags, setSelectedTags] = useState<ReviewTag[]>(
-    INITIAL_SELECTED_TAGS,
-  )
-
-  const [review, setReview] = useState(INITIAL_REVIEW)
-
+  const [selectedKeywords, setSelectedKeywords] = useState<
+    ReviewKeyword[]
+  >([])
+  const [review, setReview] = useState('')
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(
-    INITIAL_IMAGE_URLS,
+    [],
   )
-
   const [newImageList, setNewImageList] = useState<NewReviewImage[]>([])
   const [originalReview, setOriginalReview] =
     useState<ReviewSnapshot | null>(null)
-
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -126,9 +176,34 @@ const MyReviewPage = () => {
 
   useEffect(() => {
     if (!isValidReviewId) {
-      navigate('/mypage', { replace: true })
+      navigate('/mypage', {
+        replace: true,
+      })
+      return
     }
-  }, [isValidReviewId, navigate])
+
+    const fetchReview = async () => {
+      try {
+        setIsLoading(true)
+        setHasError(false)
+
+        const result = await getReview(parsedReviewId)
+
+        setReviewData(result)
+        setScore(result.rating)
+        setSelectedKeywords(result.keywords)
+        setReview(result.content)
+        setExistingImageUrls(result.images)
+      } catch (error) {
+        console.error('리뷰 조회 실패:', error)
+        setHasError(true)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void fetchReview()
+  }, [isValidReviewId, navigate, parsedReviewId])
 
   useEffect(() => {
     newImageListRef.current = newImageList
@@ -148,18 +223,18 @@ const MyReviewPage = () => {
     })
   }
 
-  const toggleTag = (tag: ReviewTag) => {
-    setSelectedTags((current) =>
-      current.includes(tag)
-        ? current.filter((item) => item !== tag)
-        : [...current, tag],
+  const toggleKeyword = (keyword: ReviewKeyword) => {
+    setSelectedKeywords((current) =>
+      current.includes(keyword)
+        ? current.filter((item) => item !== keyword)
+        : [...current, keyword],
     )
   }
 
   const handleEditStart = () => {
     setOriginalReview({
       score,
-      selectedTags: [...selectedTags],
+      selectedKeywords: [...selectedKeywords],
       review,
       existingImageUrls: [...existingImageUrls],
     })
@@ -254,11 +329,26 @@ const MyReviewPage = () => {
       await updateReview(parsedReviewId, {
         rating: score,
         content: trimmedReview,
+        keywords: selectedKeywords,
         imageUrls: nextImageUrls.length > 0 ? nextImageUrls : null,
       })
 
       revokeNewImageUrls(newImageList)
+
       setExistingImageUrls(nextImageUrls)
+
+      setReviewData((current) =>
+        current
+          ? {
+              ...current,
+              rating: score,
+              content: trimmedReview,
+              keywords: [...selectedKeywords],
+              images: nextImageUrls,
+            }
+          : current,
+      )
+
       setNewImageList([])
       setOriginalReview(null)
       setPageMode('view')
@@ -280,7 +370,9 @@ const MyReviewPage = () => {
       await deleteReview(parsedReviewId)
 
       setModal(null)
-      navigate('/mypage', { replace: true })
+      navigate('/mypage', {
+        replace: true,
+      })
     } catch (error) {
       console.error('리뷰 삭제 실패:', error)
     } finally {
@@ -293,7 +385,7 @@ const MyReviewPage = () => {
 
     if (originalReview) {
       setScore(originalReview.score)
-      setSelectedTags([...originalReview.selectedTags])
+      setSelectedKeywords([...originalReview.selectedKeywords])
       setReview(originalReview.review)
       setExistingImageUrls([...originalReview.existingImageUrls])
     }
@@ -308,6 +400,53 @@ const MyReviewPage = () => {
     return null
   }
 
+  if (isLoading) {
+    return (
+      <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
+        <NavigationBar
+          title="내 리뷰"
+          showRight={false}
+          onBack={() => navigate(-1)}
+        />
+
+        <div className="flex flex-1 items-center justify-center">
+          <p className="font-b8 text-gray-60">
+            리뷰를 불러오는 중입니다.
+          </p>
+        </div>
+      </main>
+    )
+  }
+
+  if (hasError || !reviewData) {
+    return (
+      <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
+        <NavigationBar
+          title="내 리뷰"
+          showRight={false}
+          onBack={() => navigate(-1)}
+        />
+
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5">
+          <p className="font-b5 text-black">
+            리뷰를 불러오지 못했어요
+          </p>
+
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate('/mypage', {
+                replace: true,
+              })
+            }
+          >
+            마이페이지로
+          </Button>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
       <NavigationBar
@@ -319,7 +458,11 @@ const MyReviewPage = () => {
       {isEditing ? (
         <>
           <div className="flex flex-1 flex-col gap-[15px] px-5 pb-[120px] pt-5">
-            <StudioSummary editing />
+            <StudioSummary
+              studioName={reviewData.studioName}
+              conceptName={reviewData.conceptName}
+              shootingDate={reviewData.shootingDate}
+            />
 
             <section className="flex flex-col gap-2">
               <SectionTitle>만족스러우셨나요?</SectionTitle>
@@ -363,16 +506,16 @@ const MyReviewPage = () => {
               </SectionTitle>
 
               <div className="flex flex-wrap gap-2.5">
-                {REVIEW_TAGS.map((tag) => (
+                {REVIEW_TAGS.map(({ keyword, label }) => (
                   <TimeChip
-                    key={tag}
-                    label={tag}
+                    key={keyword}
+                    label={label}
                     property1={
-                      selectedTags.includes(tag)
+                      selectedKeywords.includes(keyword)
                         ? 'selected'
                         : 'default'
                     }
-                    onClick={() => toggleTag(tag)}
+                    onClick={() => toggleKeyword(keyword)}
                   />
                 ))}
               </div>
@@ -442,25 +585,31 @@ const MyReviewPage = () => {
       ) : (
         <>
           <div className="px-5 pt-5">
-            <StudioSummary editing={false} />
+            <StudioSummary
+              studioName={reviewData.studioName}
+              conceptName={reviewData.conceptName}
+              shootingDate={reviewData.shootingDate}
+            />
           </div>
 
           <article className="mx-5 mt-3 rounded-[8px] px-0 pb-5 pt-2 shadow-[0_15px_48px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
             <Review score={score} />
 
             <p className="mt-1 font-b8 text-gray-60">
-              2026.07.12 작성
+              {formatCreatedAt(reviewData.createdAt)}
             </p>
 
-            <div className="my-3 flex flex-wrap gap-2.5">
-              {selectedTags.map((tag) => (
-                <TimeChip
-                  key={tag}
-                  label={tag}
-                  property1="selected"
-                />
-              ))}
-            </div>
+            {selectedKeywords.length > 0 && (
+              <div className="my-3 flex flex-wrap gap-2.5">
+                {selectedKeywords.map((keyword) => (
+                  <TimeChip
+                    key={keyword}
+                    label={getReviewTagLabel(keyword)}
+                    property1="selected"
+                  />
+                ))}
+              </div>
+            )}
 
             <p className="font-b8 text-gray-80">{review}</p>
 
@@ -489,7 +638,9 @@ const MyReviewPage = () => {
             </div>
 
             <div className="w-[220px]">
-              <Button onClick={handleEditStart}>수정하기</Button>
+              <Button onClick={handleEditStart}>
+                수정하기
+              </Button>
             </div>
           </div>
         </>
