@@ -14,9 +14,7 @@ export interface ReviewListItem {
   rating: number
   content: string
   keywords: ReviewKeyword[] // 태그가 없으면 빈 배열
-  // 촬영 컨셉명. 백엔드에 추가 요청해 둔 상태로 아직 응답에 없어 optional.
-  // 필드가 내려오기 시작하면 리뷰 카드에 자동으로 노출된다.
-  conceptName?: string
+  conceptName: string // 촬영 컨셉명
   images: string[]
   likeCount: number
   isLiked: boolean
