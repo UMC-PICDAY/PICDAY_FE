@@ -282,7 +282,7 @@ const ReservationDetailPage = () => {
     reservation.status === 'COMPLETED'
 
   const isCanceled =
-    reservation.status === 'CANCELED'
+    reservation.status === 'CANCELLED'
 
   const statusLabel = isReserved
     ? '예약 완료'
