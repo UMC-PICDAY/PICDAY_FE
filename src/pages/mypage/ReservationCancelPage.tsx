@@ -148,8 +148,8 @@ const ReservationCancelPage = () => {
                   reservation.studioProduct.name,
                 totalPrice:
                   reservation.totalPrice,
-                cancelledAt:
-                  result.cancelledAt,
+                canceledAt:
+                  result.canceledAt,
               },
             },
           },

@@ -281,8 +281,8 @@ const ReservationDetailPage = () => {
   const isShooting =
     reservation.status === 'COMPLETED'
 
-  const isCancelled =
-    reservation.status === 'CANCELLED'
+  const isCanceled =
+    reservation.status === 'CANCELED'
 
   const statusLabel = isReserved
     ? '예약 완료'
@@ -336,7 +336,7 @@ const ReservationDetailPage = () => {
           />
         )}
 
-        {isCancelled && (
+        {isCanceled && (
           <CancelDetailCard
             totalPrice={
               reservation.totalPrice
@@ -372,7 +372,7 @@ const ReservationDetailPage = () => {
           </Button>
         )}
 
-        {isCancelled && (
+        {isCanceled && (
           <Button
             variant="primary"
             onClick={() =>

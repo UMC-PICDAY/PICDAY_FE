@@ -14,7 +14,7 @@ export type PaymentMethod =
 export type ReservationStatus =
   | 'RESERVED'
   | 'COMPLETED'
-  | 'CANCELLED'
+  | 'CANCELED'
 
 /**
  * 3-1. 예약 생성
@@ -51,8 +51,8 @@ export const createReservation = (
  */
 export interface CancelReservationData {
   reservationId: number
-  status: 'CANCELLED'
-  cancelledAt: string
+  status: 'CANCELED'
+  canceledAt: string
 }
 
 export const cancelReservation = (
@@ -119,7 +119,7 @@ export interface ReservationDetailData {
   checklist: string[]
   reviewId: number | null
   createdAt: string
-  cancelledAt: string | null
+  canceledAt: string | null
 }
 
 export const getReservationDetail = (
