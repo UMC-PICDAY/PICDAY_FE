@@ -5,14 +5,14 @@
  *
  * 진입 시 navigation state
  *   {
- *     studioIds: number[]
+ *     studioIds: string[]
  *     shootingCategory: ShootingCategory
  *     purpose: string
  *     studios: NavigationStudio[]
  *   }
  *
  * 초기 로드
- *   studioIds와 shootingCategory로 2-10 API 호출
+ *   studioIds와 shootingCategory로 비교 결과 조회 API 호출
  *   API 응답을 화면 비교 데이터로 변환하여 렌더링
  */
 
@@ -40,7 +40,7 @@ interface CompareData {
 }
 
 interface SelectedStudio {
-  id: number
+  id: string
   name: string
   imageSrc?: string
   rating: number
@@ -49,7 +49,7 @@ interface SelectedStudio {
 }
 
 interface NavigationStudio {
-  id: number
+  id: string
   name: string
   imageSrc?: string
   rating?: number
@@ -58,7 +58,7 @@ interface NavigationStudio {
 }
 
 interface NavigationState {
-  studioIds?: number[]
+  studioIds?: string[]
   shootingCategory?: ShootingCategory
   purpose?: string
   studios?: NavigationStudio[]
@@ -83,21 +83,49 @@ const LOCATION_CATEGORY_LABEL_MAP: Record<string, string> = {
   JAMSIL: '잠실',
 }
 
+const isValidStudioId = (studioId: string) =>
+  /^[1-9]\d*$/.test(studioId)
+
 const formatServiceTag = (serviceTag: string) =>
   SERVICE_TAG_LABEL_MAP[serviceTag] ?? serviceTag
 
-const formatLocation = ({
-  locationCategory,
-  nearestStation,
-  walkingMinutes,
-}: CompareResultStudio['location']) => {
-  const locationName =
-    LOCATION_CATEGORY_LABEL_MAP[locationCategory] ?? nearestStation
+const formatLocation = (
+  location: CompareResultStudio['location'],
+) => {
+  if (!location) {
+    return '위치 정보 없음'
+  }
 
-  return `${locationName} · 도보 ${walkingMinutes}분`
+  const {
+    locationCategory,
+    nearestStation,
+    walkingMinutes,
+  } = location
+
+  const locationName =
+    LOCATION_CATEGORY_LABEL_MAP[locationCategory] ??
+    nearestStation ??
+    locationCategory
+
+  if (
+    nearestStation &&
+    walkingMinutes !== null
+  ) {
+    return `${nearestStation} · 도보 ${walkingMinutes}분`
+  }
+
+  if (walkingMinutes !== null) {
+    return `${locationName} · 도보 ${walkingMinutes}분`
+  }
+
+  return locationName
 }
 
-const formatReservationDate = (date: string) => {
+const formatReservationDate = (date: string | null) => {
+  if (!date) {
+    return '예약 가능일 없음'
+  }
+
   const [year, month, day] = date.split('-').map(Number)
 
   if (!year || !month || !day) {
@@ -117,16 +145,31 @@ const formatReservationDate = (date: string) => {
   })
 }
 
-const convertStudio = (studio: CompareResultStudio): SelectedStudio => ({
+const formatPrice = (
+  minimumPrice: number,
+  hasPriceRange: boolean,
+) =>
+  `₩${minimumPrice.toLocaleString('ko-KR')}${
+    hasPriceRange ? '~' : ''
+  }`
+
+const convertStudio = (
+  studio: CompareResultStudio,
+): SelectedStudio => ({
   id: studio.studioId,
   name: studio.studioName,
-  imageSrc: studio.thumbnailUrl,
+  imageSrc: studio.thumbnailUrl ?? undefined,
   rating: studio.rating,
   reviewCount: studio.reviewCount,
   compareData: {
-    price: `₩${studio.productsInformation.price.toLocaleString('ko-KR')}`,
-    description: studio.productsInformation.comparisonSummary,
-    badgeLabel: studio.productsInformation.hasAdditionalPrice
+    price: formatPrice(
+      studio.productInformation.minimumPrice,
+      studio.productInformation.hasPriceRange,
+    ),
+    description:
+      studio.productInformation.comparisonSummary,
+    badgeLabel: studio.productInformation
+      .hasAdditionalPrice
       ? undefined
       : '추가금 없음',
     services: studio.serviceTags.map(formatServiceTag),
@@ -141,37 +184,55 @@ const CompareTwoPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const navigationState = location.state as NavigationState | null
+  const navigationState =
+    location.state as NavigationState | null
 
   const initialStudioIds = navigationState?.studioIds
-  const shootingCategory = navigationState?.shootingCategory
+  const shootingCategory =
+    navigationState?.shootingCategory
   const purpose = navigationState?.purpose
   const studioSearch = navigationState?.studioSearch ?? ''
 
-  const [selectedStudios, setSelectedStudios] = useState<SelectedStudio[]>([])
-  const [selectedStudioId, setSelectedStudioId] = useState<number | null>(null)
-  const [shootingCategoryName, setShootingCategoryName] = useState(
-    purpose ?? '',
-  )
+  const [selectedStudios, setSelectedStudios] = useState<
+    SelectedStudio[]
+  >([])
+
+  const [selectedStudioId, setSelectedStudioId] = useState<
+    string | null
+  >(null)
+
+  const [
+    shootingCategoryName,
+    setShootingCategoryName,
+  ] = useState(purpose ?? '')
 
   const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<
+    string | null
+  >(null)
 
-  const currentStudioIds = selectedStudios.map((studio) => studio.id)
+  const currentStudioIds = selectedStudios.map(
+    (studio) => studio.id,
+  )
 
   const hasSelectedStudio = selectedStudios.some(
     (studio) => studio.id === selectedStudioId,
   )
 
   useEffect(() => {
-    if (!initialStudioIds || initialStudioIds.length !== 2) {
+    if (
+      !initialStudioIds ||
+      initialStudioIds.length !== 2
+    ) {
       setIsLoading(false)
-      setErrorMessage('비교할 사진관 목록이 올바르지 않습니다.')
+      setErrorMessage(
+        '비교할 사진관 목록이 올바르지 않습니다.',
+      )
       return
     }
 
     const hasInvalidStudioId = initialStudioIds.some(
-      (studioId) => !Number.isInteger(studioId) || studioId <= 0,
+      (studioId) => !isValidStudioId(studioId),
     )
 
     if (hasInvalidStudioId) {
@@ -180,9 +241,23 @@ const CompareTwoPage = () => {
       return
     }
 
+    const hasDuplicateStudioId =
+      new Set(initialStudioIds).size !==
+      initialStudioIds.length
+
+    if (hasDuplicateStudioId) {
+      setIsLoading(false)
+      setErrorMessage(
+        '비교할 사진관 목록이 올바르지 않습니다.',
+      )
+      return
+    }
+
     if (!shootingCategory) {
       setIsLoading(false)
-      setErrorMessage('비교할 촬영 컨셉이 올바르지 않습니다.')
+      setErrorMessage(
+        '비교할 촬영 컨셉이 올바르지 않습니다.',
+      )
       return
     }
 
@@ -199,7 +274,9 @@ const CompareTwoPage = () => {
         if (data.studios.length !== 2) {
           setSelectedStudios([])
           setSelectedStudioId(null)
-          setErrorMessage('비교할 사진관 정보를 불러오지 못했습니다.')
+          setErrorMessage(
+            '비교할 사진관 정보를 불러오지 못했습니다.',
+          )
           return
         }
 
@@ -207,11 +284,13 @@ const CompareTwoPage = () => {
 
         setSelectedStudios(studios)
         setSelectedStudioId(studios[0]?.id ?? null)
-        setShootingCategoryName(data.shootingCategoryName)
+        setShootingCategoryName(data.displayName)
       } catch {
         setSelectedStudios([])
         setSelectedStudioId(null)
-        setErrorMessage('사진관 비교 정보를 불러오지 못했습니다.')
+        setErrorMessage(
+          '사진관 비교 정보를 불러오지 못했습니다.',
+        )
       } finally {
         setIsLoading(false)
       }
@@ -241,22 +320,24 @@ const CompareTwoPage = () => {
       })
   }
 
-  const handleStudioDetail = (studioId: number) => {
+  const handleStudioDetail = (studioId: string) => {
     navigate(`/studios/${studioId}`)
   }
 
-  const handleSelectStudio = (studioId: number) => {
+  const handleSelectStudio = (studioId: string) => {
     setSelectedStudioId(studioId)
   }
 
-  const handleDeleteStudio = (studioId: number) => {
+  const handleDeleteStudio = (studioId: string) => {
     setSelectedStudios((currentStudios) => {
       const remainingStudios = currentStudios.filter(
         (studio) => studio.id !== studioId,
       )
 
       if (selectedStudioId === studioId) {
-        setSelectedStudioId(remainingStudios[0]?.id ?? null)
+        setSelectedStudioId(
+          remainingStudios[0]?.id ?? null,
+        )
       }
 
       return remainingStudios
@@ -280,15 +361,22 @@ const CompareTwoPage = () => {
   }
 
   const handleConceptList = () => {
-    if (!hasSelectedStudio || selectedStudioId === null) {
+    if (
+      !hasSelectedStudio ||
+      selectedStudioId === null
+    ) {
       return
     }
 
-    navigate(`/studios/${selectedStudioId}/concepts`)
+    navigate(
+      `/studios/${selectedStudioId}/concepts`,
+    )
   }
 
   const isConceptButtonDisabled =
-    isLoading || errorMessage !== null || !hasSelectedStudio
+    isLoading ||
+    errorMessage !== null ||
+    !hasSelectedStudio
 
   return (
     <div className="relative mx-auto min-h-dvh w-full max-w-[402px] overflow-x-hidden bg-white">
@@ -330,8 +418,12 @@ const CompareTwoPage = () => {
                   name={studio.name}
                   rating={studio.rating}
                   reviewCount={studio.reviewCount}
-                  onClick={() => handleStudioDetail(studio.id)}
-                  onDelete={() => handleDeleteStudio(studio.id)}
+                  onClick={() =>
+                    handleStudioDetail(studio.id)
+                  }
+                  onDelete={() =>
+                    handleDeleteStudio(studio.id)
+                  }
                 />
               ))}
             </section>
@@ -344,7 +436,9 @@ const CompareTwoPage = () => {
                   </p>
 
                   <p className="font-cap3 text-gray-40">
-                    {shootingCategoryName || purpose || '프로필'}
+                    {shootingCategoryName ||
+                      purpose ||
+                      '프로필'}
                   </p>
                 </div>
 
@@ -359,12 +453,19 @@ const CompareTwoPage = () => {
                       </p>
 
                       <p className="font-cap3 w-full truncate text-[#888]">
-                        {studio.compareData.description}
+                        {
+                          studio.compareData
+                            .description
+                        }
                       </p>
 
-                      {studio.compareData.badgeLabel && (
+                      {studio.compareData
+                        .badgeLabel && (
                         <span className="font-cap3 flex h-[22px] items-center justify-center rounded-full border border-gray-10 bg-brand-20 px-1.5 py-0.5 text-gray-60">
-                          {studio.compareData.badgeLabel}
+                          {
+                            studio.compareData
+                              .badgeLabel
+                          }
                         </span>
                       )}
                     </div>
@@ -378,17 +479,22 @@ const CompareTwoPage = () => {
                     key={`${studio.id}-services`}
                     className="flex min-w-0 flex-wrap items-center gap-[5px]"
                   >
-                    {studio.compareData.services.length > 0 ? (
-                      studio.compareData.services.map((service) => (
-                        <span
-                          key={service}
-                          className="font-cap3 flex h-[22px] items-center justify-center rounded-full border border-gray-10 bg-white px-2 py-0.5 text-gray-80"
-                        >
-                          {service}
-                        </span>
-                      ))
+                    {studio.compareData.services
+                      .length > 0 ? (
+                      studio.compareData.services.map(
+                        (service) => (
+                          <span
+                            key={service}
+                            className="font-cap3 flex h-[22px] items-center justify-center rounded-full border border-gray-10 bg-white px-2 py-0.5 text-gray-80"
+                          >
+                            {service}
+                          </span>
+                        ),
+                      )
                     ) : (
-                      <span className="font-b8 text-gray-40">없음</span>
+                      <span className="font-b8 text-gray-40">
+                        없음
+                      </span>
                     )}
                   </div>
                 ))}
@@ -411,7 +517,10 @@ const CompareTwoPage = () => {
                     key={`${studio.id}-reservation`}
                     className="font-b8 min-w-0 truncate text-gray-60"
                   >
-                    {studio.compareData.reservationDate}
+                    {
+                      studio.compareData
+                        .reservationDate
+                    }
                   </p>
                 ))}
               </CompareRow>
@@ -432,7 +541,8 @@ const CompareTwoPage = () => {
         <div className="flex flex-col items-center pt-3">
           <div className="flex w-full gap-2 px-5">
             {selectedStudios.map((studio) => {
-              const isSelected = selectedStudioId === studio.id
+              const isSelected =
+                selectedStudioId === studio.id
 
               return (
                 <button
@@ -444,9 +554,13 @@ const CompareTwoPage = () => {
                       ? 'font-b7 border-brand-60 bg-[rgba(254,228,235,0.3)] text-brand-80'
                       : 'font-b8 border-gray-20 bg-white text-gray-40'
                   }`}
-                  onClick={() => handleSelectStudio(studio.id)}
+                  onClick={() =>
+                    handleSelectStudio(studio.id)
+                  }
                 >
-                  <span className="truncate">{studio.name}</span>
+                  <span className="truncate">
+                    {studio.name}
+                  </span>
                 </button>
               )
             })}
@@ -455,7 +569,9 @@ const CompareTwoPage = () => {
           <div className="w-full px-5 pt-[10px] pb-5">
             <Button
               variant={
-                isConceptButtonDisabled ? 'disabled' : 'primary'
+                isConceptButtonDisabled
+                  ? 'disabled'
+                  : 'primary'
               }
               onClick={
                 isConceptButtonDisabled
@@ -472,10 +588,15 @@ const CompareTwoPage = () => {
   )
 }
 
-const CompareRow = ({ title, children }: CompareRowProps) => (
+const CompareRow = ({
+  title,
+  children,
+}: CompareRowProps) => (
   <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] py-[5px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
     <div className="px-5 py-[5px]">
-      <p className="font-b7 text-brand-100">{title}</p>
+      <p className="font-b7 text-brand-100">
+        {title}
+      </p>
     </div>
 
     <div className="grid grid-cols-2 gap-4 px-5 py-[5px]">

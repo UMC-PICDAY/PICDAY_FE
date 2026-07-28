@@ -44,7 +44,10 @@ export const getStudioProducts = (
   studioId: string,
   params?: StudioProductsParams,
 ): Promise<StudioProductsData> =>
-  apiGet<StudioProductsData>(`/api/v1/studios/${studioId}/products`, params)
+  apiGet<StudioProductsData>(
+    `/api/v1/studios/${studioId}/products`,
+    params,
+  )
 
 // 2-6. 컨셉 사진 상세
 export const getStudioProductDetail = (
@@ -60,11 +63,18 @@ export const getStudioSlots = (
   studioId: string,
   date: string,
 ): Promise<StudioTimeSlot[]> =>
-  apiGet<StudioTimeSlot[]>(`/api/v1/studios/${studioId}/slots`, { date })
+  apiGet<StudioTimeSlot[]>(
+    `/api/v1/studios/${studioId}/slots`,
+    { date },
+  )
 
 // 2-8. 헤어메이크업 연계 상세
-export const getStudioHairMakeup = (studioId: string): Promise<HairMakeupData> =>
-  apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hairMakeupDetail`)
+export const getStudioHairMakeup = (
+  studioId: string,
+): Promise<HairMakeupData> =>
+  apiGet<HairMakeupData>(
+    `/api/v1/studios/${studioId}/hairMakeupDetail`,
+  )
 
 // 최근 본 사진관 기록 — 로그인 사용자가 상세 페이지에 진입할 때만 호출
 export interface RecentStudioViewResult {
@@ -85,72 +95,90 @@ export type ShootingCategory =
   | 'FAMILY'
   | 'FRIENDSHIP'
 
+// 2-9. 비교 목적 조회
+
 export interface ComparePurposeStudio {
-  studioId: number
+  studioId: string
   studioName: string
-  shootingCategories: ShootingCategory[]
+}
+
+export interface UnsupportedCompareStudio {
+  studioId: string
+  studioName: string
+}
+
+export interface CompareShootingPurpose {
+  shootingCategory: ShootingCategory
+  displayName: string
+  supportedStudioIds: string[]
+  unsupportedStudios: UnsupportedCompareStudio[]
 }
 
 export interface ComparePurposeResponse {
   studios: ComparePurposeStudio[]
+  shootingPurposes: CompareShootingPurpose[]
 }
 
+// 2-10. 비교 결과 조회
+
 export interface CompareResultParams {
-  studioIds: number[]
+  studioIds: string[]
   shootingCategory: ShootingCategory
 }
 
 export interface CompareProductInformation {
-  price: number
-  isMine: boolean
+  minimumPrice: number
+  hasPriceRange: boolean
   comparisonSummary: string
   hasAdditionalPrice: boolean
 }
 
 export interface CompareStudioLocation {
   locationCategory: string
-  nearestStation: string
-  walkingMinutes: number
+  nearestStation: string | null
+  walkingMinutes: number | null
 }
 
 export interface CompareResultStudio {
-  studioId: number
+  studioId: string
   studioName: string
-  thumbnailUrl: string
+  thumbnailUrl: string | null
   rating: number
   reviewCount: number
-  productsInformation: CompareProductInformation
+  productInformation: CompareProductInformation
   serviceTags: string[]
-  location: CompareStudioLocation
-  earliestReservationDate: string
+  location: CompareStudioLocation | null
+  earliestReservationDate: string | null
 }
 
 export interface CompareResultResponse {
   shootingCategory: ShootingCategory
-  shootingCategoryName: string
+  displayName: string
   studios: CompareResultStudio[]
 }
 
-export const getComparePurposes = (studioIds: number[]) => {
+export const getComparePurposes = (
+  studioIds: string[],
+): Promise<ComparePurposeResponse> => {
   const searchParams = new URLSearchParams()
 
   studioIds.forEach((studioId) => {
-    searchParams.append('studioIds', String(studioId))
+    searchParams.append('studioIds', studioId)
   })
 
   return apiGet<ComparePurposeResponse>(
-    `/api/v1/studios/compare?${searchParams.toString()}`,
+    `/api/v1/studios/compare/purposes?${searchParams.toString()}`,
   )
 }
 
 export const getCompareResult = ({
   studioIds,
   shootingCategory,
-}: CompareResultParams) => {
+}: CompareResultParams): Promise<CompareResultResponse> => {
   const searchParams = new URLSearchParams()
 
   studioIds.forEach((studioId) => {
-    searchParams.append('studioIds', String(studioId))
+    searchParams.append('studioIds', studioId)
   })
 
   searchParams.append('shootingCategory', shootingCategory)

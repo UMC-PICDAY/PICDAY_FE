@@ -278,6 +278,13 @@ const MyReservationPage = () => {
         break
 
       case 'COMPLETED':
+        if (reservation.reviewId !== null) {
+          navigate(
+            `/mypage/reviews/${reservation.reviewId}`,
+          )
+          break
+        }
+
         navigate(
           `/mypage/reservations/${reservation.reservationId}/review`,
         )
@@ -295,7 +302,6 @@ const MyReservationPage = () => {
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
-
       <Profile
         variant="userInfo"
         userName="이수현"
@@ -402,6 +408,14 @@ const MyReservationPage = () => {
                   )}
                   packageName={
                     reservation.conceptName
+                  }
+                  rightButtonLabel={
+                    reservation.status ===
+                      'COMPLETED' &&
+                    reservation.reviewId !==
+                      null
+                      ? '내 리뷰 보기'
+                      : undefined
                   }
                   onLeftButtonClick={() =>
                     handleLeftButtonClick(
