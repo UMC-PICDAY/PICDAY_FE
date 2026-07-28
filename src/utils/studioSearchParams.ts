@@ -1,7 +1,13 @@
 import type { CalendarDate } from '@/components/common/Calendar'
+import {
+  getShootingCategoryLabel,
+  SHOOTING_CATEGORY_LABEL,
+} from '@/constants/shootingCategory'
+import {
+  getLocationLabel,
+  LOCATION_CATEGORY_LABEL,
+} from '@/constants/locationCategory'
 import type { StudioSort } from '@/types/studio'
-
-export const STUDIO_PURPOSES = ['증명', '프로필', '개인화보', '취업', '가족', '우정'] as const
 
 /** 백엔드 StudioSort enum 값과 표시 라벨을 한곳에서 관리합니다. */
 export const STUDIO_SORT_OPTIONS = [
@@ -19,11 +25,16 @@ export const STUDIO_SERVICE_OPTIONS = [
 
 export type StudioServiceTag = (typeof STUDIO_SERVICE_OPTIONS)[number]['value']
 
+// URL 쿼리와 API 파라미터 이름·값을 동일하게 맞춘다.
+// location/concepts/services에는 한글 라벨이 아니라 백엔드 enum 코드가 들어간다.
 export interface StudioSearchFilters {
   location?: string
   date?: string
   concepts: string[]
-  name?: string
+  /** 이름 검색(2-3-2) 대상. 있으면 통합 검색 대신 이름 검색 API를 호출한다. */
+  studioId?: number
+  /** 표시 전용. API는 studioId만 쓰지만 검색 칩에 사진관 이름을 보여주려면 필요하다. */
+  studioName?: string
   sort?: StudioSort
   minPrice?: number
   maxPrice?: number
@@ -32,19 +43,29 @@ export interface StudioSearchFilters {
 }
 
 const OWNED_PARAM_KEYS = [
-  'location',
+  'locationCategory',
   'date',
-  'concept',
-  'name',
+  'shootingCategory',
+  'studioId',
+  'studioName',
   'sort',
   'minPrice',
   'maxPrice',
-  'service',
+  'serviceCode',
   'minRating',
 ] as const
 
 const SERVICE_VALUES = new Set<string>(STUDIO_SERVICE_OPTIONS.map(({ value }) => value))
 const SORT_VALUES = new Set<string>(STUDIO_SORT_OPTIONS.map(({ value }) => value))
+
+/**
+ * 검색 위저드(B-2~B-5)는 한글 라벨('홍대')을 넘기고 API는 코드('HONGDAE')를 받는다.
+ * 코드면 그대로, 라벨이면 코드로 바꾸고, 어느 쪽도 아니면(지역칩 '전체') undefined.
+ */
+const toCode = (value: string, labels: Record<string, string>) =>
+  value in labels
+    ? value
+    : Object.keys(labels).find((code) => labels[code] === value)
 
 const uniqueNonEmpty = (values: string[]) =>
   [...new Set(values.map((value) => value.trim()).filter(Boolean))]
@@ -61,15 +82,18 @@ const parseSort = (value: string | null): StudioSort | undefined => {
 }
 
 export const parseStudioSearchParams = (params: URLSearchParams): StudioSearchFilters => ({
-  location: params.get('location')?.trim() || undefined,
+  location: params.get('locationCategory')?.trim() || undefined,
   date: params.get('date')?.trim() || undefined,
-  concepts: uniqueNonEmpty(params.getAll('concept')),
-  name: params.get('name')?.trim() || undefined,
+  concepts: uniqueNonEmpty(params.getAll('shootingCategory')).filter(
+    (value) => value in SHOOTING_CATEGORY_LABEL,
+  ),
+  studioId: parseOptionalNumber(params.get('studioId')),
+  studioName: params.get('studioName')?.trim() || undefined,
   sort: parseSort(params.get('sort')),
   minPrice: parseOptionalNumber(params.get('minPrice')),
   maxPrice: parseOptionalNumber(params.get('maxPrice')),
-  services: uniqueNonEmpty(params.getAll('service')).filter((value): value is StudioServiceTag =>
-    SERVICE_VALUES.has(value),
+  services: uniqueNonEmpty(params.getAll('serviceCode')).filter(
+    (value): value is StudioServiceTag => SERVICE_VALUES.has(value),
   ),
   minRating: parseOptionalNumber(params.get('minRating')),
 })
@@ -82,21 +106,37 @@ export const serializeStudioSearchParams = (
   const params = new URLSearchParams(baseParams)
   OWNED_PARAM_KEYS.forEach((key) => params.delete(key))
 
-  if (filters.location && filters.location !== '전체') params.set('location', filters.location)
+  const locationCategory = filters.location
+    ? toCode(filters.location, LOCATION_CATEGORY_LABEL)
+    : undefined
+  if (locationCategory) params.set('locationCategory', locationCategory)
   if (filters.date) params.set('date', filters.date)
-  filters.concepts.forEach((concept) => params.append('concept', concept))
-  if (filters.name) params.set('name', filters.name)
+  filters.concepts
+    .map((concept) => toCode(concept, SHOOTING_CATEGORY_LABEL))
+    .forEach((code) => {
+      if (code) params.append('shootingCategory', code)
+    })
+  if (filters.studioId !== undefined) params.set('studioId', String(filters.studioId))
+  if (filters.studioName) params.set('studioName', filters.studioName)
   if (filters.sort) params.set('sort', filters.sort)
   if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice))
   if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice))
-  filters.services.forEach((service) => params.append('service', service))
+  filters.services.forEach((service) => params.append('serviceCode', service))
   if (filters.minRating !== undefined) params.set('minRating', String(filters.minRating))
 
   return params
 }
 
+/**
+ * 이름 검색은 studioId 하나로 조회 가능하고,
+ * 통합 검색은 위치·날짜·컨셉 중 최소 1개가 필요하다(없으면 STUDIO_40012).
+ */
+export const isStudioNameSearch = (filters: StudioSearchFilters) =>
+  filters.studioId !== undefined
+
 export const hasBaseSearchCondition = (filters: StudioSearchFilters) =>
-  Boolean(filters.location || filters.date || filters.concepts.length > 0 || filters.name)
+  isStudioNameSearch(filters) ||
+  Boolean(filters.location || filters.date || filters.concepts.length > 0)
 
 /** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
 export const resetStudioSearchFilters = (
@@ -105,7 +145,8 @@ export const resetStudioSearchFilters = (
   location: filters.location,
   date: filters.date,
   concepts: filters.concepts,
-  name: filters.name,
+  studioId: filters.studioId,
+  studioName: filters.studioName,
   sort: undefined,
   minPrice: undefined,
   maxPrice: undefined,
@@ -143,9 +184,11 @@ const formatUrlDateForChip = (value: string) => {
 }
 
 export const buildStudioSearchChipLabel = (filters: StudioSearchFilters) => {
+  // 필터에는 코드가 들어 있으므로 칩에는 한글 라벨로 바꿔 보여준다.
   const labels = [
-    filters.concepts.join(','),
-    filters.name ?? filters.location,
+    filters.concepts.map(getShootingCategoryLabel).join(','),
+    filters.studioName ??
+      (filters.location ? getLocationLabel(filters.location) : undefined),
     filters.date ? formatUrlDateForChip(filters.date) : undefined,
   ].filter((label): label is string => Boolean(label))
 

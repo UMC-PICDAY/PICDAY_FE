@@ -8,10 +8,17 @@ export type SearchKeywordType = 'region' | 'name' | 'all'
 interface SearchDraftState {
   keyword: string
   keywordType: SearchKeywordType | null
+  // 이름 검색(2-3-2)은 이름 문자열이 아니라 자동완성에서 고른 studioId로 조회한다.
+  // keyword는 검색창 표시용으로 남는다.
+  studioId: number | null
   date: CalendarDate | null
   isDateUndecided: boolean
   purpose: string | null
-  setKeyword: (keyword: string, keywordType: SearchKeywordType) => void
+  setKeyword: (
+    keyword: string,
+    keywordType: SearchKeywordType,
+    ref?: { studioId?: number },
+  ) => void
   setDate: (date: CalendarDate) => void
   setDateUndecided: () => void
   setPurpose: (purpose: string) => void
@@ -21,10 +28,12 @@ interface SearchDraftState {
 export const useSearchDraftStore = create<SearchDraftState>((set) => ({
   keyword: '',
   keywordType: null,
+  studioId: null,
   date: null,
   isDateUndecided: false,
   purpose: null,
-  setKeyword: (keyword, keywordType) => set({ keyword, keywordType }),
+  setKeyword: (keyword, keywordType, ref) =>
+    set({ keyword, keywordType, studioId: ref?.studioId ?? null }),
   setDate: (date) => set({ date, isDateUndecided: false }),
   setDateUndecided: () => set({ date: null, isDateUndecided: true }),
   setPurpose: (purpose) => set({ purpose }),

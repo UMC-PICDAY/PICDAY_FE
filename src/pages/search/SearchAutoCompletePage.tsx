@@ -47,7 +47,11 @@ const SearchAutoCompletePage = () => {
 
   const handleConfirm = () => {
     if (isTyping) {
-      setKeywordDraft(suggestions[selectedSuggestion!].studioName, 'name')
+      // 이름 검색은 studioId로 조회하므로 선택한 항목의 id까지 함께 넘긴다.
+      const suggestion = suggestions[selectedSuggestion!]
+      setKeywordDraft(suggestion.studioName, 'name', {
+        studioId: suggestion.studioId,
+      })
     } else {
       setKeywordDraft(selectedRegion!, selectedRegion === ALL_REGION ? 'all' : 'region')
     }

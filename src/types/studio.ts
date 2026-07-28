@@ -48,14 +48,24 @@ export interface AutocompleteResult {
 export type StudioSort = 'RECOMMENDED' | 'PRICE_LOW' | 'RATING_HIGH' | 'REVIEW_COUNT'
 
 export interface StudioSearchParams {
-  location?: string
+  locationCategory?: string
   date?: string // YYYY-MM-DD
-  concept?: string[]
-  name?: string
+  shootingCategory?: string[]
   sort?: StudioSort
   minPrice?: number
   maxPrice?: number
-  service?: string[]
+  serviceCode?: string[]
+  minRating?: number
+}
+
+// 2-3-2. GET /api/v1/studios/search/name — 자동완성에서 고른 사진관 1곳을 필터와 함께 조회.
+// 응답 구조는 통합 검색과 동일하다.
+export interface StudioSearchByNameParams {
+  studioId: number
+  sort?: StudioSort
+  minPrice?: number
+  maxPrice?: number
+  serviceCode?: string[]
   minRating?: number
 }
 
@@ -76,8 +86,8 @@ export interface StudioSearchItem {
   minPrice: number
   rating: number
   reviewCount: number
-  shootingCategory: string[]
-  serviceTags: string[]
+  shootingCategories: string[]
+  serviceCodes: StudioServiceCode[]
   isWishlisted: boolean
   productSummaries: StudioSearchProductSummary[]
 }
@@ -92,15 +102,16 @@ export interface StudioRecommendItem {
   shootingCategory: string[]
 }
 
+// 통합 검색·이름 검색이 공유하는 필터 에코. 현재 화면에서 쓰는 곳은 없다.
 export interface StudioSearchAppliedFilters {
-  location: string | null
+  locationCategory: string | null
   date: string | null
-  concept: string[]
-  name: string | null
+  shootingCategories: string[]
+  studioId: number | null
   sort: StudioSort | null
   minPrice: number | null
   maxPrice: number | null
-  serviceTags: string[]
+  serviceCodes: StudioServiceCode[]
   minRating: number | null
 }
 
