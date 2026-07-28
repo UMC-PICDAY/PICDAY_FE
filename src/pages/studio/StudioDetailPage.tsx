@@ -24,6 +24,7 @@ import HairMakeupSheet from '@/pages/studio/components/HairMakeupSheet'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
+import { STUDIO_SERVICE_LABEL } from '@/constants/studioService'
 import { useStudioDetail } from '@/hooks/useStudio'
 import { saveRecentStudioView } from '@/services/studio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
@@ -39,12 +40,6 @@ const SERVICE_ICON: Record<StudioServiceCode, ComponentType<SVGProps<SVGSVGEleme
   HAIR_MAKEUP: IcBeauty,
 }
 
-const SERVICE_LABEL: Record<StudioServiceCode, string> = {
-  WIFI: '와이파이',
-  PARKING: '주차 가능',
-  COSTUME: '의상비치',
-  HAIR_MAKEUP: '헤어·메이크업 연계',
-}
 
 const stationLabel = (code: number) => {
   if (code >= 1 && code <= 9) return `${code}호선`
@@ -270,7 +265,7 @@ const StudioDetailPage = () => {
               >
                 <Icon width={24} height={24} className="text-brand-100" />
                 <span className="whitespace-nowrap font-b10 text-gray-60">
-                  {SERVICE_LABEL[code]}
+                  {STUDIO_SERVICE_LABEL[code]}
                 </span>
               </div>
             )
