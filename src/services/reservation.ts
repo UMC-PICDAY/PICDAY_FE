@@ -94,14 +94,32 @@ export const getMyReservations = (
  */
 export interface ReservationDetailData {
   reservationId: number
-  studioName: string
-  conceptName: string
-  reservationDate: string
-  reservationTime: string
   status: ReservationStatus
+  reserveeName: string
+  reserveePhone: string
   totalPrice: number
-  paymentMethod: PaymentMethod
+
+  studio: {
+    id: number
+    name: string
+  }
+
+  studioProduct: {
+    id: number
+    name: string
+    price: number
+  }
+
+  timeSlot: {
+    date: string
+    startTime: string
+    endTime: string
+  }
+
   checklist: string[]
+  reviewId: number | null
+  createdAt: string
+  cancelledAt: string | null
 }
 
 export const getReservationDetail = (
