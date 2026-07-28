@@ -88,6 +88,7 @@ const CancelCompletePage = () => {
     void fetchReservationDetail()
   }, [reservation, reservationId])
 
+
   const reservationSummary = (() => {
     if (!reservation) {
       return '예약 취소가 완료되었습니다.'
