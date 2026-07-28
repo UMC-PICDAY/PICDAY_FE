@@ -48,7 +48,7 @@ const DateChangeSheet = ({
   const [selectedDate, setSelectedDate] = useState<CalendarDate | undefined>(
     initialSelection?.date,
   )
-  const [selectedSlotId, setSelectedSlotId] = useState<string | undefined>(
+  const [selectedSlotId, setSelectedSlotId] = useState<number | undefined>(
     initialSelection?.slotId,
   )
 

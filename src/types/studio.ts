@@ -191,21 +191,18 @@ export interface StudioDetail {
 // ===== 2-5. GET /api/v1/studios/{studioId}/products =====
 
 export interface StudioProductsParams {
-  date?: string // YYYY-MM-DD
-  time?: string // HH:mm
+  timeSlotId?: number
 }
 
 export interface StudioProduct {
-  productId: number
+  studioProductId: number
   productName: string
-  imageUrls: string // 명세상 단수 문자열
+  imageUrls: string[]
   imageCount: number
   price: number
   basePeople: number
-  shortDescription: string
-  description: string
-  // date·time 둘 다 있을 때만 boolean, 하나라도 없으면 null → 예약 버튼 비활성화
-  isAvailable: boolean | null
+  // 서버가 null을 내려주는 상품이 있어 nullable
+  shortDescription: string | null
 }
 
 export interface StudioProductGroup {
@@ -213,11 +210,21 @@ export interface StudioProductGroup {
   products: StudioProduct[]
 }
 
+// 예약 가능 여부는 상품이 아니라 슬롯 단위다.
+// 같은 timeSlot을 예약하면 그 사진관의 해당 시간대가 통째로 점유되기 때문.
+export interface StudioSelectedSlot {
+  timeSlotId: number
+  date: string // YYYY-MM-DD
+  startTime: string
+  endTime: string
+  isAvailable: boolean
+}
+
 export interface StudioProductsData {
   studioId: number
   studioName: string
-  selectedDate: string | null
-  selectedTime: string | null
+  // timeSlotId 없이 조회하면 null
+  selectedSlot: StudioSelectedSlot | null
   productGroups: StudioProductGroup[]
 }
 
@@ -235,7 +242,8 @@ export interface StudioProductDetail {
 // ===== 2-7. GET /api/v1/studios/{studioId}/slots =====
 
 export interface StudioTimeSlot {
-  slotId: string
+  // 2-5의 timeSlotId와 같은 값 (엔드포인트마다 이름만 다름)
+  slotId: number
   startTime: string
   endTime: string
   isAvailable: boolean
@@ -244,7 +252,7 @@ export interface StudioTimeSlot {
 // 날짜/시간 선택 화면 상태 (컨셉 목록·예약 흐름에서 사용)
 export interface StudioDateTimeSelection {
   date: CalendarDate
-  slotId: string
+  slotId: number
   startTime: string
   endTime: string
 }

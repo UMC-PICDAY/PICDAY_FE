@@ -55,13 +55,10 @@ const ConceptListPage = () => {
   const entryHandledRef = useRef(false)
   const [favorited, setFavorited] = useState(false)
 
-  const apiDate = dateTimeSelection ? toApiDate(dateTimeSelection.date) : undefined
-  const apiTime = dateTimeSelection?.startTime
-
-  // 날짜·시간이 정해지면 상품별 isAvailable이 반영되도록 재조회한다.
+  // 시간대가 정해지면 응답에 selectedSlot(예약 가능 여부)이 실리도록 재조회한다.
   const { data: products } = useStudioProducts(
     studioId,
-    apiDate && apiTime ? { date: apiDate, time: apiTime } : undefined,
+    dateTimeSelection ? { timeSlotId: dateTimeSelection.slotId } : undefined,
   )
 
   // 상품 목록 응답엔 찜 상태가 없어, 상세 조회(캐시 공유)에서 초기값을 가져온다.
@@ -150,7 +147,8 @@ const ConceptListPage = () => {
       return
     }
 
-    if (product.isAvailable === false) {
+    // 가용 여부는 슬롯 단위. 시트에서 이미 걸러지지만, 그 사이 선점된 경우를 막는다.
+    if (products?.selectedSlot?.isAvailable === false) {
       showReservationToast('선택하신 시간엔 예약할 수 없어요')
       return
     }
@@ -164,11 +162,11 @@ const ConceptListPage = () => {
       state: {
         reservation: {
           studioId: Number(studioId),
-          studioProductId: product.productId,
-          timeSlotId: Number(dateTimeSelection.slotId),
+          studioProductId: product.studioProductId,
+          timeSlotId: dateTimeSelection.slotId,
           studioName: products?.studioName ?? '',
           conceptName: product.productName,
-          includedItems: product.shortDescription.split(' · '),
+          includedItems: product.shortDescription?.split(' · ') ?? [],
           reservationDateTime: `${selectedDate.replaceAll('-', '.')} ${selectedTime}`,
           reserverName: '',
           reserverPhone: '',
@@ -210,15 +208,17 @@ const ConceptListPage = () => {
             <div className="flex flex-col items-center gap-3">
               {group.products.map((product) => (
                 <CardStudioDetail
-                  key={product.productId}
+                  key={product.studioProductId}
                   name={product.productName}
                   description={`기준 ${product.basePeople}인`}
-                  optionText={product.shortDescription}
+                  optionText={product.shortDescription ?? undefined}
                   price={`₩${product.price.toLocaleString()}`}
-                  imageSrc={product.imageUrls}
+                  imageSrc={product.imageUrls[0]}
                   totalImages={product.imageCount}
                   onDetailClick={() =>
-                    navigate(`/studios/${studioId}/concepts/${product.productId}`)
+                    navigate(
+                      `/studios/${studioId}/concepts/${product.studioProductId}`,
+                    )
                   }
                   onReserveClick={() => handleReserve(product)}
                 />

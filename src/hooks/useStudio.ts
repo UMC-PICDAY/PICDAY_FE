@@ -46,13 +46,13 @@ export const useStudioDetail = (studioId: string | undefined) =>
     enabled: Boolean(studioId),
   })
 
-// 2-5. 컨셉(상품) 목록 — date·time이 둘 다 있으면 상품별 isAvailable 반영.
+// 2-5. 컨셉(상품) 목록 — timeSlotId를 넘기면 응답에 selectedSlot이 실린다.
 export const useStudioProducts = (
   studioId: string | undefined,
   params?: StudioProductsParams,
 ) =>
   useQuery({
-    queryKey: ['studioProducts', studioId, params?.date ?? null, params?.time ?? null],
+    queryKey: ['studioProducts', studioId, params?.timeSlotId ?? null],
     queryFn: () => getStudioProducts(studioId ?? '', params),
     enabled: Boolean(studioId),
   })
