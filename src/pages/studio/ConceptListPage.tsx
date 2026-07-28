@@ -7,6 +7,7 @@ import Toast from '@/components/common/Toast'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import DateChangeSheet from '@/pages/studio/components/DateChangeSheet'
+import { getShootingCategoryLabel } from '@/constants/shootingCategory'
 import { useStudioDetail, useStudioProducts, useStudioSlots } from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import type { StudioDateTimeSelection, StudioProduct } from '@/types/studio'
@@ -16,16 +17,6 @@ import type { CalendarDate } from '@/components/common/Calendar'
 interface ReservationToast {
   id: number
   message: string
-}
-
-// 촬영 컨셉 ENUM → 표시 라벨
-const SHOOTING_CATEGORY_LABEL: Record<string, string> = {
-  ID_PHOTO: '증명',
-  PROFILE: '프로필',
-  PERSONAL_PORTRAIT: '개인화보',
-  JOB_PHOTO: '취업',
-  FAMILY: '가족',
-  FRIENDSHIP: '우정',
 }
 
 const formatDate = ({ year, month, day }: CalendarDate) =>
@@ -202,8 +193,7 @@ const ConceptListPage = () => {
         {products?.productGroups.map((group) => (
           <section key={group.shootingCategory}>
             <h2 className="pb-3 pt-5 font-b3 text-black">
-              {SHOOTING_CATEGORY_LABEL[group.shootingCategory] ??
-                group.shootingCategory}
+              {getShootingCategoryLabel(group.shootingCategory)}
             </h2>
             <div className="flex flex-col items-center gap-3">
               {group.products.map((product) => (
