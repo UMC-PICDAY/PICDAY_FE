@@ -62,6 +62,7 @@ interface NavigationState {
   shootingCategory?: ShootingCategory
   purpose?: string
   studios?: NavigationStudio[]
+  studioSearch?: string
 }
 
 interface CompareRowProps {
@@ -190,6 +191,7 @@ const CompareTwoPage = () => {
   const shootingCategory =
     navigationState?.shootingCategory
   const purpose = navigationState?.purpose
+  const studioSearch = navigationState?.studioSearch ?? ''
 
   const [selectedStudios, setSelectedStudios] = useState<
     SelectedStudio[]
@@ -304,12 +306,18 @@ const CompareTwoPage = () => {
           currentStudioIds.length > 0
             ? currentStudioIds
             : initialStudioIds,
+        purpose: shootingCategoryName || purpose,
+        studioSearch,
       },
     })
   }
 
   const handleClose = () => {
-    navigate('/studios')
+    navigate(
+      {
+        pathname: '/studios',
+        search: studioSearch,
+      })
   }
 
   const handleStudioDetail = (studioId: string) => {
@@ -337,14 +345,19 @@ const CompareTwoPage = () => {
   }
 
   const handleAddStudio = () => {
-    navigate('/studios', {
+    navigate(
+      {
+        pathname: '/studios', 
+        search: studioSearch,
+      },
+      {
       state: {
         studioIds: currentStudioIds,
         selectedStudios,
         purpose: shootingCategoryName || purpose,
         shootingCategory,
       },
-    })
+    },)
   }
 
   const handleConceptList = () => {

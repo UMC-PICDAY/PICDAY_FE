@@ -7,11 +7,15 @@ import MiniTitle from '@/components/common/MiniTitle'
 import SearchField from '@/components/common/SearchField'
 import FilterChip from '@/components/common/FilterChip'
 import Button from '@/components/common/Button'
+import { getLocationLabel } from '@/constants/locationCategory'
 import { useSearchDraftStore } from '@/stores/useSearchDraftStore'
 import { autocompleteStudios } from '@/services/studio'
 import type { AutocompleteSuggestion } from '@/types/studio'
 
-const REGION_CHIPS = ['전체', '홍대', '강남', '성수', '연남', '건대', '신촌', '잠실', '압구정', '혜화', '종로']
+/** 지역 필터 해제를 뜻하는 칩. 값이 아니라 '지역 조건 없음'이므로 draft에 저장하지 않는다. */
+const ALL_REGION = '전체'
+
+const REGION_CHIPS = [ALL_REGION, '홍대', '강남', '성수', '연남', '건대', '신촌', '잠실', '압구정', '혜화', '종로']
 
 const AUTOCOMPLETE_DEBOUNCE_MS = 250
 
@@ -45,7 +49,7 @@ const SearchAutoCompletePage = () => {
     if (isTyping) {
       setKeywordDraft(suggestions[selectedSuggestion!].studioName, 'name')
     } else {
-      setKeywordDraft(selectedRegion!, 'region')
+      setKeywordDraft(selectedRegion!, selectedRegion === ALL_REGION ? 'all' : 'region')
     }
     navigate('/search')
   }
@@ -76,7 +80,7 @@ const SearchAutoCompletePage = () => {
                 variant="result"
                 position={index === 0 ? 'top' : index === suggestions.length - 1 ? 'bottom' : 'middle'}
                 resultLabel={suggestion.studioName}
-                resultMeta={suggestion.locationCategory}
+                resultMeta={getLocationLabel(suggestion.locationCategory)}
                 selected={selectedSuggestion === index}
                 onResultClick={() => setSelectedSuggestion(index)}
               />

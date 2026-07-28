@@ -2,9 +2,13 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type {
   PointerEvent as ReactPointerEvent,
   KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
 } from 'react'
 
 export type SheetSnap = 'collapsed' | 'half' | 'expanded'
+
+/** 드래그를 시작한 표면. 끝난 뒤 어떤 클릭을 막을지 판단하는 데 쓴다. */
+type DragSource = 'handle' | 'list'
 
 interface UseBottomSheetSnapOptions {
   snap: SheetSnap
@@ -101,14 +105,15 @@ export const useBottomSheetSnap = ({
     lastTime: number
     velocity: number
     moved: boolean
-    suppressClickAfterEnd: boolean
+    source: DragSource
   } | null>(null)
   const pendingList = useRef<{ startY: number } | null>(null)
   const suppressClick = useRef(false)
+  const suppressListClick = useRef(false)
 
   const clamp = (value: number) => clampOffset(value, collapsedOffset)
 
-  const beginDrag = (clientY: number, suppressClickAfterEnd: boolean) => {
+  const beginDrag = (clientY: number, source: DragSource) => {
     drag.current = {
       startY: clientY,
       startOffset: targetOffset,
@@ -116,7 +121,7 @@ export const useBottomSheetSnap = ({
       lastTime: performance.now(),
       velocity: 0,
       moved: false,
-      suppressClickAfterEnd,
+      source,
     }
     setIsDragging(true)
     setDragOffset(targetOffset)
@@ -139,7 +144,10 @@ export const useBottomSheetSnap = ({
     if (!state) return
     const current = clamp(state.startOffset + (state.lastY - state.startY))
     const decided = decideSnap(current, state.velocity, offsets, snap)
-    suppressClick.current = state.moved && state.suppressClickAfterEnd
+    suppressClick.current = state.moved && state.source === 'handle'
+    // 카드 위에서 드래그를 끝내면 브라우저가 click을 이어 발생시키므로,
+    // 의도치 않은 사진관 상세 이동을 막는다.
+    suppressListClick.current = state.moved && state.source === 'list'
     drag.current = null
     pendingList.current = null
     setIsDragging(false)
@@ -168,7 +176,7 @@ export const useBottomSheetSnap = ({
     onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
       suppressClick.current = false
       event.currentTarget.setPointerCapture?.(event.pointerId)
-      beginDrag(event.clientY, true)
+      beginDrag(event.clientY, 'handle')
     },
     onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
       if (drag.current) moveDrag(event.clientY)
@@ -204,14 +212,16 @@ export const useBottomSheetSnap = ({
     },
   }
 
-  // expanded 목록 최상단에서 아래로 당길 때만 시트 드래그로 넘긴다.
+  // 목록도 시트 조작 표면으로 쓴다.
+  // - expanded: 스크롤이 우선이라 최상단에서 아래로 당길 때만 시트로 넘긴다.
+  // - half: 목록이 스크롤되지 않으므로 위아래 어느 쪽 드래그든 시트를 움직인다.
   const listHandlers = {
     onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (snap !== 'expanded') return
+      suppressListClick.current = false
       const list = listRef.current
-      if (list && list.scrollTop <= 0) {
-        pendingList.current = { startY: event.clientY }
-      }
+      if (!list) return
+      if (snap === 'expanded' && list.scrollTop > 0) return
+      pendingList.current = { startY: event.clientY }
     },
     onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => {
       if (drag.current) {
@@ -222,12 +232,17 @@ export const useBottomSheetSnap = ({
       const list = listRef.current
       if (!pending || !list) return
       const delta = event.clientY - pending.startY
-      if (delta > DRAG_THRESHOLD && list.scrollTop <= 0) {
+      const shouldDrag =
+        snap === 'expanded'
+          ? delta > DRAG_THRESHOLD && list.scrollTop <= 0
+          : Math.abs(delta) > DRAG_THRESHOLD
+
+      if (shouldDrag) {
         event.currentTarget.setPointerCapture?.(event.pointerId)
-        beginDrag(pending.startY, false)
+        beginDrag(pending.startY, 'list')
         pendingList.current = null
         moveDrag(event.clientY)
-      } else if (delta < 0) {
+      } else if (snap === 'expanded' && delta < 0) {
         pendingList.current = null
       }
     },
@@ -242,6 +257,12 @@ export const useBottomSheetSnap = ({
     },
     onPointerCancel: () => {
       cancelDrag()
+    },
+    onClickCapture: (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (!suppressListClick.current) return
+      suppressListClick.current = false
+      event.preventDefault()
+      event.stopPropagation()
     },
   }
 

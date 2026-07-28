@@ -699,10 +699,10 @@ const InfoField = ({
       autoComplete={
         type === 'tel' ? 'tel' : 'name'
       }
-      className={`font-b7 w-full rounded-lg bg-[rgba(254,228,235,0.3)] px-3 py-[10px] text-gray-80 outline-none placeholder:text-gray-40 focus:ring-1 ${
+      className={`font-b7 w-full rounded-lg bg-[rgba(254,228,235,0.3)] px-3 py-[10px] text-gray-80 outline-none placeholder:text-gray-40 ${
         errorMessage
           ? 'ring-1 ring-[#FF3B5B]'
-          : 'focus:ring-brand-100'
+          : ''
       }`}
     />
 

@@ -89,11 +89,16 @@ const CancelCompletePage = () => {
   }, [reservation, reservationId])
 
   const reservationSummary = reservation
-    ? `${reservation.studioName} · ${formatReservationDateTime(
+  ? 'studio' in reservation
+    ? `${reservation.studio.name} · ${formatReservationDateTime(
+        reservation.timeSlot.date,
+        reservation.timeSlot.startTime,
+      )}`
+    : `${reservation.studioName} · ${formatReservationDateTime(
         reservation.reservationDate,
         reservation.reservationTime,
       )}`
-    : '예약 취소가 완료되었습니다.'
+  : '예약 취소가 완료되었습니다.'
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-[402px] flex-col bg-white">

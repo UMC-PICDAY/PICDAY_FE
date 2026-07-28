@@ -31,6 +31,7 @@ export interface ReviewListItem {
   likeCount: number
   isLiked: boolean
   isBest: boolean
+  conceptName: string
   createdAt: string
 }
 

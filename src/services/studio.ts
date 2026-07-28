@@ -1,6 +1,6 @@
 // 홈(2-1)·자동완성(2-2)은 PICDAY_API_Spec.md 확정본 기준 (김이준 담당분)
 // 비교(2-9, 2-10)는 전지혜 담당분. 검색·상세·상품·슬롯·헤어메이크업(2-3~2-8)은 남현준 담당분.
-import { apiGet } from '@/services/client'
+import { apiGet, apiPost } from '@/services/client'
 import type {
   AutocompleteResult,
   HairMakeupData,
@@ -16,7 +16,13 @@ import type {
 
 // ===== 2-1. 홈 / 2-2. 자동완성 (김이준) =====
 
-export const getHome = () => apiGet<HomeResult>('/api/v1/home')
+export interface HomeParams {
+  latitude?: number
+  longitude?: number
+}
+
+// latitude·longitude가 모두 있으면 위치 기준, 없으면 기본 지역(홍대) 기준으로 응답
+export const getHome = (params?: HomeParams) => apiGet<HomeResult>('/api/v1/home', params)
 
 export const autocompleteStudios = (keyword: string) =>
   apiGet<AutocompleteResult>('/api/v1/studios/autocomplete', { keyword })
@@ -69,6 +75,15 @@ export const getStudioHairMakeup = (
   apiGet<HairMakeupData>(
     `/api/v1/studios/${studioId}/hairMakeupDetail`,
   )
+
+// 최근 본 사진관 기록 — 로그인 사용자가 상세 페이지에 진입할 때만 호출
+export interface RecentStudioViewResult {
+  studioId: number
+  viewedAt: string
+}
+
+export const saveRecentStudioView = (studioId: string): Promise<RecentStudioViewResult> =>
+  apiPost<RecentStudioViewResult>(`/api/v1/studios/${studioId}/recent-view`)
 
 // ===== 2-9. 비교 목적 / 2-10. 비교 결과 (전지혜) =====
 

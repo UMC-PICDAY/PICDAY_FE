@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
 import Toast from '@/components/common/Toast'
@@ -14,9 +14,9 @@ import {
   IcStar,
   IcWifi,
 } from '@/components/icons'
+import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
 import NavigationBarTransparent from '@/components/layout/NavigationBarTransparent'
-import TabBarUser from '@/components/layout/TabBarUser'
 
 import BottomSheet from '@/pages/studio/components/BottomSheet'
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
@@ -25,15 +25,25 @@ import ReviewCard from '@/pages/studio/components/ReviewCard'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { useStudioDetail } from '@/hooks/useStudio'
+import { saveRecentStudioView } from '@/services/studio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
+import { useAuthStore } from '@/stores/useAuthStore'
+import type { StudioServiceCode } from '@/types/studio'
 
 type OpenSheet = 'info' | 'hairmakeup' | null
 
-const SERVICE_ICON: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+const SERVICE_ICON: Record<StudioServiceCode, ComponentType<SVGProps<SVGSVGElement>>> = {
   WIFI: IcWifi,
   PARKING: IcParking,
   COSTUME: IcClothing,
   HAIR_MAKEUP: IcBeauty,
+}
+
+const SERVICE_LABEL: Record<StudioServiceCode, string> = {
+  WIFI: '와이파이',
+  PARKING: '주차 가능',
+  COSTUME: '의상비치',
+  HAIR_MAKEUP: '헤어·메이크업 연계',
 }
 
 const stationLabel = (code: number) => {
@@ -56,25 +66,54 @@ const Divider = () => <div className="h-1.5 w-full bg-gray-10" />
 const StudioDetailPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
-  const [searchParams] = useSearchParams()
-  const { data: detail } = useStudioDetail(studioId)
+  const { data: detail, isError, refetch } = useStudioDetail(studioId)
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
   const [introExpanded, setIntroExpanded] = useState(false)
+  const [introOverflow, setIntroOverflow] = useState(false)
+  const introRef = useRef<HTMLParagraphElement>(null)
 
   // 상세 로드 시 서버의 찜 상태로 초기화 (토글은 handleToggleFavorite에서 위시리스트 API 호출)
   useEffect(() => {
     if (detail) setFavorited(detail.isWishlisted)
   }, [detail])
 
+  // 로그인 사용자가 상세에 진입할 때만 최근 본 사진관으로 기록. 실패해도 화면엔 영향 없음.
+  useEffect(() => {
+    if (!isLoggedIn || !studioId) return
+    saveRecentStudioView(studioId).catch(() => {})
+  }, [isLoggedIn, studioId])
+
+  // 소개 글이 3줄을 넘길 때만 더보기/접기 버튼 노출
+  // (펼친 상태에서는 clamp가 풀려 측정이 불가하므로 접힌 상태에서만 측정)
+  useEffect(() => {
+    const el = introRef.current
+    if (!el || introExpanded) return
+
+    let alive = true
+    const measure = () => {
+      if (alive) setIntroOverflow(el.scrollHeight > el.clientHeight + 1)
+    }
+
+    measure()
+    document.fonts?.ready.then(measure)
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+
+    return () => {
+      alive = false
+      observer.disconnect()
+    }
+  }, [detail?.introduction, introExpanded])
+
   const closeSheet = () => setOpenSheet(null)
   const goToReviews = () => navigate(`/studios/${studioId}/reviews`)
   const goToConcepts = () => navigate(`/studios/${studioId}/concepts`)
 
-  const fullAddress = detail
-    ? `${detail.mainAddress} ${detail.subAddress}`
-    : ''
+  const fullAddress = detail?.location.address ?? ''
 
   const handleToggleFavorite = async () => {
     if (!studioId) return
@@ -103,7 +142,7 @@ const StudioDetailPage = () => {
       .catch(() => {})
   }
 
-  if (searchParams.get('state') === 'error') {
+  if (isError) {
     return (
       <div className="flex min-h-dvh flex-col bg-white">
         <NavigationBar variant="default" showRight={false} onBack={() => navigate(-1)} />
@@ -111,9 +150,10 @@ const StudioDetailPage = () => {
           <ErrorNotice
             icon={<IcError width={48} height={48} className="text-brand-80" />}
             title="정보를 불러오지 못했어요"
+            onRetry={() => refetch()}
           />
         </div>
-        <TabBarUser activeTab="search" />
+        <AppTabBar activeTab="search" />
       </div>
     )
   }
@@ -127,22 +167,30 @@ const StudioDetailPage = () => {
   }
 
   const stationLine = [
-    ...detail.stationDetail.map(stationLabel).filter(Boolean),
-    detail.nearestStation,
+    ...detail.location.stationLineCodes.map(stationLabel).filter(Boolean),
+    detail.location.nearestStation,
   ].join(' · ')
-  const services = detail.studioService.filter(
-    (service) => SERVICE_ICON[service.serviceCode],
-  )
-  const bestReview = detail.review.items[0]
+  const services = detail.serviceCodes.filter((code) => SERVICE_ICON[code])
+  const infoBullets = [
+    ...detail.studioInfo.operation,
+    ...detail.studioInfo.parking,
+    ...detail.studioInfo.shootingGuide,
+    ...detail.studioInfo.refundGuide,
+  ]
+  const bestReview = detail.reviewSummary.previewReview
+  const avgRatingText =
+    detail.reviewSummary.averageRating != null
+      ? detail.reviewSummary.averageRating.toFixed(1)
+      : '0.0'
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-white pb-24">
       {/* 히어로 */}
       <div className="relative h-[302px] w-full shrink-0">
         <img
-          src={detail.thumbnailUrl}
+          src={detail.imageUrls[0] ?? undefined}
           alt={detail.studioName}
-          className="size-full object-cover"
+          className="size-full bg-gray-10 object-cover"
         />
         <div className="absolute inset-x-0 top-0">
           <NavigationBarTransparent
@@ -157,20 +205,18 @@ const StudioDetailPage = () => {
       <div className="px-5 py-3">
         <h1 className="py-2 font-h3 text-black">{detail.studioName}</h1>
         <div className="flex items-center pb-1 font-b6 text-gray-60">
-          <IcPin width={20} height={20} className="shrink-0" />
+          <IcPin width={20} height={20} className="shrink-0 text-brand-100" />
           <span>
-            {detail.nearestStation} 도보 {detail.walkingMinute}분
+            {detail.location.nearestStation} 도보 {detail.location.walkingMinutes}분
           </span>
           <span className="px-1">|</span>
-          <span>{detail.mainAddress}</span>
+          <span>{detail.location.address}</span>
         </div>
         <button type="button" onClick={goToReviews} className="flex items-center pb-2">
           <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
-          <span className="pl-0.5 font-b7 text-black">
-            {detail.review.summary.avgRating.toFixed(1)}
-          </span>
+          <span className="pl-0.5 font-b7 text-black">{avgRatingText}</span>
           <span className="pl-0.5 font-b7 text-gray-40">
-            ({detail.review.summary.totalCount}개 평가)
+            ({detail.reviewSummary.reviewCount}개 평가)
           </span>
           <IcRight width={20} height={20} className="text-gray-40" />
         </button>
@@ -179,14 +225,14 @@ const StudioDetailPage = () => {
       <Divider />
 
       {/* 촬영 컨셉 */}
-      <section className="px-5">
+      <section className="px-5 pb-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">촬영 컨셉</h2>
         <CardPortfolioGrid
           className="flex w-full items-center justify-center gap-2"
-          items={detail.conceptPreview.map((concept) => ({
-            imageSrc: concept.thumbnailUrl,
-            title: concept.productName,
-            price: `₩${concept.price.toLocaleString()}~`,
+          items={detail.representativeProducts.map((product) => ({
+            imageSrc: product.thumbnailUrl,
+            title: product.productName,
+            price: `₩${product.price.toLocaleString()}~`,
           }))}
         />
         <button
@@ -207,16 +253,16 @@ const StudioDetailPage = () => {
           <h2 className="flex-1 font-b3 text-black">편의시설 및 서비스</h2>
         </div>
         <div className="flex items-center justify-around pb-5">
-          {services.map((service) => {
-            const Icon = SERVICE_ICON[service.serviceCode]
+          {services.map((code) => {
+            const Icon = SERVICE_ICON[code]
             return (
               <div
-                key={service.serviceCode}
+                key={code}
                 className="flex h-[48px] w-[68px] flex-col items-center justify-center gap-1"
               >
                 <Icon width={24} height={24} className="text-brand-100" />
                 <span className="whitespace-nowrap font-b10 text-gray-60">
-                  {service.serviceName}
+                  {SERVICE_LABEL[code]}
                 </span>
               </div>
             )
@@ -230,13 +276,13 @@ const StudioDetailPage = () => {
       <section className="px-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">위치 및 주변 정보</h2>
         <StudioLocationMap
-          latitude={detail.latitude}
-          longitude={detail.longitude}
+          latitude={detail.location.latitude}
+          longitude={detail.location.longitude}
           studioName={detail.studioName}
         />
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center">
-            <IcPin width={20} height={20} className="shrink-0" />
+            <IcPin width={20} height={20} className="shrink-0 text-brand-100" />
             <span className="font-b4 text-black">{fullAddress}</span>
           </div>
           <button
@@ -248,7 +294,7 @@ const StudioDetailPage = () => {
           </button>
         </div>
         <ul className="flex flex-col gap-1 pb-5">
-          <Bullet text={`${detail.nearestStation} 도보 ${detail.walkingMinute}분`} />
+          <Bullet text={`${detail.location.nearestStation} 도보 ${detail.location.walkingMinutes}분`} />
           {stationLine && <Bullet text={stationLine} />}
         </ul>
       </section>
@@ -256,38 +302,47 @@ const StudioDetailPage = () => {
       <Divider />
 
       {/* 사진관 소개 */}
-      <section className="px-5">
-        <h2 className="pb-3 pt-5 font-b3 text-black">사진관 소개</h2>
-        <p className={`font-b6 text-gray-80${introExpanded ? '' : ' line-clamp-3'}`}>
-          {detail.introduction}
-        </p>
-        {!introExpanded && (
-          <button
-            type="button"
-            onClick={() => setIntroExpanded(true)}
-            className="mt-5 flex w-full items-center justify-center rounded-lg border border-brand-100 px-5 py-3 font-b3 text-brand-100"
-          >
-            더보기
-          </button>
-        )}
-      </section>
+      {detail.introduction && (
+        <>
+          <section className="px-5 pb-5">
+            <h2 className="pb-3 pt-5 font-b3 text-black">사진관 소개</h2>
+            <p ref={introRef} className={`font-b6 text-gray-80${introExpanded ? '' : ' line-clamp-3'}`}>
+              {detail.introduction}
+            </p>
+            {introOverflow && (
+              <button
+                type="button"
+                onClick={() => setIntroExpanded((prev) => !prev)}
+                aria-expanded={introExpanded}
+                className="mt-5 flex w-full items-center justify-center rounded-lg border border-brand-100 px-5 py-3 font-b3 text-brand-100"
+              >
+                {introExpanded ? '접기' : '더보기'}
+              </button>
+            )}
+          </section>
 
-      <Divider />
+          <Divider />
+        </>
+      )}
 
       {/* 공지사항 */}
-      <section className="px-5 py-5">
-        <h2 className="pb-3 font-b3 text-black">공지사항</h2>
-        <div className="rounded-xl bg-brand-20 px-3 py-2">
-          <p className="py-2 font-b7 text-black">예약 및 촬영 안내</p>
-          <ul className="flex flex-col gap-1 pb-1">
-            {detail.notice.split('\n').map((line, index) => (
-              <Bullet key={index} text={line} />
-            ))}
-          </ul>
-        </div>
-      </section>
+      {detail.notice && (
+        <>
+          <section className="px-5 py-5">
+            <h2 className="pb-3 font-b3 text-black">공지사항</h2>
+            <div className="rounded-xl bg-brand-20 px-3 py-2">
+              <p className="py-2 font-b7 text-black">{detail.notice.title}</p>
+              <ul className="flex flex-col gap-1 pb-1">
+                {detail.notice.items.map((line, index) => (
+                  <Bullet key={index} text={line} />
+                ))}
+              </ul>
+            </div>
+          </section>
 
-      <Divider />
+          <Divider />
+        </>
+      )}
 
       {/* 사진관 이용 정보 */}
       <section className="px-5 py-5">
@@ -299,15 +354,11 @@ const StudioDetailPage = () => {
           <h2 className="flex-1 text-left font-b3 text-black">사진관 이용 정보</h2>
           <IcRight width={24} height={24} className="text-gray-40" />
         </button>
-        {detail.studioInfo.map((section) => (
-          <div key={section.infoSectionId} className="pb-2">
-            <ul className="flex flex-col gap-1">
-              {section.content.split('\n').map((line, index) => (
-                <Bullet key={index} text={line} />
-              ))}
-            </ul>
-          </div>
-        ))}
+        <ul className="flex flex-col gap-1">
+          {infoBullets.map((line, index) => (
+            <Bullet key={index} text={line} />
+          ))}
+        </ul>
       </section>
 
       <Divider />
@@ -323,7 +374,7 @@ const StudioDetailPage = () => {
           <IcRight width={24} height={24} className="text-gray-40" />
         </button>
         <p className="font-b6 text-gray-80">
-          제휴 헤어메이크업샵 {detail.hairMakeupPartnersCount}곳
+          제휴 헤어메이크업샵 {detail.hairMakeupPartnerCount}곳
         </p>
       </section>
 
@@ -338,11 +389,9 @@ const StudioDetailPage = () => {
         >
           <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
           <span className="flex-1 pl-1 text-left">
-            <span className="font-b3 text-black">
-              {detail.review.summary.avgRating.toFixed(1)}
-            </span>
+            <span className="font-b3 text-black">{avgRatingText}</span>
             <span className="pl-1 font-b6 text-gray-60">
-              ({detail.review.summary.totalCount}개 평가)
+              ({detail.reviewSummary.reviewCount}개 평가)
             </span>
           </span>
           <IcRight width={24} height={24} className="text-gray-40" />
@@ -352,10 +401,9 @@ const StudioDetailPage = () => {
             reviewerName={bestReview.writerNickname}
             isBest={bestReview.isBest}
             rating={bestReview.rating}
-            date={bestReview.createdAt.slice(0, 10).replaceAll('-', '.')}
-            conceptTitle={bestReview.conceptName}
+            date={bestReview.createdAt ? bestReview.createdAt.slice(0, 10).replaceAll('-', '.') : ''}
             body={bestReview.content}
-            photos={bestReview.images}
+            photos={bestReview.imageUrls}
           />
         )}
       </section>
@@ -389,7 +437,7 @@ const StudioDetailPage = () => {
 
       {openSheet === 'info' && (
         <BottomSheet dim onClose={closeSheet}>
-          <StudioInfoSheet sections={detail.studioInfo} onClose={closeSheet} />
+          <StudioInfoSheet sections={infoBullets} onClose={closeSheet} />
         </BottomSheet>
       )}
       {openSheet === 'hairmakeup' && (

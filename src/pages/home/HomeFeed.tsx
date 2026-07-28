@@ -7,13 +7,15 @@ import SearchField from '@/components/common/SearchField'
 import Title from '@/components/common/Title'
 import CardStudioLarge from '@/components/cards/CardStudioLarge'
 import CardStudio from '@/components/cards/CardStudio'
+import { getLocationLabel } from '@/constants/locationCategory'
 import { getHome } from '@/services/studio'
 import type { StudioSummary } from '@/types/studio'
 
 const HORIZONTAL_SCROLL_CLASS =
   'flex w-full gap-3 overflow-x-auto px-5 pb-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
-const formatPrice = (minPrice: number) => `₩${minPrice.toLocaleString()}~`
+const formatPrice = (minPrice: number | null) =>
+  minPrice === null ? '가격 정보 없음' : `₩${minPrice.toLocaleString()}~`
 
 // 앞뒤로 마지막/첫 배너를 하나씩 복제해 무한 순환처럼 보이게 함 (index 0 = 복제된 마지막, 1~N = 실제, N+1 = 복제된 1번)
 const getRealCardNumber = (renderedIndex: number, bannerCount: number) => {
@@ -38,13 +40,51 @@ const centerItemAt = (container: HTMLDivElement, renderedIndex: number) => {
  * Figma A-1(비로그인 홈)/B-1(로그인 후 홈) 공통 컨텐츠 (검색창 + 캐러셀 + 사진관 리스트 3종)
  * 두 홈은 하단 탭바만 다르고 이 영역은 동일해서 공유함
  */
+const GEOLOCATION_TIMEOUT_MS = 3000
+
 const HomeFeed = () => {
   const navigate = useNavigate()
   const largeCardScrollRef = useRef<HTMLDivElement>(null)
   const [activeRenderedIndex, setActiveRenderedIndex] = useState(1)
   const activeRenderedIndexRef = useRef(1)
 
-  const { data } = useQuery({ queryKey: ['home'], queryFn: getHome })
+  // 위치 권한이 없거나 응답이 늦어도 홈이 무한정 안 뜨지 않도록, 짧은 타임아웃 안에 시도만 하고
+  // 못 받으면 좌표 없이(기본 지역 기준) 먼저 홈을 요청한다.
+  // getCurrentPosition의 timeout 옵션은 권한 팝업이 떠 있는 동안은 안 흐르는 브라우저가 있어서
+  // (사용자가 팝업에 응답을 안 하면 콜백도 timeout도 영영 안 옴), 별도 타이머로 locationSettled만
+  // 강제로 풀어준다. coords는 이 타이머와 무관하게 승인 응답이 오면 그때 반영 — 늦게 승인해도
+  // queryKey가 바뀌면서 위치 기준으로 자동 재조회된다.
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locationSettled, setLocationSettled] = useState(false)
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationSettled(true)
+      return
+    }
+
+    const fallbackTimer = window.setTimeout(() => setLocationSettled(true), GEOLOCATION_TIMEOUT_MS)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+        setLocationSettled(true)
+      },
+      () => setLocationSettled(true),
+      { timeout: GEOLOCATION_TIMEOUT_MS },
+    )
+
+    return () => window.clearTimeout(fallbackTimer)
+  }, [])
+
+  const { data } = useQuery({
+    queryKey: ['home', coords],
+    queryFn: () => getHome(coords ?? undefined),
+    enabled: locationSettled,
+  })
 
   const bannerStudios = data?.bannerStudios ?? []
   // recentStudios는 로그인 사용자에게만 응답에 포함됨 — 없으면 섹션 자체를 숨김
@@ -67,7 +107,7 @@ const HomeFeed = () => {
       variant: (renderedIndex === activeRenderedIndex ? 'center' : 'default') as 'center' | 'default',
       imageSrc: banner?.thumbnailUrl,
       name: banner?.studioName,
-      location: banner?.locationCategory,
+      location: banner ? getLocationLabel(banner.locationCategory) : undefined,
       countCurrent: String(getRealCardNumber(renderedIndex, bannerCount)).padStart(2, '0'),
       countTotal: String(bannerCount).padStart(2, '0'),
       onClick: banner ? () => navigate(`/studios/${banner.studioId}`) : undefined,
@@ -145,7 +185,7 @@ const HomeFeed = () => {
         <CardStudio
           imageSrc={studio.thumbnailUrl}
           name={studio.studioName}
-          location={studio.locationCategory}
+          location={getLocationLabel(studio.locationCategory)}
           price={formatPrice(studio.minPrice)}
           rating={studio.rating.toFixed(1)}
           onClick={() => navigate(`/studios/${studio.studioId}`)}
@@ -184,7 +224,10 @@ const HomeFeed = () => {
 
       {regionalStudios && (
         <>
-          <Title variant="onlyTitle" title={`${regionalStudios.locationCategory}의 사진관`} />
+          <Title
+            variant="onlyTitle"
+            title={`${getLocationLabel(regionalStudios.locationCategory)}의 사진관`}
+          />
           <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(regionalStudios.studios)}</div>
         </>
       )}

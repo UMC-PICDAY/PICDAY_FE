@@ -137,13 +137,13 @@ const ReservationCancelPage = () => {
                 reservationId:
                   result.reservationId,
                 studioName:
-                  reservation.studioName,
+                  reservation.studio.name,
                 reservationDate:
-                  reservation.reservationDate,
+                  reservation.timeSlot.date,
                 reservationTime:
-                  reservation.reservationTime,
+                  reservation.timeSlot.startTime,
                 conceptName:
-                  reservation.conceptName,
+                  reservation.studioProduct.name,
                 totalPrice:
                   reservation.totalPrice,
                 cancelledAt:
@@ -215,8 +215,8 @@ const ReservationCancelPage = () => {
 
   const formattedReservationDate =
     formatReservationDateTime(
-      reservation.reservationDate,
-      reservation.reservationTime,
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
     )
 
   return (
@@ -232,7 +232,7 @@ const ReservationCancelPage = () => {
           receiptItems={[
             {
               label: '사진관',
-              value: reservation.studioName,
+              value: reservation.studio.name,
             },
             {
               label: '날짜·시간',
@@ -242,7 +242,7 @@ const ReservationCancelPage = () => {
             {
               label: '컨셉',
               value:
-                reservation.conceptName,
+                reservation.studioProduct.name,
             },
           ]}
           totalAmount={`₩${formattedTotalPrice}`}

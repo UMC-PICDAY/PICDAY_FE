@@ -63,6 +63,7 @@ interface NavigationState {
   shootingCategory?: ShootingCategory
   purpose?: string
   studios?: NavigationStudio[]
+  studioSearch?:string
 }
 
 interface CompareRowProps {
@@ -191,6 +192,7 @@ const CompareThreePage = () => {
   const shootingCategory =
     navigationState?.shootingCategory
   const purpose = navigationState?.purpose
+  const studioSearch = navigationState?.studioSearch ?? ''
 
   const [selectedStudios, setSelectedStudios] = useState<
     SelectedStudio[]
@@ -305,12 +307,19 @@ const CompareThreePage = () => {
           currentStudioIds.length > 0
             ? currentStudioIds
             : initialStudioIds,
+        purpose : shootingCategoryName || purpose,
+        studioSearch,
       },
     })
   }
 
   const handleClose = () => {
-    navigate('/studios')
+    navigate(
+      {
+        pathname: '/studios',
+        search: studioSearch,
+      }    
+    )
   }
 
   const handleStudioDetail = (studioId: string) => {
@@ -338,7 +347,12 @@ const CompareThreePage = () => {
   }
 
   const handleAddStudio = () => {
-    navigate('/studios', {
+    navigate(
+      {
+        pathname: '/studios',
+        search: studioSearch,
+       },
+      {
       state: {
         studioIds: currentStudioIds,
         selectedStudios,
