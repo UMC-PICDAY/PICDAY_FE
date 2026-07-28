@@ -41,12 +41,12 @@ export const completeSocialSignup = (signupToken: string, agreedTermsIds: number
     { headers: { Authorization: `Bearer ${signupToken}` } },
   )
 
-export const getMe = () => apiGet<MeResult>('/api/v1/users/me')
+export const getMe = () => apiGet<MeResult>('/api/v1/auth/me')
 
 export const updateNickname = (nickname: string) =>
-  apiPatch<UpdateNicknameResult>('/api/v1/users/me', { nickname })
+  apiPatch<UpdateNicknameResult>('/api/v1/auth/me', { nickname })
 
 export const checkNicknameAvailable = (nickname: string) =>
   apiGet<AvailabilityResult>('/api/v1/auth/nickname/check', { nickname })
 
-export const withdraw = () => apiDelete<null>('/api/v1/users/me')
+export const withdraw = () => apiDelete<null>('/api/v1/auth/me')
