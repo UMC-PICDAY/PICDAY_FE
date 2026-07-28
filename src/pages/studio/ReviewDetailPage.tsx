@@ -16,6 +16,8 @@ import { useAuthStore } from '@/stores/useAuthStore'
 const SORT_OPTIONS = [
   { value: 'recent', label: '최신순' },
   { value: 'recommend', label: '추천순' },
+  { value: 'ratingHigh', label: '평점 높은순' },
+  { value: 'ratingLow', label: '평점 낮은순' },
 ] as const
 
 const ReviewDetailPage = () => {

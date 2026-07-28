@@ -1,5 +1,5 @@
 // 5-1. GET /api/v1/studios/{studioId}/reviews
-export type ReviewSort = 'recent' | 'recommend'
+export type ReviewSort = 'recent' | 'recommend' | 'ratingHigh' | 'ratingLow'
 
 export interface ReviewListParams {
   sort?: ReviewSort
@@ -13,12 +13,16 @@ export interface ReviewListItem {
   writerNickname: string
   rating: number
   content: string
+  keywords: ReviewKeyword[] // 태그가 없으면 빈 배열
+  // 촬영 컨셉명. 백엔드에 추가 요청해 둔 상태로 아직 응답에 없어 optional.
+  // 필드가 내려오기 시작하면 리뷰 카드에 자동으로 노출된다.
+  conceptName?: string
   images: string[]
   likeCount: number
   isLiked: boolean
+  // 해당 사진관에서 추천 수가 가장 많은 리뷰 1건
   isBest: boolean
-  conceptName: string
-  createdAt: string
+  createdAt: string // ISO 8601
 }
 
 export interface ReviewSummary {
