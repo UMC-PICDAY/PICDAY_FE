@@ -11,7 +11,7 @@ const ConceptDetailPage = () => {
   const { studioId, conceptId } = useParams()
   const { data: detail, isLoading } = useStudioProductDetail(studioId, conceptId)
 
-  const images = detail?.imageList ?? []
+  const images = detail?.imageUrls ?? []
   const isEmpty = !isLoading && images.length === 0
 
   return (

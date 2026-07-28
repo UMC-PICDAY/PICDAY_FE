@@ -221,12 +221,15 @@ export interface StudioProductsData {
   productGroups: StudioProductGroup[]
 }
 
-// ===== 2-6. GET /api/v1/studios/{studioId}/products/{productId} =====
+// ===== 2-6. GET /api/v1/studios/{studioId}/products/{studioProductId} =====
 
 export interface StudioProductDetail {
   studioId: number
   studioName: string
-  imageList: string[]
+  studioProductId: number
+  productName: string
+  imageUrls: string[]
+  imageCount: number
 }
 
 // ===== 2-7. GET /api/v1/studios/{studioId}/slots =====
@@ -246,13 +249,12 @@ export interface StudioDateTimeSelection {
   endTime: string
 }
 
-// ===== 2-8. GET /api/v1/studios/{studioId}/hairMakeupDetail =====
+// ===== 2-8. GET /api/v1/studios/{studioId}/hair-makeup =====
 
 export interface HairMakeupPartner {
-  studioServiceId: number
+  hairMakeupDetailId: number
   partnerName: string
   additionalPrice: number
-  displayOrder: number
 }
 
 export interface HairMakeupData {

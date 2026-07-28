@@ -64,7 +64,7 @@ export const getStudioSlots = (
 
 // 2-8. 헤어메이크업 연계 상세
 export const getStudioHairMakeup = (studioId: string): Promise<HairMakeupData> =>
-  apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hairMakeupDetail`)
+  apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hair-makeup`)
 
 // 최근 본 사진관 기록 — 로그인 사용자가 상세 페이지에 진입할 때만 호출
 export interface RecentStudioViewResult {
