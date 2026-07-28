@@ -1,13 +1,16 @@
 /**
  * Figma A-5 소셜 신규회원 약관 동의 (라우트: /signup/social)
- * OAuthCallbackPage에서 소셜 로그인 결과 isNewUser=true일 때 signupToken을 router state로 들고 진입.
- * 닉네임은 서버 자동배정, 이름·연락처는 소셜 제공자에게 이미 받아온 상태라 약관 동의만 받으면 됨.
+ * OAuthCallbackPage에서 소셜 로그인 결과 isNewUser=true일 때 signupToken·socialInfo를 router state로 들고 진입.
+ * 닉네임은 서버 자동배정, 이름은 소셜 제공자에게 이미 받아온 상태라 약관 동의만 받으면 됨.
+ * 이메일·전화번호는 소셜 제공자가 내려준 값을 읽기전용으로 노출 — 카카오 비즈앱 검수에서
+ * 필수 수집 항목임을 화면에 명시해야 하기 때문 (수정 불가, 약관 동의로만 수집에 동의).
  */
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
 import NavigationBar from '@/components/layout/NavigationBar'
 import Title from '@/components/common/Title'
+import InputField from '@/components/common/InputField'
 import Agreement from '@/components/common/Agreement'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
@@ -16,16 +19,18 @@ import { ApiError } from '@/types/common'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { REQUIRED_TERMS, TERM_ITEMS } from '@/constants/terms'
 import type { TermKey } from '@/constants/terms'
+import type { SocialInfo } from '@/types/auth'
 
 interface LocationState {
   signupToken?: string
+  socialInfo?: SocialInfo
 }
 
 const SocialSignUpPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const authLogin = useAuthStore((state) => state.login)
-  const signupToken = (location.state as LocationState | null)?.signupToken
+  const { signupToken, socialInfo } = (location.state as LocationState | null) ?? {}
 
   const [terms, setTerms] = useState<Record<TermKey, boolean>>({
     service: false,
@@ -85,6 +90,19 @@ const SocialSignUpPage = () => {
         title="약관에 동의해 주세요"
         description="PICDAY 가입을 위해 아래 약관 동의가 필요해요"
       />
+
+      {socialInfo && (
+        <>
+          <InputField label="이메일 (필수)" placeholder="" value={socialInfo.email} disabled readOnly />
+          <InputField
+            label="전화번호 (필수)"
+            placeholder=""
+            value={socialInfo.phoneNumber}
+            disabled
+            readOnly
+          />
+        </>
+      )}
 
       <Agreement
         variant="split"

@@ -25,7 +25,9 @@ import ReviewCard from '@/pages/studio/components/ReviewCard'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { useStudioDetail } from '@/hooks/useStudio'
+import { saveRecentStudioView } from '@/services/studio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
+import { useAuthStore } from '@/stores/useAuthStore'
 import type { StudioServiceCode } from '@/types/studio'
 
 type OpenSheet = 'info' | 'hairmakeup' | null
@@ -65,6 +67,7 @@ const StudioDetailPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
   const { data: detail, isError, refetch } = useStudioDetail(studioId)
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
@@ -76,6 +79,12 @@ const StudioDetailPage = () => {
   useEffect(() => {
     if (detail) setFavorited(detail.isWishlisted)
   }, [detail])
+
+  // 로그인 사용자가 상세에 진입할 때만 최근 본 사진관으로 기록. 실패해도 화면엔 영향 없음.
+  useEffect(() => {
+    if (!isLoggedIn || !studioId) return
+    saveRecentStudioView(studioId).catch(() => {})
+  }, [isLoggedIn, studioId])
 
   // 소개 글이 3줄을 넘길 때만 더보기/접기 버튼 노출
   // (펼친 상태에서는 clamp가 풀려 측정이 불가하므로 접힌 상태에서만 측정)

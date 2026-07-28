@@ -2,7 +2,7 @@
  * Figma A-3 자체 회원가입 (라우트: /signup)
  * 약관 상세(서비스/개인정보/만14세/마케팅)는 Agreement의 onItemDetailClick으로 A-3 하위 화면인 /terms/:termType로 이동
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FocusEventHandler } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -66,6 +66,9 @@ const SignUpPage = () => {
   const [idAvailability, setIdAvailability] = useState<IdAvailability>('idle')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  // 중복확인 응답이 도착한 순서가 요청한 순서와 다를 수 있어(늦게 보낸 요청이 먼저 응답),
+  // 마지막으로 보낸 요청의 결과만 반영하도록 매 요청마다 값을 갱신해 최신 요청인지 비교한다.
+  const latestIdCheckRef = useRef('')
 
   // 약관 상세(/terms/:termType)로 갔다가 뒤로가기로 돌아와도 입력값이 날아가지 않도록,
   // draft 스토어에 있던 값으로 시작하고 아래 useEffect에서 계속 동기화한다.
@@ -128,11 +131,16 @@ const SignUpPage = () => {
     id.fieldProps.onBlur(event)
     if (!id.isValid || id.fieldProps.value === '') return
 
+    const requestedId = id.fieldProps.value
+    latestIdCheckRef.current = requestedId
+
     setIdAvailability('checking')
     try {
-      const { available } = await checkLoginIdAvailable(id.fieldProps.value)
+      const { available } = await checkLoginIdAvailable(requestedId)
+      if (latestIdCheckRef.current !== requestedId) return
       setIdAvailability(available ? 'available' : 'taken')
     } catch {
+      if (latestIdCheckRef.current !== requestedId) return
       setIdAvailability('idle')
     }
   }
@@ -192,13 +200,13 @@ const SignUpPage = () => {
         {...password.fieldProps}
       />
       <InputField
-        label="이메일"
+        label="이메일 (필수)"
         placeholder="이메일을 입력해 주세요"
         type="email"
         {...email.fieldProps}
       />
       <InputField
-        label="전화번호"
+        label="전화번호 (필수)"
         placeholder="휴대폰 번호를 입력해 주세요"
         prefix="+82"
         type="tel"

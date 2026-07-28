@@ -36,7 +36,9 @@ const OAuthCallbackPage = () => {
     socialLogin(provider as SocialProvider, code, redirectUri)
       .then((result) => {
         if (result.isNewUser) {
-          navigate('/signup/social', { state: { signupToken: result.signupToken } })
+          navigate('/signup/social', {
+            state: { signupToken: result.signupToken, socialInfo: result.socialInfo },
+          })
           return
         }
         authLogin({ accessToken: result.token.accessToken, refreshToken: result.token.refreshToken })
