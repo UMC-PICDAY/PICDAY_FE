@@ -167,9 +167,17 @@ const StudioDetailPage = () => {
   }
 
   const stationLine = [
-    ...detail.location.stationLineCodes.map(stationLabel).filter(Boolean),
+    ...detail.location.stationLineCodes.map(stationLabel),
     detail.location.nearestStation,
-  ].join(' · ')
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  // 역·도보시간이 하나라도 없으면 "null 도보 null분"이 되므로 줄 자체를 숨긴다.
+  const stationWalkText =
+    detail.location.nearestStation !== null &&
+    detail.location.walkingMinutes !== null
+      ? `${detail.location.nearestStation} 도보 ${detail.location.walkingMinutes}분`
+      : null
   const services = detail.serviceCodes.filter((code) => SERVICE_ICON[code])
   const infoBullets = [
     ...detail.studioInfo.operation,
@@ -204,14 +212,14 @@ const StudioDetailPage = () => {
       {/* 이름 / 위치 / 별점 */}
       <div className="px-5 py-3">
         <h1 className="py-2 font-h3 text-black">{detail.studioName}</h1>
-        <div className="flex items-center pb-1 font-b6 text-gray-60">
-          <IcPin width={20} height={20} className="shrink-0 text-brand-100" />
-          <span>
-            {detail.location.nearestStation} 도보 {detail.location.walkingMinutes}분
-          </span>
-          <span className="px-1">|</span>
-          <span>{detail.location.address}</span>
-        </div>
+        {(stationWalkText || fullAddress) && (
+          <div className="flex items-center pb-1 font-b6 text-gray-60">
+            <IcPin width={20} height={20} className="shrink-0 text-brand-100" />
+            {stationWalkText && <span>{stationWalkText}</span>}
+            {stationWalkText && fullAddress && <span className="px-1">|</span>}
+            {fullAddress && <span>{fullAddress}</span>}
+          </div>
+        )}
         <button type="button" onClick={goToReviews} className="flex items-center pb-2">
           <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
           <span className="pl-0.5 font-b7 text-black">{avgRatingText}</span>
@@ -294,7 +302,7 @@ const StudioDetailPage = () => {
           </button>
         </div>
         <ul className="flex flex-col gap-1 pb-5">
-          <Bullet text={`${detail.location.nearestStation} 도보 ${detail.location.walkingMinutes}분`} />
+          {stationWalkText && <Bullet text={stationWalkText} />}
           {stationLine && <Bullet text={stationLine} />}
         </ul>
       </section>

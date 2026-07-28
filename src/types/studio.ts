@@ -125,23 +125,25 @@ export interface CompareStudio {
 // ===== 2-4. GET /api/v1/studios/{studioId} =====
 
 export interface StudioRepresentativeProduct {
-  studioProductId?: number
+  studioProductId: number
   productName: string
-  thumbnailUrl?: string | null
+  thumbnailUrl: string | null // 상품 이미지가 없으면 null
   price: number
 }
 
 // 실제 응답 enum(swagger 기준). FE에서 아이콘/라벨을 매핑해서 씀 (StudioDetailPage 참고)
 export type StudioServiceCode = 'HAIR_MAKEUP' | 'PARKING' | 'COSTUME' | 'WIFI'
 
+// stationLineCodes를 제외한 전 필드가 nullable (명세 기준).
+// 위도·경도가 없으면 지도 대신 미제공 상태를 표시한다.
 export interface StudioLocationDetail {
-  locationCategory: string
-  district: string
-  address: string
-  latitude: number
-  longitude: number
-  nearestStation: string
-  walkingMinutes: number
+  locationCategory: string | null
+  district: string | null
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  nearestStation: string | null
+  walkingMinutes: number | null
   stationLineCodes: number[] // 1~9: n호선 / 11: 공항철도 / 12: 경의중앙선 / 13: 신분당선
 }
 
@@ -158,19 +160,19 @@ export interface StudioNotice {
 }
 
 export interface StudioReviewPreviewItem {
-  reviewId?: number
+  reviewId: number
   writerNickname: string
   rating: number
   content: string
   imageUrls: string[]
   isBest: boolean
-  createdAt?: string
+  createdAt: string // ISO 8601
 }
 
 export interface StudioReviewSummaryPreview {
-  averageRating?: number | null
+  averageRating: number | null // 리뷰가 없으면 null
   reviewCount: number
-  previewReview?: StudioReviewPreviewItem | null
+  previewReview: StudioReviewPreviewItem | null
 }
 
 export interface StudioDetail {
@@ -181,8 +183,8 @@ export interface StudioDetail {
   location: StudioLocationDetail
   representativeProducts: StudioRepresentativeProduct[]
   serviceCodes: StudioServiceCode[]
-  introduction?: string | null
-  notice?: StudioNotice | null
+  introduction: string | null
+  notice: StudioNotice | null
   studioInfo: StudioInfoDetail
   hairMakeupPartnerCount: number
   reviewSummary: StudioReviewSummaryPreview
