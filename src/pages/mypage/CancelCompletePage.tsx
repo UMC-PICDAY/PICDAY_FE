@@ -88,17 +88,24 @@ const CancelCompletePage = () => {
     void fetchReservationDetail()
   }, [reservation, reservationId])
 
-  const reservationSummary = reservation
-  ? 'studio' in reservation
-    ? `${reservation.studio.name} · ${formatReservationDateTime(
-        reservation.timeSlot.date,
-        reservation.timeSlot.startTime,
-      )}`
-    : `${reservation.studioName} · ${formatReservationDateTime(
+
+  const reservationSummary = (() => {
+    if (!reservation) {
+      return '예약 취소가 완료되었습니다.'
+    }
+
+    if ('studioName' in reservation) {
+      return `${reservation.studioName} · ${formatReservationDateTime(
         reservation.reservationDate,
         reservation.reservationTime,
       )}`
-  : '예약 취소가 완료되었습니다.'
+    }
+
+    return `${reservation.studio.name} · ${formatReservationDateTime(
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
+    )}`
+  })()
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-[402px] flex-col bg-white">

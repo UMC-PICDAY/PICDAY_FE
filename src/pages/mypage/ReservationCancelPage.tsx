@@ -132,6 +132,8 @@ const ReservationCancelPage = () => {
           `/mypage/reservations/${reservationId}/cancel/complete`,
           {
             replace: true,
+
+            //취소 완료 화면으로 넘기는 state
             state: {
               reservation: {
                 reservationId:
@@ -208,6 +210,7 @@ const ReservationCancelPage = () => {
     )
   }
 
+  //날짜 포맷
   const formattedTotalPrice =
     reservation.totalPrice.toLocaleString(
       'ko-KR',
@@ -229,6 +232,7 @@ const ReservationCancelPage = () => {
 
       <div className="pt-[10px]">
         <ReservationDetail
+          //화면 표시 필드
           receiptItems={[
             {
               label: '사진관',
@@ -287,9 +291,9 @@ const ReservationCancelPage = () => {
             isSubmitting
               ? undefined
               : () =>
-                  setIsCancelModalOpen(
-                    true,
-                  )
+                setIsCancelModalOpen(
+                  true,
+                )
           }
         >
           {isSubmitting
