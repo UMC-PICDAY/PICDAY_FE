@@ -37,6 +37,7 @@ import ProfileSettingPage from '@/pages/mypage/ProfileSettingPage'
 import WithdrawCompletePage from '@/pages/mypage/WithdrawCompletePage'
 import ReviewWritePage from '@/pages/mypage/ReviewWritePage'
 import ReviewCompletePage from '@/pages/mypage/ReviewCompletePage'
+import MyReviewPage from '@/pages/mypage/MyReviewPage'
 
 import WishlistPage from '@/pages/wishlist/WishlistPage'
 import ChatListPage from '@/pages/chat/ChatListPage'
@@ -95,6 +96,7 @@ function App() {
       <Route path="/mypage/withdraw/complete" element={<WithdrawCompletePage />} />
       <Route path="/mypage/reservations/:reservationId/review" element={<ReviewWritePage />} />
       <Route path="/mypage/reservations/:reservationId/review/complete" element={<ReviewCompletePage />} />
+      <Route path="/mypage/reviews/:reviewId" element={<MyReviewPage />} />
 
       {/* 위시리스트 */}
       <Route path="/wishlist" element={<WishlistPage />} />

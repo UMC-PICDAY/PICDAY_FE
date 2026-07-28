@@ -16,6 +16,12 @@
  *     packageName="1인 기본 패키지"
  *   />
  *
+ * 버튼 문구 변경
+ *   <CardReservationHistory
+ *     leftButtonLabel="예약 상세"
+ *     rightButtonLabel="내 리뷰 보기"
+ *   />
+ *
  * 버튼 이벤트 연결
  *   <CardReservationHistory
  *     onLeftButtonClick={handleLeftButtonClick}
@@ -32,8 +38,15 @@ import defaultSecondImage from '@/assets/images/CardImage2.png'
 const DEFAULT_IMAGE = defaultImage
 const DEFAULT_SECOND_IMAGE = defaultSecondImage
 
-type ReservationStatusTag = '예약 완료' | '촬영 완료' | '취소'
-type StatusTagVariant = 'reservation' | 'shooting' | 'canceled'
+type ReservationStatusTag =
+  | '예약 완료'
+  | '촬영 완료'
+  | '취소'
+
+type StatusTagVariant =
+  | 'reservation'
+  | 'shooting'
+  | 'canceled'
 
 interface Props {
   className?: string
@@ -43,6 +56,8 @@ interface Props {
   studioName?: string
   dateTime?: string
   packageName?: string
+  leftButtonLabel?: string
+  rightButtonLabel?: string
   onLeftButtonClick?: () => void
   onRightButtonClick?: () => void
 }
@@ -61,7 +76,9 @@ const getStatusTagVariant = (
   return 'reservation'
 }
 
-const getButtonLabels = (statusTag: ReservationStatusTag) => {
+const getButtonLabels = (
+  statusTag: ReservationStatusTag,
+) => {
   if (statusTag === '촬영 완료') {
     return {
       leftButtonLabel: '예약 상세',
@@ -90,11 +107,24 @@ const CardReservationHistory = ({
   studioName = '데이지스튜디오',
   dateTime = '2026년 3월 15일 (토) 14:00',
   packageName = '1인 기본 패키지',
+  leftButtonLabel,
+  rightButtonLabel,
   onLeftButtonClick,
   onRightButtonClick,
 }: Props) => {
-  const statusTagVariant = getStatusTagVariant(statusTag)
-  const { leftButtonLabel, rightButtonLabel } = getButtonLabels(statusTag)
+  const statusTagVariant =
+    getStatusTagVariant(statusTag)
+
+  const defaultButtonLabels =
+    getButtonLabels(statusTag)
+
+  const resolvedLeftButtonLabel =
+    leftButtonLabel ??
+    defaultButtonLabels.leftButtonLabel
+
+  const resolvedRightButtonLabel =
+    rightButtonLabel ??
+    defaultButtonLabels.rightButtonLabel
 
   return (
     <div
@@ -132,7 +162,9 @@ const CardReservationHistory = ({
       <div className="flex w-full shrink-0 flex-col items-start gap-[10px] rounded-[12px] px-[12px] py-[8px]">
         <div className="flex shrink-0 flex-col items-start gap-[5px]">
           <div className="flex w-[338px] shrink-0 items-center gap-[5px]">
-            <StatusTag variant={statusTagVariant} />
+            <StatusTag
+              variant={statusTagVariant}
+            />
 
             <p className="min-w-0 flex-1 truncate text-[var(--font-b5-size)] font-[var(--font-b5-weight)] leading-[var(--font-b5-line-height)] tracking-[var(--font-b5-letter-spacing)] text-black">
               {studioName}
@@ -140,16 +172,29 @@ const CardReservationHistory = ({
           </div>
 
           <div className="flex shrink-0 flex-col items-start py-[2px]">
-            <p className="shrink-0 whitespace-nowrap font-cap3 text-gray-40">{dateTime}</p>
-            <p className="shrink-0 whitespace-nowrap font-cap3 text-gray-40">{packageName}</p>
+            <p className="shrink-0 whitespace-nowrap font-cap3 text-gray-40">
+              {dateTime}
+            </p>
+
+            <p className="shrink-0 whitespace-nowrap font-cap3 text-gray-40">
+              {packageName}
+            </p>
           </div>
         </div>
 
         <ButtonPair
-          leftLabel={leftButtonLabel}
-          rightLabel={rightButtonLabel}
-          onLeftClick={onLeftButtonClick}
-          onRightClick={onRightButtonClick}
+          leftLabel={
+            resolvedLeftButtonLabel
+          }
+          rightLabel={
+            resolvedRightButtonLabel
+          }
+          onLeftClick={
+            onLeftButtonClick
+          }
+          onRightClick={
+            onRightButtonClick
+          }
         />
       </div>
     </div>
