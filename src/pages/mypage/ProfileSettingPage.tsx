@@ -222,7 +222,9 @@ const ProfileSettingPage = () => {
       console.error('로그아웃 실패:', error)
     } finally {
       clearAuth()
-      navigate('/login')
+      // replace: 로그인 화면에서 뒤로가기(닫기)를 눌렀을 때 로그아웃 전 마이페이지로
+      // 돌아가지 않도록 히스토리에서 마이페이지 항목을 로그인 화면으로 대체한다.
+      navigate('/login', { replace: true })
     }
   }
 
