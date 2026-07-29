@@ -58,7 +58,7 @@ export const createReservation = (
 export interface CancelReservationData {
   reservationId: number
   status: 'CANCELLED'
-  cancelledAt: string
+  canceledAt: string
 }
 
 export const cancelReservation = (
@@ -72,7 +72,7 @@ export const cancelReservation = (
     {
       reservationId: Number(reservationId) || 1,
       status: 'CANCELLED',
-      cancelledAt: new Date().toISOString(),
+      canceledAt: new Date().toISOString(),
     },
   )
 
@@ -88,6 +88,7 @@ export interface ReservationListItem {
   reservationTime: string
   totalPrice: number
   status: ReservationStatus
+  reviewId: number | null
 }
 
 const MOCK_RESERVATION_LIST: ReservationListItem[] = [
@@ -99,6 +100,7 @@ const MOCK_RESERVATION_LIST: ReservationListItem[] = [
     reservationTime: '14:00',
     totalPrice: 55000,
     status: 'RESERVED',
+    reviewId: null,
   },
   {
     reservationId: 2,
@@ -108,6 +110,7 @@ const MOCK_RESERVATION_LIST: ReservationListItem[] = [
     reservationTime: '11:00',
     totalPrice: 30000,
     status: 'COMPLETED',
+    reviewId: null,
   },
 ]
 
@@ -135,14 +138,28 @@ export const getMyReservations = (
  */
 export interface ReservationDetailData {
   reservationId: number
-  studioName: string
-  conceptName: string
-  reservationDate: string
-  reservationTime: string
   status: ReservationStatus
+  reserveeName: string
+  reserveePhone: string
   totalPrice: number
-  paymentMethod: PaymentMethod
+  studio: {
+    id: number
+    name: string
+  }
+  studioProduct: {
+    id: number
+    name: string
+    price: number
+  }
+  timeSlot: {
+    date: string
+    startTime: string
+    endTime: string
+  }
+  reviewId: number | null
   checklist: string[]
+  createdAt: string
+  canceledAt?: string | null
 }
 
 export const getReservationDetail = (
@@ -155,13 +172,15 @@ export const getReservationDetail = (
       ),
     {
       reservationId: Number(reservationId) || 1,
-      studioName: '데이지 스튜디오',
-      conceptName: '체리베리벌쓰데이',
-      reservationDate: '2026-08-01',
-      reservationTime: '14:00',
       status: 'RESERVED',
+      reserveeName: '이수현',
+      reserveePhone: '01012345678',
       totalPrice: 55000,
-      paymentMethod: 'KAKAOPAY',
+      studio: { id: 1, name: '데이지 스튜디오' },
+      studioProduct: { id: 1, name: '체리베리벌쓰데이', price: 55000 },
+      timeSlot: { date: '2026-08-01', startTime: '14:00', endTime: '15:00' },
+      reviewId: null,
       checklist: ['예약 시간 10분 전까지 도착해주세요.', '촬영 3일 전까지 변경/취소가 가능합니다.'],
+      createdAt: new Date().toISOString(),
     },
   )

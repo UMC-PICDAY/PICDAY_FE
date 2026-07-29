@@ -56,12 +56,36 @@ const formatReservationDateTime = (
   return `${year}년 ${month}월 ${day}일 (${weekday}) ${reservationTime}`
 }
 
+const formatCanceledAt = (
+  canceledAt?: string | null,
+) => {
+  if (!canceledAt) {
+    return '-'
+  }
+
+  const date = new Date(canceledAt)
+
+  return new Intl.DateTimeFormat(
+    'ko-KR',
+    {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    },
+  ).format(date)
+}
+
 interface CancelDetailCardProps {
   totalPrice: number
+  canceledAt?: string | null
 }
 
 const CancelDetailCard = ({
   totalPrice,
+  canceledAt,
 }: CancelDetailCardProps) => {
   const formattedTotalPrice =
     totalPrice.toLocaleString('ko-KR')
@@ -94,7 +118,9 @@ const CancelDetailCard = ({
             </div>
 
             <p className="font-b8 text-black">
-              -
+              {formatCanceledAt(
+                canceledAt,
+              )}
             </p>
           </div>
         </div>
@@ -226,7 +252,7 @@ const ReservationDetailPage = () => {
           setReservation(result)
 
           setChecklistItems(
-            result.checklist.map(
+            (result.checklist ?? []).map(
               (label, index) => ({
                 id: `checklist-${index}`,
                 label,
@@ -293,8 +319,8 @@ const ReservationDetailPage = () => {
 
   const formattedReservationDate =
     formatReservationDateTime(
-      reservation.reservationDate,
-      reservation.reservationTime,
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
     )
 
   const formattedTotalPrice =
@@ -312,7 +338,7 @@ const ReservationDetailPage = () => {
 
       <Profile
         variant="bookingInfo"
-        studioName={reservation.studioName}
+        studioName={reservation.studio.name}
         reservationDate={
           formattedReservationDate
         }
@@ -324,7 +350,9 @@ const ReservationDetailPage = () => {
           receiptItems={[
             {
               label: '컨셉',
-              value: reservation.conceptName,
+              value:
+                reservation.studioProduct
+                  .name,
             },
           ]}
           totalAmount={`₩${formattedTotalPrice}`}
@@ -343,6 +371,9 @@ const ReservationDetailPage = () => {
           <CancelDetailCard
             totalPrice={
               reservation.totalPrice
+            }
+            canceledAt={
+              reservation.canceledAt
             }
           />
         )}
@@ -365,13 +396,25 @@ const ReservationDetailPage = () => {
         {isShooting && (
           <Button
             variant="primary"
-            onClick={() =>
+            onClick={() => {
+              if (
+                reservation.reviewId !==
+                null
+              ) {
+                navigate(
+                  `/mypage/reviews/${reservation.reviewId}`,
+                )
+                return
+              }
+
               navigate(
                 `/mypage/reservations/${reservationId}/review`,
               )
-            }
+            }}
           >
-            리뷰 작성
+            {reservation.reviewId !== null
+              ? '내 리뷰 보기'
+              : '리뷰 작성'}
           </Button>
         )}
 
@@ -379,7 +422,14 @@ const ReservationDetailPage = () => {
           <Button
             variant="primary"
             onClick={() =>
-              navigate('/reservation')
+              navigate(
+                `/studios/${reservation.studio.id}/concepts`,
+                {
+                  state: {
+                    openTimeSelectModal: true,
+                  },
+                },
+              )
             }
           >
             재예약

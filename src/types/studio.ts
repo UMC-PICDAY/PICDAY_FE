@@ -48,14 +48,24 @@ export interface AutocompleteResult {
 export type StudioSort = 'RECOMMENDED' | 'PRICE_LOW' | 'RATING_HIGH' | 'REVIEW_COUNT'
 
 export interface StudioSearchParams {
-  location?: string
+  locationCategory?: string
   date?: string // YYYY-MM-DD
-  concept?: string[]
-  name?: string
+  shootingCategory?: string[]
   sort?: StudioSort
   minPrice?: number
   maxPrice?: number
-  service?: string[]
+  serviceCode?: string[]
+  minRating?: number
+}
+
+// 2-3-2. GET /api/v1/studios/search/name — 자동완성에서 고른 사진관 1곳을 필터와 함께 조회.
+// 응답 구조는 통합 검색과 동일하다.
+export interface StudioSearchByNameParams {
+  studioId: number
+  sort?: StudioSort
+  minPrice?: number
+  maxPrice?: number
+  serviceCode?: string[]
   minRating?: number
 }
 
@@ -76,8 +86,8 @@ export interface StudioSearchItem {
   minPrice: number
   rating: number
   reviewCount: number
-  shootingCategory: string[]
-  serviceTags: string[]
+  shootingCategories: string[]
+  serviceCodes: StudioServiceCode[]
   isWishlisted: boolean
   productSummaries: StudioSearchProductSummary[]
 }
@@ -92,15 +102,16 @@ export interface StudioRecommendItem {
   shootingCategory: string[]
 }
 
+// 통합 검색·이름 검색이 공유하는 필터 에코. 현재 화면에서 쓰는 곳은 없다.
 export interface StudioSearchAppliedFilters {
-  location: string | null
+  locationCategory: string | null
   date: string | null
-  concept: string[]
-  name: string | null
+  shootingCategories: string[]
+  studioId: number | null
   sort: StudioSort | null
   minPrice: number | null
   maxPrice: number | null
-  serviceTags: string[]
+  serviceCodes: StudioServiceCode[]
   minRating: number | null
 }
 
@@ -125,23 +136,25 @@ export interface CompareStudio {
 // ===== 2-4. GET /api/v1/studios/{studioId} =====
 
 export interface StudioRepresentativeProduct {
-  studioProductId?: number
+  studioProductId: number
   productName: string
-  thumbnailUrl?: string | null
+  thumbnailUrl: string | null // 상품 이미지가 없으면 null
   price: number
 }
 
 // 실제 응답 enum(swagger 기준). FE에서 아이콘/라벨을 매핑해서 씀 (StudioDetailPage 참고)
 export type StudioServiceCode = 'HAIR_MAKEUP' | 'PARKING' | 'COSTUME' | 'WIFI'
 
+// stationLineCodes를 제외한 전 필드가 nullable (명세 기준).
+// 위도·경도가 없으면 지도 대신 미제공 상태를 표시한다.
 export interface StudioLocationDetail {
-  locationCategory: string
-  district: string
-  address: string
-  latitude: number
-  longitude: number
-  nearestStation: string
-  walkingMinutes: number
+  locationCategory: string | null
+  district: string | null
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  nearestStation: string | null
+  walkingMinutes: number | null
   stationLineCodes: number[] // 1~9: n호선 / 11: 공항철도 / 12: 경의중앙선 / 13: 신분당선
 }
 
@@ -158,19 +171,19 @@ export interface StudioNotice {
 }
 
 export interface StudioReviewPreviewItem {
-  reviewId?: number
+  reviewId: number
   writerNickname: string
   rating: number
   content: string
   imageUrls: string[]
   isBest: boolean
-  createdAt?: string
+  createdAt: string // ISO 8601
 }
 
 export interface StudioReviewSummaryPreview {
-  averageRating?: number | null
+  averageRating: number | null // 리뷰가 없으면 null
   reviewCount: number
-  previewReview?: StudioReviewPreviewItem | null
+  previewReview: StudioReviewPreviewItem | null
 }
 
 export interface StudioDetail {
@@ -181,8 +194,8 @@ export interface StudioDetail {
   location: StudioLocationDetail
   representativeProducts: StudioRepresentativeProduct[]
   serviceCodes: StudioServiceCode[]
-  introduction?: string | null
-  notice?: StudioNotice | null
+  introduction: string | null
+  notice: StudioNotice | null
   studioInfo: StudioInfoDetail
   hairMakeupPartnerCount: number
   reviewSummary: StudioReviewSummaryPreview
@@ -191,21 +204,18 @@ export interface StudioDetail {
 // ===== 2-5. GET /api/v1/studios/{studioId}/products =====
 
 export interface StudioProductsParams {
-  date?: string // YYYY-MM-DD
-  time?: string // HH:mm
+  timeSlotId?: number
 }
 
 export interface StudioProduct {
-  productId: number
+  studioProductId: number
   productName: string
-  imageUrls: string // 명세상 단수 문자열
+  imageUrls: string[]
   imageCount: number
   price: number
   basePeople: number
-  shortDescription: string
-  description: string
-  // date·time 둘 다 있을 때만 boolean, 하나라도 없으면 null → 예약 버튼 비활성화
-  isAvailable: boolean | null
+  // 서버가 null을 내려주는 상품이 있어 nullable
+  shortDescription: string | null
 }
 
 export interface StudioProductGroup {
@@ -213,26 +223,40 @@ export interface StudioProductGroup {
   products: StudioProduct[]
 }
 
+// 예약 가능 여부는 상품이 아니라 슬롯 단위다.
+// 같은 timeSlot을 예약하면 그 사진관의 해당 시간대가 통째로 점유되기 때문.
+export interface StudioSelectedSlot {
+  timeSlotId: number
+  date: string // YYYY-MM-DD
+  startTime: string
+  endTime: string
+  isAvailable: boolean
+}
+
 export interface StudioProductsData {
   studioId: number
   studioName: string
-  selectedDate: string | null
-  selectedTime: string | null
+  // timeSlotId 없이 조회하면 null
+  selectedSlot: StudioSelectedSlot | null
   productGroups: StudioProductGroup[]
 }
 
-// ===== 2-6. GET /api/v1/studios/{studioId}/products/{productId} =====
+// ===== 2-6. GET /api/v1/studios/{studioId}/products/{studioProductId} =====
 
 export interface StudioProductDetail {
   studioId: number
   studioName: string
-  imageList: string[]
+  studioProductId: number
+  productName: string
+  imageUrls: string[]
+  imageCount: number
 }
 
 // ===== 2-7. GET /api/v1/studios/{studioId}/slots =====
 
 export interface StudioTimeSlot {
-  slotId: string
+  // 2-5의 timeSlotId와 같은 값 (엔드포인트마다 이름만 다름)
+  slotId: number
   startTime: string
   endTime: string
   isAvailable: boolean
@@ -241,18 +265,17 @@ export interface StudioTimeSlot {
 // 날짜/시간 선택 화면 상태 (컨셉 목록·예약 흐름에서 사용)
 export interface StudioDateTimeSelection {
   date: CalendarDate
-  slotId: string
+  slotId: number
   startTime: string
   endTime: string
 }
 
-// ===== 2-8. GET /api/v1/studios/{studioId}/hairMakeupDetail =====
+// ===== 2-8. GET /api/v1/studios/{studioId}/hair-makeup =====
 
 export interface HairMakeupPartner {
-  studioServiceId: number
+  hairMakeupDetailId: number
   partnerName: string
   additionalPrice: number
-  displayOrder: number
 }
 
 export interface HairMakeupData {

@@ -23,6 +23,7 @@ import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import { IcEvent2 } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
+import { getMe } from '@/services/auth'
 import {
   getMyReservations,
   type ReservationListItem,
@@ -108,6 +109,17 @@ const MyReservationPage = () => {
     setHasError,
   ] = useState(false)
 
+  const [nickname, setNickname] = useState('')
+
+  const [
+    profileImageUrl,
+    setProfileImageUrl,
+  ] = useState('')
+
+  const [provider, setProvider] = useState<
+    'LOCAL' | 'KAKAO' | 'GOOGLE'
+  >('LOCAL')
+
   const filterParam =
     searchParams.get('filter')
 
@@ -142,6 +154,31 @@ const MyReservationPage = () => {
 
     void fetchReservations()
   }, [])
+
+  useEffect(() => {
+    getMe()
+      .then((result) => {
+        setNickname(result.user.nickname)
+        setProfileImageUrl(result.user.profileImageUrl)
+        setProvider(result.user.provider)
+      })
+      .catch((error) => {
+        console.error('내 정보 조회에 실패했습니다.', error)
+      })
+  }, [])
+
+  const isSocialLogin = provider !== 'LOCAL'
+
+  const providerLabel =
+    provider === 'KAKAO'
+      ? '카카오'
+      : provider === 'GOOGLE'
+        ? '구글'
+        : '자체'
+
+  const accountText = isSocialLogin
+    ? `${providerLabel} 계정 연결`
+    : '자체 로그인'
 
   const reservationCounts = useMemo(
     () => ({
@@ -278,6 +315,13 @@ const MyReservationPage = () => {
         break
 
       case 'COMPLETED':
+        if (reservation.reviewId !== null) {
+          navigate(
+            `/mypage/reviews/${reservation.reviewId}`,
+          )
+          break
+        }
+
         navigate(
           `/mypage/reservations/${reservation.reservationId}/review`,
         )
@@ -297,9 +341,9 @@ const MyReservationPage = () => {
     <div className="flex min-h-dvh w-full flex-col bg-white">
       <Profile
         variant="userInfo"
-        userName="이수현"
-        accountText="카카오 계정 연결"
-        userImageSrc={logoIcon}
+        userName={nickname}
+        accountText={accountText}
+        userImageSrc={profileImageUrl || logoIcon}
       />
 
       <SegmentedTab
@@ -401,6 +445,14 @@ const MyReservationPage = () => {
                   )}
                   packageName={
                     reservation.conceptName
+                  }
+                  rightButtonLabel={
+                    reservation.status ===
+                      'COMPLETED' &&
+                    reservation.reviewId !==
+                      null
+                      ? '내 리뷰 보기'
+                      : undefined
                   }
                   onLeftButtonClick={() =>
                     handleLeftButtonClick(

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import FilterChip from '@/components/common/FilterChip'
 import { IcClose } from '@/components/icons'
@@ -12,18 +12,13 @@ interface HairMakeupSheetProps {
 
 const HairMakeupSheet = ({ studioId, onClose }: HairMakeupSheetProps) => {
   const { data } = useStudioHairMakeup(studioId)
-  const partners = useMemo(
-    () =>
-      data
-        ? [...data.hairMakeupList].sort((a, b) => a.displayOrder - b.displayOrder)
-        : [],
-    [data],
-  )
+  // 정렬 기준(displayOrder)이 명세에서 빠져 응답 배열 순서를 그대로 노출한다.
+  const partners = data?.hairMakeupList ?? []
 
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const effectiveId = selectedId ?? partners[0]?.studioServiceId ?? null
+  const effectiveId = selectedId ?? partners[0]?.hairMakeupDetailId ?? null
   const selected = partners.find(
-    (partner) => partner.studioServiceId === effectiveId,
+    (partner) => partner.hairMakeupDetailId === effectiveId,
   )
 
   return (
@@ -39,11 +34,11 @@ const HairMakeupSheet = ({ studioId, onClose }: HairMakeupSheetProps) => {
         <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {partners.map((partner) => (
             <FilterChip
-              key={partner.studioServiceId}
+              key={partner.hairMakeupDetailId}
               label={partner.partnerName}
               size="large"
-              selected={partner.studioServiceId === effectiveId}
-              onClick={() => setSelectedId(partner.studioServiceId)}
+              selected={partner.hairMakeupDetailId === effectiveId}
+              onClick={() => setSelectedId(partner.hairMakeupDetailId)}
             />
           ))}
         </div>

@@ -17,6 +17,8 @@ import StudioResultsBottomSheet from '@/pages/studio/components/StudioResultsBot
 import StudioResultsList from '@/pages/studio/components/StudioResultsList'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
+import { getLocationLabel } from '@/constants/locationCategory'
+import { getShootingCategoryLabel } from '@/constants/shootingCategory'
 import { studioSearchQueryKey, useStudioSearch } from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
@@ -245,9 +247,14 @@ const StudioSearchPage = () => {
                         key={studio.studioId}
                         name={studio.studioName}
                         imageSrc={studio.thumbnailUrl}
-                        location={studio.locationCategory}
-                        category={studio.shootingCategory[0] ?? ''}
-                        secondaryCategory={studio.shootingCategory[1]}
+                        location={getLocationLabel(studio.locationCategory)}
+                        category={getShootingCategoryLabel(
+                          studio.shootingCategory[0] ?? '',
+                        )}
+                        secondaryCategory={
+                          studio.shootingCategory[1] &&
+                          getShootingCategoryLabel(studio.shootingCategory[1])
+                        }
                         price={`₩${studio.minPrice.toLocaleString()}~`}
                         rating={`★${studio.rating}`}
                         onClick={() => navigate(`/studios/${studio.studioId}`)}

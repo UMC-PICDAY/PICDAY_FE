@@ -5,11 +5,11 @@ import FilterChip from '@/components/common/FilterChip'
 import RangeSlider from '@/components/common/RangeSlider'
 import NavigationBar from '@/components/layout/NavigationBar'
 import { useStudioSearch } from '@/hooks/useStudio'
+import { SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
 import {
   hasBaseSearchCondition,
   parseStudioSearchParams,
   serializeStudioSearchParams,
-  STUDIO_PURPOSES,
   STUDIO_SERVICE_OPTIONS,
   type StudioServiceTag,
 } from '@/utils/studioSearchParams'
@@ -91,10 +91,10 @@ const FilterPage = () => {
         <section className="pb-5">
           <h2 className="pb-3 font-b5 text-black">촬영 목적</h2>
           <div className="grid grid-cols-3 gap-2">
-            {STUDIO_PURPOSES.map((purpose) => (
+            {Object.entries(SHOOTING_CATEGORY_LABEL).map(([purpose, label]) => (
               <FilterChip
                 key={purpose}
-                label={purpose}
+                label={label}
                 size="large"
                 selected={purposes.includes(purpose)}
                 onClick={() => setPurposes((prev) => toggle(prev, purpose))}

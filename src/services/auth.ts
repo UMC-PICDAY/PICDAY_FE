@@ -59,7 +59,7 @@ export const signup = (body: {
 
 export const checkLoginIdAvailable = (loginId: string) =>
   withMockFallback(
-    () => apiGet<AvailabilityResult>('/api/v1/auth/loginid/check', { loginid: loginId }),
+    () => apiGet<AvailabilityResult>('/api/v1/auth/loginid/check', { loginId }),
     { available: true },
   )
 
@@ -85,10 +85,10 @@ export const completeSocialSignup = (signupToken: string, agreedTermsIds: number
   )
 
 export const getMe = () =>
-  withMockFallback(() => apiGet<MeResult>('/api/v1/users/me'), MOCK_ME_RESULT)
+  withMockFallback(() => apiGet<MeResult>('/api/v1/auth/me'), MOCK_ME_RESULT)
 
 export const updateNickname = (nickname: string) =>
-  withMockFallback(() => apiPatch<UpdateNicknameResult>('/api/v1/users/me', { nickname }), {
+  withMockFallback(() => apiPatch<UpdateNicknameResult>('/api/v1/auth/me', { nickname }), {
     user: { id: 1, nickname },
   })
 
@@ -97,4 +97,4 @@ export const checkNicknameAvailable = (nickname: string) =>
     available: true,
   })
 
-export const withdraw = () => withMockFallback(() => apiDelete<null>('/api/v1/users/me'), null)
+export const withdraw = () => withMockFallback(() => apiDelete<null>('/api/v1/auth/me'), null)
