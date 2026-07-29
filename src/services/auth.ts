@@ -22,18 +22,6 @@ const MOCK_LOGIN_RESULT: LoginResult = {
   },
 }
 
-const MOCK_ME_RESULT: MeResult = {
-  user: {
-    id: 1,
-    name: '이수현',
-    nickname: '즐거운사진사1204',
-    email: 'demo@pickday.com',
-    profileImageUrl: '',
-    provider: 'LOCAL',
-    notification: { reservation: true, marketing: false },
-  },
-}
-
 export const signup = (body: {
   loginId: string
   name: string
@@ -84,8 +72,8 @@ export const completeSocialSignup = (signupToken: string, agreedTermsIds: number
     { headers: { Authorization: `Bearer ${signupToken}` } },
   )
 
-export const getMe = () =>
-  withMockFallback(() => apiGet<MeResult>('/api/v1/auth/me'), MOCK_ME_RESULT)
+// 개인정보 조회는 실패를 mock으로 가리면 안 됨(실제 계정 문제를 감지할 수 없게 됨) — mock fallback 없이 그대로 전파
+export const getMe = () => apiGet<MeResult>('/api/v1/auth/me')
 
 export const updateNickname = (nickname: string) =>
   withMockFallback(() => apiPatch<UpdateNicknameResult>('/api/v1/auth/me', { nickname }), {
