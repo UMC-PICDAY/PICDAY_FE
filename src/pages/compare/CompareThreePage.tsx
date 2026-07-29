@@ -30,6 +30,7 @@ import {
   type CompareResultStudio,
   type ShootingCategory,
 } from '@/services/studio'
+import { useCompareStore } from '@/stores/useCompareStore'
 
 interface CompareData {
   price: string
@@ -184,6 +185,8 @@ const convertStudio = (
 const CompareThreePage = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  
+  const { remove: removeCompare } = useCompareStore()
 
   const navigationState =
     location.state as NavigationState | null
@@ -344,6 +347,8 @@ const CompareThreePage = () => {
 
       return remainingStudios
     })
+
+    removeCompare(Number(studioId))
   }
 
   const handleAddStudio = () => {
