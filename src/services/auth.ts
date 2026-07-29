@@ -21,7 +21,7 @@ export const signup = (body: {
 }) => apiPost<SignupResult>('/api/v1/auth/signup', body)
 
 export const checkLoginIdAvailable = (loginId: string) =>
-  apiGet<AvailabilityResult>('/api/v1/auth/loginid/check', { loginid: loginId })
+  apiGet<AvailabilityResult>('/api/v1/auth/loginid/check', { loginId })
 
 export const login = (loginId: string, password: string) =>
   apiPost<LoginResult>('/api/v1/auth/login', { loginId, password })
