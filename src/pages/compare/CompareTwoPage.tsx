@@ -29,6 +29,7 @@ import {
   type CompareResultStudio,
   type ShootingCategory,
 } from '@/services/studio'
+import { useCompareStore } from '@/stores/useCompareStore'
 
 interface CompareData {
   price: string
@@ -184,6 +185,11 @@ const CompareTwoPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const {
+    remove: removeCompare,
+    clear: clearCompare,
+  } = useCompareStore()
+
   const navigationState =
     location.state as NavigationState | null
 
@@ -313,11 +319,17 @@ const CompareTwoPage = () => {
   }
 
   const handleClose = () => {
+    clearCompare()
+
     navigate(
       {
         pathname: '/studios',
         search: studioSearch,
-      })
+      },
+      {
+        replace: true,
+      },
+    )
   }
 
   const handleStudioDetail = (studioId: string) => {
@@ -342,6 +354,8 @@ const CompareTwoPage = () => {
 
       return remainingStudios
     })
+
+    removeCompare(Number(studioId))
   }
 
   const handleAddStudio = () => {

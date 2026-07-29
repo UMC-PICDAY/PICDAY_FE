@@ -186,7 +186,10 @@ const CompareThreePage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   
-  const { remove: removeCompare } = useCompareStore()
+  const { 
+    remove: removeCompare,
+    clear: clearCompare,
+  } = useCompareStore()
 
   const navigationState =
     location.state as NavigationState | null
@@ -317,11 +320,16 @@ const CompareThreePage = () => {
   }
 
   const handleClose = () => {
+    clearCompare()
+
     navigate(
       {
         pathname: '/studios',
         search: studioSearch,
-      }    
+      },
+      {
+        replace: true,
+      },    
     )
   }
 
