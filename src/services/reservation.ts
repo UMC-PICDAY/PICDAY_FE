@@ -52,7 +52,7 @@ export const createReservation = (
 export interface CancelReservationData {
   reservationId: number
   status: 'CANCELLED'
-  cancelledAt: string
+  canceledAt: string
 }
 
 export const cancelReservation = (

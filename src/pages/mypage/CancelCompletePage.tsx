@@ -27,7 +27,7 @@ interface CancelCompleteReservation {
   reservationTime: string
   conceptName: string
   totalPrice: number
-  cancelledAt: string
+  canceledAt: string
 }
 
 interface CancelCompleteLocationState {
