@@ -1,12 +1,12 @@
-// 홈(2-1)·자동완성(2-2) 응답의 locationCategory가 한글("홍대") → 영문 코드("HONGDAE")로 변경됨(백엔드 확정).
-// "HONGDAE"만 백엔드가 확정해준 값이고, 나머지는 REGION_CHIPS(검색 지역칩) 목록 기준 추정치라
-// 실제 응답과 다르면 백엔드에 코드 목록을 확인해서 갱신해야 함.
+// locationCategory는 한글("홍대")이 아니라 영문 코드("HONGDAE")로 내려온다.
+// 아래 10개는 검색 API(2-3)에 실제로 넣어보고 전부 통과하는 것을 확인한 확정값이다.
+// (건대는 GEONDAE가 아니라 KONDAE. GEONDAE로 보내면 STUDIO_4008 오류)
 export const LOCATION_CATEGORY_LABEL: Record<string, string> = {
   HONGDAE: '홍대',
   GANGNAM: '강남',
   SEONGSU: '성수',
   YEONNAM: '연남',
-  GEONDAE: '건대',
+  KONDAE: '건대',
   SINCHON: '신촌',
   JAMSIL: '잠실',
   APGUJEONG: '압구정',

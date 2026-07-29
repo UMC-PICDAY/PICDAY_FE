@@ -9,6 +9,7 @@ import type {
   StudioProductDetail,
   StudioProductsData,
   StudioProductsParams,
+  StudioSearchByNameParams,
   StudioSearchParams,
   StudioSearchResult,
   StudioTimeSlot,
@@ -29,11 +30,57 @@ export const autocompleteStudios = (keyword: string) =>
 
 // ===== 2-3 ~ 2-8. 사진관 검색/상세/상품/슬롯/헤어메이크업 (남현준) =====
 
-// 2-3. 사진관 검색
-export const searchStudios = (
-  params: StudioSearchParams,
-): Promise<StudioSearchResult> =>
-  apiGet<StudioSearchResult>('/api/v1/studios/search', params)
+// 2-3. 사진관 통합 검색 (위치·날짜·컨셉)
+// 배열 파라미터는 반복키(shootingCategory=A&shootingCategory=B)로 보내야 한다.
+// axios 기본 직렬화(shootingCategory[]=A)는 백엔드가 조건 없음으로 처리해 400을 낸다.
+export const searchStudios = ({
+  locationCategory,
+  date,
+  shootingCategory,
+  sort,
+  minPrice,
+  maxPrice,
+  serviceCode,
+  minRating,
+}: StudioSearchParams): Promise<StudioSearchResult> => {
+  const searchParams = new URLSearchParams()
+  if (locationCategory) searchParams.set('locationCategory', locationCategory)
+  if (date) searchParams.set('date', date)
+  shootingCategory?.forEach((code) => searchParams.append('shootingCategory', code))
+  if (sort) searchParams.set('sort', sort)
+  if (minPrice !== undefined) searchParams.set('minPrice', String(minPrice))
+  if (maxPrice !== undefined) searchParams.set('maxPrice', String(maxPrice))
+  serviceCode?.forEach((code) => searchParams.append('serviceCode', code))
+  if (minRating !== undefined) searchParams.set('minRating', String(minRating))
+
+  return apiGet<StudioSearchResult>(
+    `/api/v1/studios/search?${searchParams.toString()}`,
+  )
+}
+
+// 2-3-2. 사진관 이름 선택 검색 (자동완성에서 고른 studioId 기준)
+// 배열 파라미터(serviceCode)를 반복키로 보내야 해서 쿼리를 직접 조립한다.
+// axios 기본 직렬화(serviceCode[]=A)는 백엔드가 인식하지 못한다.
+export const searchStudiosByName = ({
+  studioId,
+  sort,
+  minPrice,
+  maxPrice,
+  serviceCode,
+  minRating,
+}: StudioSearchByNameParams): Promise<StudioSearchResult> => {
+  const searchParams = new URLSearchParams()
+  searchParams.set('studioId', String(studioId))
+  if (sort) searchParams.set('sort', sort)
+  if (minPrice !== undefined) searchParams.set('minPrice', String(minPrice))
+  if (maxPrice !== undefined) searchParams.set('maxPrice', String(maxPrice))
+  serviceCode?.forEach((code) => searchParams.append('serviceCode', code))
+  if (minRating !== undefined) searchParams.set('minRating', String(minRating))
+
+  return apiGet<StudioSearchResult>(
+    `/api/v1/studios/search/name?${searchParams.toString()}`,
+  )
+}
 
 // 2-4. 사진관 상세
 export const getStudioDetail = (studioId: string): Promise<StudioDetail> =>
@@ -69,12 +116,8 @@ export const getStudioSlots = (
   )
 
 // 2-8. 헤어메이크업 연계 상세
-export const getStudioHairMakeup = (
-  studioId: string,
-): Promise<HairMakeupData> =>
-  apiGet<HairMakeupData>(
-    `/api/v1/studios/${studioId}/hairMakeupDetail`,
-  )
+export const getStudioHairMakeup = (studioId: string): Promise<HairMakeupData> =>
+  apiGet<HairMakeupData>(`/api/v1/studios/${studioId}/hair-makeup`)
 
 // 최근 본 사진관 기록 — 로그인 사용자가 상세 페이지에 진입할 때만 호출
 export interface RecentStudioViewResult {

@@ -1,10 +1,8 @@
 import CardStudioPreview from '@/components/cards/CardStudioPreview'
-import { STUDIO_SERVICE_OPTIONS } from '@/utils/studioSearchParams'
+import { getLocationLabel } from '@/constants/locationCategory'
+import { getShootingCategoryLabel } from '@/constants/shootingCategory'
+import { getStudioServiceShortLabel } from '@/constants/studioService'
 import type { StudioSearchItem } from '@/types/studio'
-
-const SERVICE_LABEL = new Map<string, string>(
-  STUDIO_SERVICE_OPTIONS.map(({ value, quickLabel }) => [value, quickLabel]),
-)
 
 const formatPrice = (price: number) => `₩${price.toLocaleString()}~`
 
@@ -37,10 +35,12 @@ const StudioResultsList = ({
         <CardStudioPreview
           key={studio.studioId}
           name={studio.studioName}
-          location={studio.locationCategory}
-          category={studio.shootingCategory[0] ?? ''}
-          secondaryCategory={studio.shootingCategory[1] ?? ''}
-          services={studio.serviceTags.map((tag) => SERVICE_LABEL.get(tag) ?? tag)}
+          location={getLocationLabel(studio.locationCategory)}
+          category={getShootingCategoryLabel(studio.shootingCategories[0] ?? '')}
+          secondaryCategory={getShootingCategoryLabel(
+            studio.shootingCategories[1] ?? '',
+          )}
+          services={studio.serviceCodes.map(getStudioServiceShortLabel)}
           price={formatPrice(studio.minPrice)}
           rating={String(studio.rating)}
           reviewCount={String(studio.reviewCount)}

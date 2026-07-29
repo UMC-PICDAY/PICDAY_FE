@@ -15,7 +15,8 @@ import type { StudioSearchFilters } from '@/utils/studioSearchParams'
 
 const SearchPage = () => {
   const navigate = useNavigate()
-  const { keyword, keywordType, date, isDateUndecided, purpose } = useSearchDraftStore()
+  const { keyword, keywordType, studioId, date, isDateUndecided, purpose } =
+    useSearchDraftStore()
 
   const dateLabel = isDateUndecided ? '날짜 미정' : date ? formatSearchDate(date) : undefined
   // 지역칩 '전체'(keywordType 'all')와 '날짜 미정'(date null)은 표시용일 뿐
@@ -25,10 +26,12 @@ const SearchPage = () => {
 
   const handleSearch = () => {
     const isRegion = keywordType === 'region' && keyword !== ''
+    const isStudioName = keywordType === 'name' && studioId !== null
 
     const filters: StudioSearchFilters = {
       location: isRegion ? keyword : undefined,
-      name: keywordType === 'name' && keyword !== '' ? keyword : undefined,
+      studioId: isStudioName ? studioId : undefined,
+      studioName: isStudioName ? keyword : undefined,
       date: date ? formatCalendarDateForUrl(date) : undefined,
       concepts: purpose ? [purpose] : [],
       services: [],

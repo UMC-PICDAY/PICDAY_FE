@@ -7,8 +7,13 @@ import {
   getStudioProducts,
   getStudioSlots,
   searchStudios,
+  searchStudiosByName,
 } from '@/services/studio'
-import type { StudioProductsParams, StudioSearchParams } from '@/types/studio'
+import type {
+  StudioProductsParams,
+  StudioSearchByNameParams,
+  StudioSearchParams,
+} from '@/types/studio'
 import {
   hasBaseSearchCondition,
   serializeStudioSearchParams,
@@ -16,25 +21,40 @@ import {
 import type { StudioSearchFilters } from '@/utils/studioSearchParams'
 
 const toSearchParams = (filters: StudioSearchFilters): StudioSearchParams => ({
-  location: filters.location,
+  locationCategory: filters.location,
   date: filters.date,
-  concept: filters.concepts.length ? filters.concepts : undefined,
-  name: filters.name,
+  shootingCategory: filters.concepts.length ? filters.concepts : undefined,
   sort: filters.sort,
   minPrice: filters.minPrice,
   maxPrice: filters.maxPrice,
-  service: filters.services.length ? filters.services : undefined,
+  serviceCode: filters.services.length ? filters.services : undefined,
+  minRating: filters.minRating,
+})
+
+const toSearchByNameParams = (
+  filters: StudioSearchFilters,
+  studioId: number,
+): StudioSearchByNameParams => ({
+  studioId,
+  sort: filters.sort,
+  minPrice: filters.minPrice,
+  maxPrice: filters.maxPrice,
+  serviceCode: filters.services.length ? filters.services : undefined,
   minRating: filters.minRating,
 })
 
 export const studioSearchQueryKey = (filters: StudioSearchFilters) =>
   ['studioSearch', serializeStudioSearchParams(filters).toString()] as const
 
-// 2-3. 사진관 검색 — 기본 조건(location/date/concept/name)이 하나라도 있어야 호출.
+// 2-3. 사진관 검색 — studioId가 있으면 이름 검색(2-3-2), 없으면 통합 검색을 호출한다.
+// 통합 검색은 기본 조건(location/date/concept)이 하나라도 있어야 한다.
 export const useStudioSearch = (filters: StudioSearchFilters) =>
   useQuery({
     queryKey: studioSearchQueryKey(filters),
-    queryFn: () => searchStudios(toSearchParams(filters)),
+    queryFn: () =>
+      filters.studioId !== undefined
+        ? searchStudiosByName(toSearchByNameParams(filters, filters.studioId))
+        : searchStudios(toSearchParams(filters)),
     enabled: hasBaseSearchCondition(filters),
   })
 
@@ -46,13 +66,13 @@ export const useStudioDetail = (studioId: string | undefined) =>
     enabled: Boolean(studioId),
   })
 
-// 2-5. 컨셉(상품) 목록 — date·time이 둘 다 있으면 상품별 isAvailable 반영.
+// 2-5. 컨셉(상품) 목록 — timeSlotId를 넘기면 응답에 selectedSlot이 실린다.
 export const useStudioProducts = (
   studioId: string | undefined,
   params?: StudioProductsParams,
 ) =>
   useQuery({
-    queryKey: ['studioProducts', studioId, params?.date ?? null, params?.time ?? null],
+    queryKey: ['studioProducts', studioId, params?.timeSlotId ?? null],
     queryFn: () => getStudioProducts(studioId ?? '', params),
     enabled: Boolean(studioId),
   })

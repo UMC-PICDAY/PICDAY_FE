@@ -5,15 +5,16 @@ import { IcPin } from '@/components/icons'
 import { useKakaoLoader } from '@/hooks/useKakaoLoader'
 
 interface StudioLocationMapProps {
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   studioName: string
 }
 
 /**
  * 상세 페이지 '위치 및 주변 정보'의 단일 좌표 미니 지도.
  * 드래그·줌을 막아 정적으로 표시하고, 스튜디오 위치를 자체 디자인 마커로 찍는다.
- * SDK 로드 실패 시 회색 박스 + 핀 아이콘 fallback을 그대로 유지한다.
+ * SDK 로드 실패 시, 그리고 좌표가 없는 사진관일 때
+ * 회색 박스 + 핀 아이콘 fallback을 보여준다.
  */
 const StudioLocationMap = ({
   latitude,
@@ -22,7 +23,7 @@ const StudioLocationMap = ({
 }: StudioLocationMapProps) => {
   const [, error] = useKakaoLoader()
 
-  if (error) {
+  if (error || latitude === null || longitude === null) {
     return (
       <div className="relative flex h-[180px] w-full items-center justify-center rounded-xl bg-gray-20">
         <IcPin width={48} height={48} className="text-brand-100" />

@@ -8,11 +8,7 @@ export type ReviewKeyword =
   | 'SATISFYING_RESULT'
 
 // 5-1. GET /api/v1/studios/{studioId}/reviews
-export type ReviewSort =
-  | 'recent'
-  | 'recommend'
-  | 'ratingHigh'
-  | 'ratingLow'
+export type ReviewSort = 'recent' | 'recommend' | 'ratingHigh' | 'ratingLow'
 
 export interface ReviewListParams {
   sort?: ReviewSort
@@ -26,13 +22,14 @@ export interface ReviewListItem {
   writerNickname: string
   rating: number
   content: string
-  keywords: ReviewKeyword[]
+  keywords: ReviewKeyword[] // 태그가 없으면 빈 배열
+  conceptName: string // 촬영 컨셉명
   images: string[]
   likeCount: number
   isLiked: boolean
+  // 해당 사진관에서 추천 수가 가장 많은 리뷰 1건
   isBest: boolean
-  conceptName: string
-  createdAt: string
+  createdAt: string // ISO 8601
 }
 
 export interface ReviewSummary {
