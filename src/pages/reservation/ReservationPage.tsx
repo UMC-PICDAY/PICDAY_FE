@@ -88,8 +88,16 @@ interface ReservationPageData {
   price: number
 }
 
+interface ReservationDraft {
+  selectedPaymentMethod: PaymentMethod
+  agreement: Record<string, boolean>
+  reserverName: string
+  reserverPhone: string
+}
+
 interface ReservationPageLocationState {
   reservation?: ReservationPageData
+  draft?: ReservationDraft
 }
 
 type ModalType =
@@ -187,23 +195,26 @@ const ReservationPage = () => {
   const reservation =
     locationState?.reservation ?? RESERVATION_MOCK
 
+  const draft = locationState?.draft
+
   const [
     selectedPaymentMethod,
     setSelectedPaymentMethod,
   ] = useState<PaymentMethod>(
-    PAYMENT_METHODS[0].value,
+    draft?.selectedPaymentMethod ??
+      PAYMENT_METHODS[0].value,
   )
 
   const [agreement, setAgreement] = useState(
-    INITIAL_AGREEMENT,
+    draft?.agreement ?? INITIAL_AGREEMENT,
   )
 
   const [reserverName, setReserverName] = useState(
-    reservation.reserverName,
+    draft?.reserverName ?? reservation.reserverName,
   )
 
   const [reserverPhone, setReserverPhone] = useState(
-    reservation.reserverPhone,
+    draft?.reserverPhone ?? reservation.reserverPhone,
   )
 
   const [modalType, setModalType] =
@@ -270,6 +281,30 @@ const ReservationPage = () => {
       ...prevAgreement,
       [key]: !prevAgreement[key],
     }))
+  }
+
+  const handleOpenAgreementDetail = (
+  key: string,
+  ) => {
+    const currentState: ReservationPageLocationState = {
+      ...locationState,
+      reservation,
+      draft: {
+        selectedPaymentMethod,
+        agreement,
+        reserverName,
+        reserverPhone,
+      },
+    }
+
+    // 현재 예약 페이지의 history state에 입력값 저장
+    navigate(location.pathname, {
+      replace: true,
+      state: currentState,
+    })
+
+    // 약관 상세 페이지로 이동
+    navigate(`/reservation/terms/${key}`)
   }
 
   const handleBack = () => {
@@ -534,11 +569,10 @@ const ReservationPage = () => {
             onToggleItem={
               handleToggleAgreement
             }
-            onItemDetailClick={(key) =>
-              navigate(
-                `/reservation/terms/${key}`,
-              )
+            onItemDetailClick={
+              handleOpenAgreementDetail
             }
+              
             className="w-full"
           />
         </Section>
