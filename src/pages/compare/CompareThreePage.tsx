@@ -342,21 +342,25 @@ const CompareThreePage = () => {
   }
 
   const handleDeleteStudio = (studioId: string) => {
-    setSelectedStudios((currentStudios) => {
-      const remainingStudios = currentStudios.filter(
+      const remainingStudios = selectedStudios.filter(
         (studio) => studio.id !== studioId,
       )
 
-      if (selectedStudioId === studioId) {
-        setSelectedStudioId(
-          remainingStudios[0]?.id ?? null,
-        )
-      }
-
-      return remainingStudios
-    })
-
     removeCompare(Number(studioId))
+
+    // 3개 → 2개: D-2 레이아웃으로 전환
+    navigate('/compare/two', {
+      replace: true,
+      state: {
+        studioIds: remainingStudios.map(
+          (studio) => studio.id,
+        ),
+        shootingCategory,
+        purpose: shootingCategoryName || purpose,
+        studios: remainingStudios,
+        studioSearch,
+      },
+    })
   }
 
   const handleAddStudio = () => {
