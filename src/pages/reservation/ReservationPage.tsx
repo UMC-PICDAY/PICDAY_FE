@@ -15,11 +15,6 @@
  *   - 뒤로가기: 결제 중단 확인
  *   - 슬롯 충돌: 컨셉 목록으로 돌아가 시간 재선택
  *   - 예약 처리 실패: 현재 페이지에서 다시 시도
- *
- * TODO
- *   - 로그인 사용자 이름 및 연락처 기본값 연결
- *   - 결제 실패 전용 API 코드 확정 후 분기 연결
- *   - 개발용 테스트 버튼 제거
  */
 
 import type {
@@ -57,11 +52,6 @@ interface InfoFieldProps {
 interface SectionProps {
   children: ReactNode
   className?: string
-}
-
-interface DevModalButtonProps {
-  children: ReactNode
-  onClick: () => void
 }
 
 interface PaymentMethodItem {
@@ -103,7 +93,6 @@ interface ReservationPageLocationState {
 type ModalType =
   | 'exit'
   | 'reservationConflict'
-  | 'paymentFailed'
   | 'reservationFailed'
   | null
 
@@ -399,11 +388,6 @@ const ReservationPage = () => {
     }
   }
 
-  const handleRetryPayment = () => {
-    setModalType(null)
-    void handlePayment()
-  }
-
   const handleRetryReservation = () => {
     setModalType(null)
     void handlePayment()
@@ -594,46 +578,6 @@ const ReservationPage = () => {
         </div>
       </main>
 
-      {import.meta.env.DEV && (
-        <div className="fixed bottom-12 left-1/2 z-40 grid w-[calc(100%-40px)] max-w-[362px] -translate-x-1/2 grid-cols-2 gap-1 rounded-lg bg-white/90 p-2 shadow-[0px_8px_24px_0px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
-          <DevModalButton
-            onClick={() =>
-              setModalType('exit')
-            }
-          >
-            이탈 방지
-          </DevModalButton>
-
-          <DevModalButton
-            onClick={() =>
-              setModalType(
-                'reservationConflict',
-              )
-            }
-          >
-            예약 충돌
-          </DevModalButton>
-
-          <DevModalButton
-            onClick={() =>
-              setModalType('paymentFailed')
-            }
-          >
-            결제 실패
-          </DevModalButton>
-
-          <DevModalButton
-            onClick={() =>
-              setModalType(
-                'reservationFailed',
-              )
-            }
-          >
-            예약 처리 오류
-          </DevModalButton>
-        </div>
-      )}
-
       {modalType && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-gray-80/90 px-5"
@@ -670,18 +614,6 @@ const ReservationPage = () => {
               helperText="선택하신 컨셉 목록으로 돌아갑니다"
               onClick={
                 handleSelectAnotherTime
-              }
-            />
-          )}
-
-          {modalType === 'paymentFailed' && (
-            <Alert
-              variant="variant3"
-              title="결제에 실패했어요"
-              description="잠시 후 다시 시도해 주세요"
-              confirmText="다시 시도하기"
-              onConfirm={
-                handleRetryPayment
               }
             />
           )}
@@ -747,19 +679,6 @@ const InfoField = ({
       </p>
     )}
   </label>
-)
-
-const DevModalButton = ({
-  children,
-  onClick,
-}: DevModalButtonProps) => (
-  <button
-    type="button"
-    className="font-cap3 rounded-md border border-gray-10 bg-white px-2 py-1.5 text-gray-80"
-    onClick={onClick}
-  >
-    {children}
-  </button>
 )
 
 export default ReservationPage
