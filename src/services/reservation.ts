@@ -38,18 +38,12 @@ export interface CreateReservationData {
   createdAt: string
 }
 
+// 예약 생성은 실패를 mock으로 가리면 안 됨(성공 화면으로 넘어가놓고 실제로는
+// 예약이 안 만들어지는 사고로 이어짐) — mock fallback 없이 그대로 전파
 export const createReservation = (
   body: CreateReservationRequest,
 ): Promise<CreateReservationData> =>
-  withMockFallback(
-    () => apiPost<CreateReservationData>('/api/v1/reservations', body),
-    {
-      reservationId: 1,
-      status: 'RESERVED',
-      totalPrice: 55000,
-      createdAt: new Date().toISOString(),
-    },
-  )
+  apiPost<CreateReservationData>('/api/v1/reservations', body)
 
 /**
  * 3-2. 예약 취소
