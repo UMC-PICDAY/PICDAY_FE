@@ -2,7 +2,6 @@ import {
   apiGet,
   apiPatch,
   apiPost,
-  withMockFallback,
 } from '@/services/client'
 
 export type PaymentMethod =
@@ -38,12 +37,13 @@ export interface CreateReservationData {
   createdAt: string
 }
 
-// 예약 생성은 실패를 mock으로 가리면 안 됨(성공 화면으로 넘어가놓고 실제로는
-// 예약이 안 만들어지는 사고로 이어짐) — mock fallback 없이 그대로 전파
 export const createReservation = (
   body: CreateReservationRequest,
 ): Promise<CreateReservationData> =>
-  apiPost<CreateReservationData>('/api/v1/reservations', body)
+  apiPost<CreateReservationData>(
+    '/api/v1/reservations',
+    body,
+  )
 
 /**
  * 3-2. 예약 취소
@@ -55,12 +55,12 @@ export interface CancelReservationData {
   canceledAt: string
 }
 
-// 예약 취소도 생성과 동일한 이유로 mock fallback 없이 그대로 전파
-// (실패해도 취소 완료 화면으로 넘어가면서 실제로는 예약이 그대로 남는 사고로 이어짐)
 export const cancelReservation = (
   reservationId: string | number,
 ): Promise<CancelReservationData> =>
-  apiPatch<CancelReservationData>(`/api/v1/reservations/${reservationId}/cancel`)
+  apiPatch<CancelReservationData>(
+    `/api/v1/reservations/${reservationId}/cancel`,
+  )
 
 /**
  * 3-3. 내 예약 내역 목록 조회
@@ -77,45 +77,16 @@ export interface ReservationListItem {
   reviewId: number | null
 }
 
-const MOCK_RESERVATION_LIST: ReservationListItem[] = [
-  {
-    reservationId: 1,
-    studioName: '데이지 스튜디오',
-    conceptName: '체리베리벌쓰데이',
-    reservationDate: '2026-08-01',
-    reservationTime: '14:00',
-    totalPrice: 55000,
-    status: 'RESERVED',
-    reviewId: null,
-  },
-  {
-    reservationId: 2,
-    studioName: '보노 스튜디오',
-    conceptName: '프로필 기본',
-    reservationDate: '2026-06-10',
-    reservationTime: '11:00',
-    totalPrice: 30000,
-    status: 'COMPLETED',
-    reviewId: null,
-  },
-]
-
 export const getMyReservations = (
   status?: ReservationStatus,
 ): Promise<ReservationListItem[]> =>
-  withMockFallback(
-    () =>
-      apiGet<ReservationListItem[]>(
-        '/api/v1/reservations',
-        status
-          ? {
-              status,
-            }
-          : undefined,
-      ),
+  apiGet<ReservationListItem[]>(
+    '/api/v1/reservations',
     status
-      ? MOCK_RESERVATION_LIST.filter((item) => item.status === status)
-      : MOCK_RESERVATION_LIST,
+      ? {
+          status,
+        }
+      : undefined,
   )
 
 /**
@@ -151,22 +122,6 @@ export interface ReservationDetailData {
 export const getReservationDetail = (
   reservationId: string | number,
 ): Promise<ReservationDetailData> =>
-  withMockFallback(
-    () =>
-      apiGet<ReservationDetailData>(
-        `/api/v1/reservations/${reservationId}`,
-      ),
-    {
-      reservationId: Number(reservationId) || 1,
-      status: 'RESERVED',
-      reserveeName: '이수현',
-      reserveePhone: '01012345678',
-      totalPrice: 55000,
-      studio: { id: 1, name: '데이지 스튜디오' },
-      studioProduct: { id: 1, name: '체리베리벌쓰데이', price: 55000 },
-      timeSlot: { date: '2026-08-01', startTime: '14:00', endTime: '15:00' },
-      reviewId: null,
-      checklist: ['예약 시간 10분 전까지 도착해주세요.', '촬영 3일 전까지 변경/취소가 가능합니다.'],
-      createdAt: new Date().toISOString(),
-    },
+  apiGet<ReservationDetailData>(
+    `/api/v1/reservations/${reservationId}`,
   )

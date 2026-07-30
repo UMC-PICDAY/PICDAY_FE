@@ -107,9 +107,3 @@ export const apiDelete = async <T>(url: string): Promise<T> => {
   const response = await apiClient.delete<ApiResponse<T>>(url)
   return unwrap(response)
 }
-
-// 백엔드 미배포 상태에서 데모가 빈 화면으로 보이지 않도록 하는 임시 안전장치.
-// 실제 API가 응답하면 그대로 쓰고, 실패(백엔드 미배포 등)할 때만 mock으로 대체한다.
-// 백엔드 배포되면 이 함수를 쓰는 곳들을 지우면 됨 (services/*.ts에서 `withMockFallback` 검색).
-export const withMockFallback = <T>(request: () => Promise<T>, mock: T): Promise<T> =>
-  request().catch(() => mock)
