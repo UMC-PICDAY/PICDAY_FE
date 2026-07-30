@@ -30,6 +30,7 @@ import {
   type CompareResultStudio,
   type ShootingCategory,
 } from '@/services/studio'
+import { useCompareStore } from '@/stores/useCompareStore'
 
 interface CompareData {
   price: string
@@ -184,6 +185,11 @@ const convertStudio = (
 const CompareThreePage = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  
+  const { 
+    remove: removeCompare,
+    clear: clearCompare,
+  } = useCompareStore()
 
   const navigationState =
     location.state as NavigationState | null
@@ -314,11 +320,16 @@ const CompareThreePage = () => {
   }
 
   const handleClose = () => {
+    clearCompare()
+
     navigate(
       {
         pathname: '/studios',
         search: studioSearch,
-      }    
+      },
+      {
+        replace: true,
+      },    
     )
   }
 
@@ -331,18 +342,24 @@ const CompareThreePage = () => {
   }
 
   const handleDeleteStudio = (studioId: string) => {
-    setSelectedStudios((currentStudios) => {
-      const remainingStudios = currentStudios.filter(
+      const remainingStudios = selectedStudios.filter(
         (studio) => studio.id !== studioId,
       )
 
-      if (selectedStudioId === studioId) {
-        setSelectedStudioId(
-          remainingStudios[0]?.id ?? null,
-        )
-      }
+    removeCompare(Number(studioId))
 
-      return remainingStudios
+    // 3개 → 2개: D-2 레이아웃으로 전환
+    navigate('/compare/two', {
+      replace: true,
+      state: {
+        studioIds: remainingStudios.map(
+          (studio) => studio.id,
+        ),
+        shootingCategory,
+        purpose: shootingCategoryName || purpose,
+        studios: remainingStudios,
+        studioSearch,
+      },
     })
   }
 

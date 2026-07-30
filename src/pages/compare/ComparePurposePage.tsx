@@ -52,6 +52,7 @@ import {
   type CompareShootingPurpose,
   type ShootingCategory,
 } from '@/services/studio'
+import { useCompareStore } from '@/stores/useCompareStore'
 
 type PurposeType =
   | '증명'
@@ -102,6 +103,8 @@ const isPurposeType = (value: unknown): value is PurposeType =>
 const ComparePurposePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
+
+  const { remove: removeCompare } = useCompareStore()
 
   const navigationState = location.state as CompareNavigationState | null
   const rawStudioIds = navigationState?.studioIds
@@ -265,6 +268,7 @@ const ComparePurposePage = () => {
         (studio) => studio.id !== studioId,
       ),
     )
+    removeCompare(Number(studioId))
   }
 
   const handleAddStudio = () => {

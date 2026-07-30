@@ -29,6 +29,7 @@ import ReservationPage from '@/pages/reservation/ReservationPage'
 import ReservationCompletePage from '@/pages/reservation/ReservationCompletePage'
 import AgreementDetailPage from '@/pages/reservation/AgreementDetailPage'
 
+import RequireAuth from '@/components/auth/RequireAuth'
 import MyReservationPage from '@/pages/mypage/MyReservationPage'
 import ReservationDetailPage from '@/pages/mypage/ReservationDetailPage'
 import ReservationCancelPage from '@/pages/mypage/ReservationCancelPage'
@@ -87,16 +88,18 @@ function App() {
       <Route path="/reservation/terms/:key" element={<AgreementDetailPage />}
 />
 
-      {/* 마이페이지 */}
-      <Route path="/mypage" element={<MyReservationPage />} />
-      <Route path="/mypage/reservations/:reservationId" element={<ReservationDetailPage />} />
-      <Route path="/mypage/reservations/:reservationId/cancel" element={<ReservationCancelPage />} />
-      <Route path="/mypage/reservations/:reservationId/cancel/complete" element={<CancelCompletePage />} />
-      <Route path="/mypage/profile" element={<ProfileSettingPage />} />
-      <Route path="/mypage/withdraw/complete" element={<WithdrawCompletePage />} />
-      <Route path="/mypage/reservations/:reservationId/review" element={<ReviewWritePage />} />
-      <Route path="/mypage/reservations/:reservationId/review/complete" element={<ReviewCompletePage />} />
-      <Route path="/mypage/reviews/:reviewId" element={<MyReviewPage />} />
+      {/* 마이페이지 (로그인 가드) */}
+      <Route element={<RequireAuth />}>
+        <Route path="/mypage" element={<MyReservationPage />} />
+        <Route path="/mypage/reservations/:reservationId" element={<ReservationDetailPage />} />
+        <Route path="/mypage/reservations/:reservationId/cancel" element={<ReservationCancelPage />} />
+        <Route path="/mypage/reservations/:reservationId/cancel/complete" element={<CancelCompletePage />} />
+        <Route path="/mypage/profile" element={<ProfileSettingPage />} />
+        <Route path="/mypage/withdraw/complete" element={<WithdrawCompletePage />} />
+        <Route path="/mypage/reservations/:reservationId/review" element={<ReviewWritePage />} />
+        <Route path="/mypage/reservations/:reservationId/review/complete" element={<ReviewCompletePage />} />
+        <Route path="/mypage/reviews/:reviewId" element={<MyReviewPage />} />
+      </Route>
 
       {/* 위시리스트 */}
       <Route path="/wishlist" element={<WishlistPage />} />

@@ -109,7 +109,7 @@ const MyReservationPage = () => {
     setHasError,
   ] = useState(false)
 
-  const [nickname, setNickname] = useState('')
+  const [userName, setUserName] = useState('')
 
   const [
     profileImageUrl,
@@ -158,8 +158,8 @@ const MyReservationPage = () => {
   useEffect(() => {
     getMe()
       .then((result) => {
-        setNickname(result.user.nickname)
-        setProfileImageUrl(result.user.profileImageUrl)
+        setUserName(result.user.name)
+        setProfileImageUrl(result.user.profileImageUrl ?? '')
         setProvider(result.user.provider)
       })
       .catch((error) => {
@@ -341,7 +341,7 @@ const MyReservationPage = () => {
     <div className="flex min-h-dvh w-full flex-col bg-white">
       <Profile
         variant="userInfo"
-        userName={nickname}
+        userName={userName}
         accountText={accountText}
         userImageSrc={profileImageUrl || logoIcon}
       />
