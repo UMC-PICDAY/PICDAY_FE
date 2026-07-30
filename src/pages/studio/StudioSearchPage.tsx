@@ -36,6 +36,26 @@ import {
   toggleStudioService,
 } from '@/utils/studioSearchParams'
 
+type ComparePurpose =
+  | '증명'
+  | '프로필'
+  | '개인화보'
+  | '취업'
+  | '가족'
+  | '우정'
+
+const SHOOTING_CATEGORY_TO_PURPOSE: Record<
+  string,
+  ComparePurpose
+> = {
+  ID_PHOTO: '증명',
+  PROFILE: '프로필',
+  PERSONAL_PORTRAIT: '개인화보',
+  JOB_PHOTO: '취업',
+  FAMILY: '가족',
+  FRIENDSHIP: '우정',
+}
+  
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
   ...STUDIO_SERVICE_OPTIONS
@@ -46,13 +66,24 @@ const QUICK_FILTER_ITEMS = [
 const StudioSearchPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const comparePurpose = (
+
+  const navigationPurpose = (
     location.state as {
-      purpose?: '증명' | '프로필' | '개인화보' | '취업' | '가족' | '우정'
+      purpose?: ComparePurpose
     } | null
   )?.purpose
+  
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
+
+  const searchPurpose =
+    SHOOTING_CATEGORY_TO_PURPOSE[
+      filters.concepts[0] ?? ''
+    ]
+
+  const comparePurpose =
+    navigationPurpose ?? searchPurpose
+
   const [mapError, setMapError] = useState(false)
   const queryClient = useQueryClient()
 

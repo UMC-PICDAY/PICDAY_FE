@@ -29,6 +29,7 @@ import {
   type CompareResultStudio,
   type ShootingCategory,
 } from '@/services/studio'
+import { useCompareStore } from '@/stores/useCompareStore'
 
 interface CompareData {
   price: string
@@ -184,6 +185,11 @@ const CompareTwoPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const {
+    remove: removeCompare,
+    clear: clearCompare,
+  } = useCompareStore()
+
   const navigationState =
     location.state as NavigationState | null
 
@@ -222,7 +228,8 @@ const CompareTwoPage = () => {
   useEffect(() => {
     if (
       !initialStudioIds ||
-      initialStudioIds.length !== 2
+      initialStudioIds.length < 1 ||
+      initialStudioIds.length > 2
     ) {
       setIsLoading(false)
       setErrorMessage(
@@ -271,7 +278,9 @@ const CompareTwoPage = () => {
           shootingCategory,
         })
 
-        if (data.studios.length !== 2) {
+        if (data.studios.length < 1 ||
+          data.studios.length > 2
+        ) {
           setSelectedStudios([])
           setSelectedStudioId(null)
           setErrorMessage(
@@ -313,11 +322,17 @@ const CompareTwoPage = () => {
   }
 
   const handleClose = () => {
+    clearCompare()
+
     navigate(
       {
         pathname: '/studios',
         search: studioSearch,
-      })
+      },
+      {
+        replace: true,
+      },
+    )
   }
 
   const handleStudioDetail = (studioId: string) => {
@@ -329,19 +344,37 @@ const CompareTwoPage = () => {
   }
 
   const handleDeleteStudio = (studioId: string) => {
-    setSelectedStudios((currentStudios) => {
-      const remainingStudios = currentStudios.filter(
+      const remainingStudios = selectedStudios.filter(
         (studio) => studio.id !== studioId,
       )
 
-      if (selectedStudioId === studioId) {
+      removeCompare(Number(studioId))
+
+      //1개 -> 0개
+      if (remainingStudios.length === 0) {
+        //비교 대상 없으므로 트레이 전체 초기화
+        clearCompare()
+
+        navigate(
+          {
+            pathname: '/studios',
+            search: studioSearch,
+          },
+          {
+            replace: true,
+          },
+        )
+        return
+      }
+
+      //2개 -> 1개: D-2 화면 유지
+      setSelectedStudios(remainingStudios)
+
+      if(selectedStudioId === studioId){
         setSelectedStudioId(
           remainingStudios[0]?.id ?? null,
         )
       }
-
-      return remainingStudios
-    })
   }
 
   const handleAddStudio = () => {
