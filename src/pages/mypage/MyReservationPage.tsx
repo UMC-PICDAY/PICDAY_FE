@@ -159,7 +159,7 @@ const MyReservationPage = () => {
     getMe()
       .then((result) => {
         setUserName(result.user.name)
-        setProfileImageUrl(result.user.profileImageUrl)
+        setProfileImageUrl(result.user.profileImageUrl ?? '')
         setProvider(result.user.provider)
       })
       .catch((error) => {
