@@ -205,12 +205,14 @@ const HomeFeed = () => {
         </div>
       </div>
 
-      <div
-        ref={largeCardScrollRef}
-        className="w-full overflow-x-auto py-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
-      </div>
+      {bannerCount > 0 && (
+        <div
+          ref={largeCardScrollRef}
+          className="w-full overflow-x-auto py-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
+        </div>
+      )}
 
       {recentStudios.length > 0 && (
         <>
