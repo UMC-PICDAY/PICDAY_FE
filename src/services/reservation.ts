@@ -55,20 +55,12 @@ export interface CancelReservationData {
   canceledAt: string
 }
 
+// 예약 취소도 생성과 동일한 이유로 mock fallback 없이 그대로 전파
+// (실패해도 취소 완료 화면으로 넘어가면서 실제로는 예약이 그대로 남는 사고로 이어짐)
 export const cancelReservation = (
   reservationId: string | number,
 ): Promise<CancelReservationData> =>
-  withMockFallback(
-    () =>
-      apiPatch<CancelReservationData>(
-        `/api/v1/reservations/${reservationId}/cancel`,
-      ),
-    {
-      reservationId: Number(reservationId) || 1,
-      status: 'CANCELLED',
-      canceledAt: new Date().toISOString(),
-    },
-  )
+  apiPatch<CancelReservationData>(`/api/v1/reservations/${reservationId}/cancel`)
 
 /**
  * 3-3. 내 예약 내역 목록 조회
