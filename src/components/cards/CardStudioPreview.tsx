@@ -182,7 +182,7 @@ const CardStudioPreview = ({
                   event.stopPropagation()
                   onCompareClick?.()
                 }}
-                className={`flex w-[89px] shrink-0 items-center justify-center rounded-[8px] px-[20px] py-[10px] ${
+                className={`flex w-[89px] shrink-0 items-center justify-center whitespace-nowrap rounded-[8px] px-[12px] py-[10px] ${
                   isCompareSelected
                     ? 'bg-brand-100 font-b7 text-white'
                     : 'border border-gray-20 bg-white font-b8 text-gray-40'
