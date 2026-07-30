@@ -158,10 +158,17 @@ const StudioSearchPage = () => {
   }, [isEmpty])
 
   useEffect(() => {
-    if (!searchParams.has('snap')) return
+    const requestedSnap = searchParams.get('snap')
+
+    if(!requestedSnap) return
+
+    if(requestedSnap === 'expanded'){
+      setSnap('expanded')
+    }
 
     const nextParams = new URLSearchParams(searchParams)
     nextParams.delete('snap')
+
     setSearchParams(nextParams, { replace: true })
   }, [searchParams, setSearchParams])
 
