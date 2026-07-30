@@ -26,6 +26,7 @@ import AppTabBar from '@/components/layout/AppTabBar'
 import { getMe } from '@/services/auth'
 import {
   getMyReservations,
+  getReservationDetail,
   type ReservationListItem,
   type ReservationStatus,
 } from '@/services/reservation'
@@ -304,7 +305,7 @@ const MyReservationPage = () => {
     }
   }
 
-  const handleRightButtonClick = (
+  const handleRightButtonClick = async (
     reservation: ReservationListItem,
   ) => {
     switch (reservation.status) {
@@ -328,7 +329,32 @@ const MyReservationPage = () => {
         break
 
       case 'CANCELLED':
-        navigate('/search')
+        try {
+          const reservationDetail =
+            await getReservationDetail(
+              String(reservation.reservationId),
+          )
+
+          navigate(
+            `/studios/${reservationDetail.studio.id}/concepts`,
+            {
+              state: {
+                openTimeSelectModal: true,
+              },
+            },
+          )
+        
+      } catch (error){
+        console.error(
+          '재예약을 위한 예약 정보 조회에 실패했습니다.',
+          error,
+        )
+
+        alert(
+          '예약 정보를 불러오지 못했습니다. 다시 시도해 주세요.'
+        )
+      }
+          
         break
     }
   }
@@ -460,7 +486,7 @@ const MyReservationPage = () => {
                     )
                   }
                   onRightButtonClick={() =>
-                    handleRightButtonClick(
+                    void handleRightButtonClick(
                       reservation,
                     )
                   }
