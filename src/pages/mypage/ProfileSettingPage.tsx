@@ -102,13 +102,13 @@ const ProfileSettingPage = () => {
         setUserName(user.name)
         setNickname(user.nickname)
         setOriginalNickname(user.nickname)
-        setProfileImageUrl(user.profileImageUrl)
+        setProfileImageUrl(user.profileImageUrl ?? '')
         setProvider(user.provider)
         setReservationAlarm(
-          user.notification.reservation,
+          user.notification?.reservation ?? false,
         )
         setMarketingAlarm(
-          user.notification.marketing,
+          user.notification?.marketing ?? false,
         )
       } catch (error) {
         console.error('내 정보 조회 실패:', error)

@@ -130,25 +130,26 @@ const PAYMENT_METHODS: PaymentMethodItem[] = [
   },
 ]
 
+// 약관 ID 5~8은 예약 전용 네임스페이스(1~4는 회원가입 약관과 겹침 — 백엔드 확인 완료)
 const AGREEMENT_ITEMS: AgreementItem[] = [
   {
-    id: 1,
+    id: 5,
     key: 'reservationRule',
     label:
       '촬영 이용규칙 및 취소/환불 규정 동의 (필수)',
   },
   {
-    id: 2,
+    id: 6,
     key: 'privacy',
     label: '개인정보 수집 및 이용 동의 (필수)',
   },
   {
-    id: 3,
+    id: 7,
     key: 'privacyThirdParty',
     label: '개인정보 제3자 제공 동의 (필수)',
   },
   {
-    id: 4,
+    id: 8,
     key: 'paymentTerms',
     label: '결제대행 서비스 약관 동의 (필수)',
   },

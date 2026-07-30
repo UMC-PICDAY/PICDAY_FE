@@ -82,9 +82,9 @@ export interface MeUser {
   name: string
   nickname: string
   email: string
-  profileImageUrl: string
+  profileImageUrl?: string | null
   provider: AuthProvider
-  notification: { reservation: boolean; marketing: boolean }
+  notification?: { reservation: boolean; marketing: boolean }
 }
 
 export interface MeResult {
