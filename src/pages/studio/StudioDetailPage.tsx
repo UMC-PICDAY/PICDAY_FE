@@ -3,6 +3,7 @@ import type { ComponentType, SVGProps } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
+import ReviewZero from '@/components/common/ReviewZero'
 import Toast from '@/components/common/Toast'
 import {
   IcBeauty,
@@ -181,6 +182,7 @@ const StudioDetailPage = () => {
     ...detail.studioInfo.refundGuide,
   ]
   const bestReview = detail.reviewSummary.previewReview
+  const hasReviews = detail.reviewSummary.reviewCount > 0
   const avgRatingText =
     detail.reviewSummary.averageRating != null
       ? detail.reviewSummary.averageRating.toFixed(1)
@@ -215,14 +217,27 @@ const StudioDetailPage = () => {
             {fullAddress && <span>{fullAddress}</span>}
           </div>
         )}
-        <button type="button" onClick={goToReviews} className="flex items-center pb-2">
-          <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
-          <span className="pl-0.5 font-b7 text-black">{avgRatingText}</span>
-          <span className="pl-0.5 font-b7 text-gray-40">
-            ({detail.reviewSummary.reviewCount}개 평가)
-          </span>
-          <IcRight width={20} height={20} className="text-gray-40" />
-        </button>
+        {/* 리뷰가 없으면 이동할 곳이 없어 링크로 두지 않는다. */}
+        {hasReviews ? (
+          <button
+            type="button"
+            onClick={goToReviews}
+            className="flex items-center gap-0.5 pb-2"
+          >
+            <IcStar width={20} height={20} className="shrink-0 text-brand-100" />
+            <span className="font-b7 text-black">{avgRatingText}</span>
+            <span className="font-b8 text-gray-40">
+              ({detail.reviewSummary.reviewCount}개 평가)
+            </span>
+            <IcRight width={20} height={20} className="shrink-0 text-gray-60" />
+          </button>
+        ) : (
+          <div className="flex items-center gap-0.5 pb-2">
+            <IcStar width={20} height={20} className="shrink-0 text-brand-100" />
+            <span className="font-b8 text-gray-40">리뷰가 아직 없습니다</span>
+            <IcRight width={20} height={20} className="shrink-0 text-gray-20" />
+          </div>
+        )}
       </div>
 
       <Divider />
@@ -383,33 +398,37 @@ const StudioDetailPage = () => {
 
       <Divider />
 
-      {/* 리뷰 요약 */}
-      <section className="px-5 py-5">
-        <button
-          type="button"
-          onClick={goToReviews}
-          className="flex w-full items-center pb-4"
-        >
-          <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
-          <span className="flex-1 pl-1 text-left">
-            <span className="font-b3 text-black">{avgRatingText}</span>
-            <span className="pl-1 font-b6 text-gray-60">
-              ({detail.reviewSummary.reviewCount}개 평가)
+      {/* 리뷰 요약. 리뷰가 없으면 평점 대신 진입점만 보여준다. */}
+      {hasReviews ? (
+        <section className="px-5 py-5">
+          <button
+            type="button"
+            onClick={goToReviews}
+            className="flex w-full items-center pb-4"
+          >
+            <IcStar width={20} height={20} className="shrink-0 text-brand-80" />
+            <span className="flex-1 pl-1 text-left">
+              <span className="font-b3 text-black">{avgRatingText}</span>
+              <span className="pl-1 font-b6 text-gray-60">
+                ({detail.reviewSummary.reviewCount}개 평가)
+              </span>
             </span>
-          </span>
-          <IcRight width={24} height={24} className="text-gray-40" />
-        </button>
-        {bestReview && (
-          <ReviewCard
-            reviewerName={bestReview.writerNickname}
-            isBest={bestReview.isBest}
-            rating={bestReview.rating}
-            date={bestReview.createdAt ? bestReview.createdAt.slice(0, 10).replaceAll('-', '.') : ''}
-            body={bestReview.content}
-            photos={bestReview.imageUrls}
-          />
-        )}
-      </section>
+            <IcRight width={24} height={24} className="text-gray-40" />
+          </button>
+          {bestReview && (
+            <ReviewCard
+              reviewerName={bestReview.writerNickname}
+              isBest={bestReview.isBest}
+              rating={bestReview.rating}
+              date={bestReview.createdAt ? bestReview.createdAt.slice(0, 10).replaceAll('-', '.') : ''}
+              body={bestReview.content}
+              photos={bestReview.imageUrls}
+            />
+          )}
+        </section>
+      ) : (
+        <ReviewZero />
+      )}
 
       <Divider />
 
