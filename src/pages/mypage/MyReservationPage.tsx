@@ -462,6 +462,7 @@ const MyReservationPage = () => {
                   imageSrc={
                     reservation.thumbnailUrl
                   }
+                  // TODO: 백엔드 AWS 이전 완료 후 secondThumbnailUrl로 수정
                   secondImageSrc={
                     reservation.thumbnailUrl
                   }
