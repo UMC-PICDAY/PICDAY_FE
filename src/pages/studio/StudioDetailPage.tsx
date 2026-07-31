@@ -174,6 +174,8 @@ const StudioDetailPage = () => {
     detail.location.walkingMinutes !== null
       ? `${detail.location.nearestStation} 도보 ${detail.location.walkingMinutes}분`
       : null
+  // 이름 아래 요약 줄은 구까지만 보여준다. 전체 주소는 '위치 및 주변 정보'에 있다.
+  const districtText = detail.location.district ?? ''
   const services = detail.serviceCodes.filter((code) => SERVICE_ICON[code])
   const infoBullets = [
     ...detail.studioInfo.operation,
@@ -209,12 +211,12 @@ const StudioDetailPage = () => {
       {/* 이름 / 위치 / 별점 */}
       <div className="px-5 py-3">
         <h1 className="py-2 font-h3 text-black">{detail.studioName}</h1>
-        {(stationWalkText || fullAddress) && (
+        {(stationWalkText || districtText) && (
           <div className="flex items-center pb-1 font-b6 text-gray-60">
             <IcPin width={20} height={20} className="shrink-0 text-brand-100" />
             {stationWalkText && <span>{stationWalkText}</span>}
-            {stationWalkText && fullAddress && <span className="px-1">|</span>}
-            {fullAddress && <span>{fullAddress}</span>}
+            {stationWalkText && districtText && <span className="px-1">|</span>}
+            {districtText && <span>{districtText}</span>}
           </div>
         )}
         {/* 리뷰가 없으면 이동할 곳이 없어 링크로 두지 않는다. */}
