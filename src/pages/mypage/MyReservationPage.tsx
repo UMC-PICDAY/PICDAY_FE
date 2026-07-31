@@ -459,6 +459,12 @@ const MyReservationPage = () => {
                   key={
                     reservation.reservationId
                   }
+                  imageSrc={
+                    reservation.thumbnailUrl
+                  }
+                  secondImageSrc={
+                    reservation.thumbnailUrl
+                  }
                   statusTag={getStatusTag(
                     reservation.status,
                   )}
