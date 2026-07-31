@@ -67,11 +67,13 @@ const StudioSearchPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const navigationPurpose = (
-    location.state as {
-      purpose?: ComparePurpose
+  const navigationState = location.state as {
+    purpose?: ComparePurpose
+    snap?: SheetSnap
     } | null
-  )?.purpose
+
+  const navigationPurpose = navigationState?.purpose
+  const navigationSnap = navigationState?.snap
   
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
@@ -150,7 +152,9 @@ const StudioSearchPage = () => {
     })
   }
 
-  const [snap, setSnap] = useState<SheetSnap>('half')
+  const [snap, setSnap] = useState<SheetSnap>(
+    navigationSnap ?? 'half',
+  )
 
   // 빈 결과일 때 시트를 펼쳐 추천 리스트가 보이도록 한다.
   useEffect(() => {
@@ -158,12 +162,10 @@ const StudioSearchPage = () => {
   }, [isEmpty])
 
   useEffect(() => {
-    if (!searchParams.has('snap')) return
-
-    const nextParams = new URLSearchParams(searchParams)
-    nextParams.delete('snap')
-    setSearchParams(nextParams, { replace: true })
-  }, [searchParams, setSearchParams])
+    if (navigationSnap) {
+      setSnap(navigationSnap)
+    }
+  }, [navigationSnap])
 
   const {
     containerRef,

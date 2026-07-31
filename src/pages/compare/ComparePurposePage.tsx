@@ -299,6 +299,10 @@ const ComparePurposePage = () => {
       },
       {
         replace: true,
+        state: {
+          purpose: selectedPurpose,
+          snap: 'expanded',
+        },
       },
     )
   }
