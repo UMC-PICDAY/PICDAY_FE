@@ -596,12 +596,6 @@ const MyReviewPage = () => {
             </section>
           </div>
 
-          {errorMessage && (
-            <div className="pointer-events-none fixed inset-x-0 bottom-[100px] z-10 flex justify-center px-5">
-              <Toast message={errorMessage} />
-            </div>
-          )}
-
           <div className="fixed bottom-0 left-1/2 z-10 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10 pt-5">
             <Button
               variant={canSubmit ? 'primary' : 'disabled'}
@@ -673,6 +667,12 @@ const MyReviewPage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {errorMessage && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-[100px] z-10 flex justify-center px-5">
+          <Toast message={errorMessage} />
+        </div>
       )}
 
       {modal && (
