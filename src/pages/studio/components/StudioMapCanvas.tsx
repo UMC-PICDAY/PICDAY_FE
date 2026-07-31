@@ -18,6 +18,12 @@ interface StudioMapCanvasProps {
   className?: string
 }
 
+/** 좌표가 확정돼 지도에 찍을 수 있는 사진관. */
+type LocatedStudio = StudioSearchItem & {
+  latitude: number
+  longitude: number
+}
+
 /**
  * 검색 결과 지도. 카카오 지도 위에 스튜디오 위치를 자체 디자인 마커로 렌더한다.
  * - 찜한 스튜디오: PinFavorite / 그 외: MapPin(이름 라벨)
@@ -37,7 +43,7 @@ const StudioMapCanvas = ({
   // 강제돼 지도 영역이 서울에서 적도까지 벌어지고, 그 배율에서는 카카오가
   // 타일 대신 빈 이미지를 채워 지도가 통째로 비어 보인다.
   const locatedStudios = studios.filter(
-    (studio) =>
+    (studio): studio is LocatedStudio =>
       Number.isFinite(studio.latitude) && Number.isFinite(studio.longitude),
   )
   // 지도를 다시 맞출지 판단하는 기준이자 계산에 쓰는 좌표 자체.
