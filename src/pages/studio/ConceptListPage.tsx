@@ -30,14 +30,45 @@ const formatDate = ({ year, month, day }: CalendarDate) =>
 const toApiDate = ({ year, month, day }: CalendarDate) =>
   `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
+/** endTime은 화면에서 쓰지 않아 URL에 담지 않는다. */
+type SelectedDateTime = Omit<StudioDateTimeSelection, 'endTime'>
+
+const DATE_PARAM = 'date'
+const TIME_PARAM = 'time'
+const SLOT_PARAM = 'slotId'
+
+const parseCalendarDate = (value: string | null): CalendarDate | null => {
+  const matched = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value?.trim() ?? '')
+  if (!matched) return null
+  return {
+    year: Number(matched[1]),
+    month: Number(matched[2]),
+    day: Number(matched[3]),
+  }
+}
+
+/**
+ * 선택한 일시를 컴포넌트 state가 아니라 URL에 둔다.
+ * 컨셉 상세를 보고 돌아오거나 새로고침해도 선택이 유지되도록 하기 위함.
+ * 세 값이 모두 유효할 때만 선택으로 인정한다(slotId가 상품 조회 입력이라 필수).
+ */
+const parseDateTimeSelection = (
+  params: URLSearchParams,
+): SelectedDateTime | null => {
+  const date = parseCalendarDate(params.get(DATE_PARAM))
+  const startTime = params.get(TIME_PARAM)?.trim()
+  const slotId = Number(params.get(SLOT_PARAM))
+  if (!date || !startTime || !Number.isInteger(slotId) || slotId <= 0) return null
+  return { date, slotId, startTime }
+}
+
 const ConceptListPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { studioId } = useParams()
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
-  const [dateTimeSelection, setDateTimeSelection] =
-    useState<StudioDateTimeSelection | null>(null)
+  const dateTimeSelection = parseDateTimeSelection(searchParams)
   // 시트에서 선택 중인 날짜 (슬롯 조회 트리거)
   const [sheetDate, setSheetDate] = useState<CalendarDate | undefined>(undefined)
   const [reservationToast, setReservationToast] =
@@ -83,6 +114,15 @@ const ConceptListPage = () => {
     setDateSheetOpen(true)
   }
 
+  // 선택한 일시를 URL에 반영한다. 날짜 변경마다 히스토리가 쌓이지 않도록 replace.
+  const applyDateTimeSelection = (selection: StudioDateTimeSelection) => {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set(DATE_PARAM, toApiDate(selection.date))
+    nextParams.set(TIME_PARAM, selection.startTime)
+    nextParams.set(SLOT_PARAM, String(selection.slotId))
+    setSearchParams(nextParams, { replace: true })
+  }
+
   const showReservationToast = (message: string) => {
     setReservationToast({ id: Date.now(), message })
   }
@@ -116,7 +156,7 @@ const ConceptListPage = () => {
       setReservationToast({ id: Date.now(), message: '이미 예약된 시간대예요' })
     }
     if (entryState?.openTimeSelectModal) {
-      setSheetDate(dateTimeSelection?.date)
+      setSheetDate(parseDateTimeSelection(searchParams)?.date)
       setDateSheetOpen(true)
     }
 
@@ -130,7 +170,7 @@ const ConceptListPage = () => {
       },
       { replace: true, state: null },
     )
-  }, [location, searchParams, navigate, dateTimeSelection])
+  }, [location, searchParams, navigate])
 
   const handleReserve = (product: StudioProduct) => {
     if (!dateTimeSelection) {
@@ -226,7 +266,7 @@ const ConceptListPage = () => {
           onDateChange={setSheetDate}
           onClose={() => setDateSheetOpen(false)}
           onApply={(selection) => {
-            setDateTimeSelection(selection)
+            applyDateTimeSelection(selection)
             setDateSheetOpen(false)
           }}
         />
