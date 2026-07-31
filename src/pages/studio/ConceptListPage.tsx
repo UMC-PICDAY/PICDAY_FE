@@ -4,9 +4,11 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import CardStudioDetail from '@/components/cards/CardStudioDetail'
 import FavoriteButton from '@/components/common/FavoriteButton'
 import Toast from '@/components/common/Toast'
+import { IcError } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import DateChangeSheet from '@/pages/studio/components/DateChangeSheet'
+import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
 import { useStudioDetail, useStudioProducts, useStudioSlots } from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
@@ -78,7 +80,11 @@ const ConceptListPage = () => {
   const [favorited, setFavorited] = useState(false)
 
   // 시간대가 정해지면 응답에 selectedSlot(예약 가능 여부)이 실리도록 재조회한다.
-  const { data: products } = useStudioProducts(
+  const {
+    data: products,
+    isError: productsError,
+    refetch: refetchProducts,
+  } = useStudioProducts(
     studioId,
     dateTimeSelection ? { timeSlotId: dateTimeSelection.slotId } : undefined,
   )
@@ -229,34 +235,44 @@ const ConceptListPage = () => {
         </div>
       )}
 
-      <main className="flex flex-col px-5 pb-6">
-        {products?.productGroups.map((group) => (
-          <section key={group.shootingCategory}>
-            <h2 className="pb-3 pt-5 font-b3 text-black">
-              {getShootingCategoryLabel(group.shootingCategory)}
-            </h2>
-            <div className="flex flex-col items-center gap-3">
-              {group.products.map((product) => (
-                <CardStudioDetail
-                  key={product.studioProductId}
-                  name={product.productName}
-                  description={`기준 ${product.basePeople}인`}
-                  optionText={product.shortDescription ?? undefined}
-                  price={`₩${product.price.toLocaleString()}`}
-                  imageSrc={product.imageUrls[0]}
-                  totalImages={product.imageCount}
-                  onDetailClick={() =>
-                    navigate(
-                      `/studios/${studioId}/concepts/${product.studioProductId}`,
-                    )
-                  }
-                  onReserveClick={() => handleReserve(product)}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-      </main>
+      {productsError ? (
+        <div className="flex flex-1 items-center justify-center px-5 py-10">
+          <ErrorNotice
+            icon={<IcError width={48} height={48} className="text-brand-80" />}
+            title="컨셉을 불러오지 못했어요"
+            onRetry={() => refetchProducts()}
+          />
+        </div>
+      ) : (
+        <main className="flex flex-col px-5 pb-6">
+          {products?.productGroups.map((group) => (
+            <section key={group.shootingCategory}>
+              <h2 className="pb-3 pt-5 font-b3 text-black">
+                {getShootingCategoryLabel(group.shootingCategory)}
+              </h2>
+              <div className="flex flex-col items-center gap-3">
+                {group.products.map((product) => (
+                  <CardStudioDetail
+                    key={product.studioProductId}
+                    name={product.productName}
+                    description={`기준 ${product.basePeople}인`}
+                    optionText={product.shortDescription ?? undefined}
+                    price={`₩${product.price.toLocaleString()}`}
+                    imageSrc={product.imageUrls[0]}
+                    totalImages={product.imageCount}
+                    onDetailClick={() =>
+                      navigate(
+                        `/studios/${studioId}/concepts/${product.studioProductId}`,
+                      )
+                    }
+                    onReserveClick={() => handleReserve(product)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </main>
+      )}
 
       {dateSheetOpen && (
         <DateChangeSheet
