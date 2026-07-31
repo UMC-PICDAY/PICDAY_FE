@@ -194,8 +194,8 @@ npm install
 # 환경변수 설정 (.env.example을 복사해 값 채우기)
 cp .env.example .env
 
-# 개발 서버 실행
-npm run dev
+# 개발 서버 실행 (배포된 백엔드로 붙일 땐 반드시 3000번 포트로 — 아래 참고)
+npm run dev -- --port 3000
 ```
 
 `.env`에 필요한 값:
@@ -203,7 +203,9 @@ npm run dev
 | 변수 | 설명 |
 |------|------|
 | `VITE_API_BASE_URL` | 백엔드 API Base URL (오리진만, 예: `http://localhost:8080`) |
-| `VITE_KAKAO_MAP_KEY` | 카카오맵 JavaScript 키. [Kakao Developers](https://developers.kakao.com)에서 발급, 플랫폼에 `http://localhost:5173` 등록 필요 |
+| `VITE_KAKAO_MAP_KEY` | 카카오맵 JavaScript 키. [Kakao Developers](https://developers.kakao.com)에서 발급, 플랫폼에 `http://localhost:3000` 등록 필요 |
+
+> ⚠️ **CORS 주의**: 배포된 백엔드(Railway)는 `localhost:3000`만 CORS 허용 목록에 등록되어 있습니다. Vite 기본 포트(5173)로 실행하면 `VITE_API_BASE_URL`을 배포 백엔드로 설정했을 때 CORS 에러가 납니다. 반드시 `npm run dev -- --port 3000`으로 실행하세요. (로컬 백엔드를 직접 띄워서 붙이는 경우는 해당 없음)
 
 > 모바일 UI 확인은 Chrome DevTools에서 `Cmd + Shift + M` (디바이스 모드) 사용을 권장합니다.
 
