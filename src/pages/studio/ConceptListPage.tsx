@@ -258,7 +258,7 @@ const ConceptListPage = () => {
                     description={`기준 ${product.basePeople}인`}
                     optionText={product.shortDescription ?? undefined}
                     price={`₩${product.price.toLocaleString()}`}
-                    imageSrc={product.imageUrls[0]}
+                    imageSrcs={product.imageUrls}
                     totalImages={product.imageCount}
                     onDetailClick={() =>
                       navigate(
