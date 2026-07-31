@@ -292,20 +292,17 @@ const ComparePurposePage = () => {
   }
 
   const handleSelectStudiosAgain = () => {
-    const nextSearchParams = new URLSearchParams(studioSearch)
-
-    nextSearchParams.set('snap', 'expanded')
-
     navigate(
       {
         pathname: STUDIO_LIST_PATH,
-        search: `?${nextSearchParams.toString()}`,
+        search: studioSearch,
       },
       {
         replace: true,
         state: {
           purpose: selectedPurpose,
-        }
+          snap: 'expanded',
+        },
       },
     )
   }
