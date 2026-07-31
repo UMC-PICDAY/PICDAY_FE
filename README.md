@@ -77,6 +77,7 @@ src/
 | `bugfix/*` | 버그 수정 (develop에서 분기) |
 | `hotfix/*` | 운영 중 긴급 수정 (main에서 분기) |
 | `design/*` | 디자인 반영 (develop에서 분기) |
+| `fix/*` | 버그 수정 (develop에서 분기, `bugfix/*`와 동일하게 사용) |
 | `refactor/*` | 리팩토링 (develop에서 분기) |
 | `docs/*` | 문서 작업 (develop에서 분기) |
 | `test/*` | 테스트 (develop에서 분기) |
@@ -190,11 +191,28 @@ See: #21
 # 의존성 설치
 npm install
 
+# 환경변수 설정 (.env.example을 복사해 값 채우기)
+cp .env.example .env
+
 # 개발 서버 실행
 npm run dev
 ```
 
+`.env`에 필요한 값:
+
+| 변수 | 설명 |
+|------|------|
+| `VITE_API_BASE_URL` | 백엔드 API Base URL (오리진만, 예: `http://localhost:8080`) |
+| `VITE_KAKAO_MAP_KEY` | 카카오맵 JavaScript 키. [Kakao Developers](https://developers.kakao.com)에서 발급, 플랫폼에 `http://localhost:5173` 등록 필요 |
+
 > 모바일 UI 확인은 Chrome DevTools에서 `Cmd + Shift + M` (디바이스 모드) 사용을 권장합니다.
+
+<br>
+
+## 🚀 배포
+
+- **프로덕션**: [picday-fe.vercel.app](https://picday-fe.vercel.app) — `main` 브랜치에 push하면 Vercel(GitHub 연동)이 자동으로 배포합니다.
+- **환경변수**는 Vercel 프로젝트 설정(Production/Preview)에서 별도로 관리하며, 로컬 `.env`와는 독립적입니다.
 
 <br>
 
@@ -255,9 +273,16 @@ npm run dev
 
 | 화면 | 설명 |
 |------|------|
-| F-1 예약 목록 | 전체/촬영완료/취소 탭 |
-| F-1D 예약 상세 | 예약 상세 내역 |
-| F-3 프로필 설정 | 프로필 편집 |
+| F-1 예약 목록 | 전체/예약완료/촬영완료/취소 탭별 예약 내역 |
+| F-1D 예약 상세 | 예약 상세 내역, 상태별(예약완료/촬영완료/취소) 화면 분기 |
+| F-1C 예약 취소 | 예약 내역·환불 안내 확인 후 취소 진행 |
+| F-1C 취소 완료 | 취소 완료 안내, 마이페이지/홈 이동 |
+| F-1R 리뷰 작성 | 촬영 완료 건에 대한 별점·태그·후기·사진 첨부 |
+| F-1R 리뷰 등록 완료 | 리뷰 등록 완료 안내, 마이페이지 이동 |
+| 내 리뷰 상세/수정 | 작성한 리뷰 조회·수정·삭제 (`/mypage/reviews/:reviewId`) |
+| F-3 프로필 설정 | 닉네임·알림 설정 편집, 연결 계정 확인 |
+| F-3 회원탈퇴 | 탈퇴 확인 팝업 플로우 |
+| F-3 탈퇴 완료 | 탈퇴 완료 안내, 홈으로 이동 |
 
 ### G. 기타
 
