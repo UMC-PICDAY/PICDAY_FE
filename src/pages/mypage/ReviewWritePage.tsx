@@ -14,10 +14,12 @@ import Button from '@/components/common/Button'
 import InputImage from '@/components/common/InputImage'
 import InputReview from '@/components/common/InputReview'
 import TimeChip from '@/components/common/TimeChip'
+import Toast from '@/components/common/Toast'
 import { IcStar, IcStar2,} from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 import { getReservationDetail,type ReservationDetailData,} from '@/services/reservation'
 import { createReview, uploadImage,} from '@/services/review'
+import { ApiError } from '@/types/common'
 import type { ReviewKeyword } from '@/types/review'
 
 const formatShootingDate = (
@@ -132,6 +134,22 @@ const ReviewWritePage = () => {
     isUploading,
     setIsUploading,
   ] = useState(false)
+
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!errorMessage) return
+
+    const timer = setTimeout(
+      () => setErrorMessage(null),
+      3000,
+    )
+
+    return () => clearTimeout(timer)
+  }, [errorMessage])
 
   const trimmedReview =
     review.trim()
@@ -354,10 +372,7 @@ const ReviewWritePage = () => {
         rating,
         content: trimmedReview,
         keywords: mappedKeywords,
-        imageUrls:
-          uploadedImageUrls.length > 0
-            ? uploadedImageUrls
-            : null,
+        imageUrls: uploadedImageUrls,
       })
 
       navigate(
@@ -378,6 +393,12 @@ const ReviewWritePage = () => {
         console.error(
           '리뷰 등록 실패:',
           error,
+        )
+
+        setErrorMessage(
+          error instanceof ApiError
+            ? error.message
+            : '리뷰 등록에 실패했습니다. 다시 시도해 주세요.',
         )
       } finally {
         setIsUploading(false)
@@ -604,6 +625,12 @@ const ReviewWritePage = () => {
           </div>
         </div>
       </section>
+
+      {errorMessage && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-[100px] flex justify-center px-5">
+          <Toast message={errorMessage} />
+        </div>
+      )}
 
       <div className="fixed bottom-0 left-1/2 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10">
         <Button

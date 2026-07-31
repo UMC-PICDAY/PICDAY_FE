@@ -8,9 +8,11 @@ import InputImage from '@/components/common/InputImage'
 import InputReview from '@/components/common/InputReview'
 import Review from '@/components/common/Review'
 import TimeChip from '@/components/common/TimeChip'
+import Toast from '@/components/common/Toast'
 import { IcStar, IcStar2 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 import { deleteReview, getReview, updateReview, uploadImage,} from '@/services/review'
+import { ApiError } from '@/types/common'
 import type { ReviewDetailData, ReviewKeyword,} from '@/types/review'
 
 type PageMode = 'view' | 'edit'
@@ -156,6 +158,15 @@ const MyReviewPage = () => {
   const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!errorMessage) return
+
+    const timer = setTimeout(() => setErrorMessage(null), 3000)
+
+    return () => clearTimeout(timer)
+  }, [errorMessage])
 
   const isEditing = pageMode === 'edit'
   const trimmedReview = review.trim()
@@ -330,7 +341,7 @@ const MyReviewPage = () => {
         rating: score,
         content: trimmedReview,
         keywords: selectedKeywords,
-        imageUrls: nextImageUrls.length > 0 ? nextImageUrls : null,
+        imageUrls: nextImageUrls,
       })
 
       revokeNewImageUrls(newImageList)
@@ -354,6 +365,12 @@ const MyReviewPage = () => {
       setPageMode('view')
     } catch (error) {
       console.error('리뷰 수정 실패:', error)
+
+      setErrorMessage(
+        error instanceof ApiError
+          ? error.message
+          : '리뷰 수정에 실패했습니다. 다시 시도해 주세요.',
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -375,6 +392,12 @@ const MyReviewPage = () => {
       })
     } catch (error) {
       console.error('리뷰 삭제 실패:', error)
+
+      setErrorMessage(
+        error instanceof ApiError
+          ? error.message
+          : '리뷰 삭제에 실패했습니다. 다시 시도해 주세요.',
+      )
     } finally {
       setIsDeleting(false)
     }
@@ -572,6 +595,12 @@ const MyReviewPage = () => {
               </div>
             </section>
           </div>
+
+          {errorMessage && (
+            <div className="pointer-events-none fixed inset-x-0 bottom-[100px] z-10 flex justify-center px-5">
+              <Toast message={errorMessage} />
+            </div>
+          )}
 
           <div className="fixed bottom-0 left-1/2 z-10 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10 pt-5">
             <Button

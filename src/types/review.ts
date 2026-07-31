@@ -62,7 +62,7 @@ export interface CreateReviewRequest {
   rating: number
   content: string
   keywords: ReviewKeyword[]
-  imageUrls: string[] | null
+  imageUrls: string[]
 }
 
 // 5-2. 리뷰 작성 응답
@@ -88,7 +88,7 @@ export interface UpdateReviewRequest {
   rating?: number
   content?: string
   keywords?: ReviewKeyword[]
-  imageUrls?: string[] | null
+  imageUrls?: string[]
 }
 
 // 5-3. 리뷰 수정 응답
