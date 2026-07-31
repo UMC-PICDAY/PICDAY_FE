@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { CustomOverlayMap, Map } from 'react-kakao-maps-sdk'
 
 import MapPin from '@/components/common/MapPin'
@@ -34,6 +34,16 @@ const StudioMapCanvas = ({
     if (error) onLoadError?.()
   }, [error, onLoadError])
 
+  const handleMapCreate = useCallback((map: kakao.maps.Map) => {
+    if (studios.length === 0) return
+
+    const bounds = new kakao.maps.LatLngBounds()
+    studios.forEach((studio) =>
+      bounds.extend(new kakao.maps.LatLng(studio.latitude, studio.longitude)),
+    )
+    map.setBounds(bounds)
+  }, [studios])
+
   // SDK 로드 실패 시 회색 fallback (상위에서 에러 UI를 덮어씌운다)
   if (error) {
     return <div className={`absolute inset-0 bg-gray-10 ${className}`} />
@@ -50,17 +60,10 @@ const StudioMapCanvas = ({
       <Map
         center={center}
         level={5}
-        draggable={interactive}
-        zoomable={interactive}
+        draggable
+        zoomable
         className="h-full w-full"
-        onCreate={(map) => {
-          if (studios.length === 0) return
-          const bounds = new kakao.maps.LatLngBounds()
-          studios.forEach((studio) =>
-            bounds.extend(new kakao.maps.LatLng(studio.latitude, studio.longitude)),
-          )
-          map.setBounds(bounds)
-        }}
+        onCreate={handleMapCreate}
       >
         {studios.map((studio) =>
           studio.isWishlisted ? (
