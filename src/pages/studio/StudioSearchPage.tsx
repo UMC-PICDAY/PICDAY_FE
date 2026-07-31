@@ -167,6 +167,14 @@ const StudioSearchPage = () => {
     }
   }, [navigationSnap])
 
+  // 지도 핀으로 고른 사진관. 검색 조건이 바뀌면 결과 목록 자체가 달라지므로 푼다.
+  const [focusedStudioId, setFocusedStudioId] = useState<number | null>(null)
+  const searchKey = searchParams.toString()
+
+  useEffect(() => {
+    setFocusedStudioId(null)
+  }, [searchKey])
+
   const {
     containerRef,
     listRef,
@@ -184,6 +192,18 @@ const StudioSearchPage = () => {
     listHandlers,
     listRef,
   }
+
+  const handleMapPinSelect = (studioId: number) => {
+    setFocusedStudioId(studioId)
+    setSnap('half')
+  }
+
+  const focusedStudio =
+    studios.find((studio) => studio.studioId === focusedStudioId) ?? null
+  // half에서는 목록이 스크롤되지 않아 상단 카드만 보인다. 핀으로 고른 사진관을
+  // 확인할 수 있도록 그 카드만 단독으로 띄우고, 펼치면 원래 정렬의 전체 목록을 둔다.
+  const sheetStudios =
+    focusedStudio && snap !== 'expanded' ? [focusedStudio] : studios
 
   const handleQuickFilterChange = (value: string) => {
     if (!canQuickFilter) return
@@ -236,6 +256,7 @@ const StudioSearchPage = () => {
           interactive={!isDragging}
           studios={studios}
           onLoadError={() => setMapError(true)}
+          onStudioSelect={handleMapPinSelect}
         />
 
         {mapError ? (
@@ -328,7 +349,7 @@ const StudioSearchPage = () => {
             }
           >
             <StudioResultsList
-              studios={studios}
+              studios={sheetStudios}
               showCompareButton={snap === 'expanded'}
               selectedIds={selectedIds}
               onSelect={(id) => navigate(`/studios/${id}`)}

@@ -15,6 +15,7 @@ interface StudioMapCanvasProps {
   studios?: StudioSearchItem[]
   interactive?: boolean
   onLoadError?: () => void
+  onStudioSelect?: (studioId: number) => void
   className?: string
 }
 
@@ -34,6 +35,7 @@ const StudioMapCanvas = ({
   studios = [],
   interactive = true,
   onLoadError,
+  onStudioSelect,
   className = '',
 }: StudioMapCanvasProps) => {
   const [, error] = useKakaoLoader()
@@ -102,11 +104,20 @@ const StudioMapCanvas = ({
         {locatedStudios.map((studio) =>
           studio.isWishlisted ? (
             // 원형 마커 → 좌표에 중앙 정렬
+            // clickable을 켜야 오버레이 안의 DOM까지 클릭이 전달된다.
             <CustomOverlayMap
               key={studio.studioId}
               position={{ lat: studio.latitude, lng: studio.longitude }}
+              clickable
             >
-              <PinFavorite />
+              <button
+                type="button"
+                aria-label={`${studio.studioName} 선택`}
+                className="cursor-pointer"
+                onClick={() => onStudioSelect?.(studio.studioId)}
+              >
+                <PinFavorite />
+              </button>
             </CustomOverlayMap>
           ) : (
             // 핀 마커 → 끝점(IcMapPin 하단)이 좌표에 오도록 yAnchor 보정
@@ -114,8 +125,16 @@ const StudioMapCanvas = ({
               key={studio.studioId}
               position={{ lat: studio.latitude, lng: studio.longitude }}
               yAnchor={0.85}
+              clickable
             >
-              <MapPin label={studio.studioName} />
+              <button
+                type="button"
+                aria-label={`${studio.studioName} 선택`}
+                className="cursor-pointer"
+                onClick={() => onStudioSelect?.(studio.studioId)}
+              >
+                <MapPin label={studio.studioName} />
+              </button>
             </CustomOverlayMap>
           ),
         )}
