@@ -69,6 +69,8 @@ export const cancelReservation = (
 export interface ReservationListItem {
   reservationId: number
   studioName: string
+  thumbnailUrl: string
+  secondthumbnailUrl: string
   conceptName: string
   reservationDate: string
   reservationTime: string

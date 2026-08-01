@@ -81,8 +81,9 @@ export interface StudioSearchItem {
   studioName: string
   thumbnailUrls: string[]
   locationCategory: string
-  latitude: number
-  longitude: number
+  // 위치가 등록되지 않은 사진관은 좌표가 null로 내려온다.
+  latitude: number | null
+  longitude: number | null
   minPrice: number
   rating: number
   reviewCount: number

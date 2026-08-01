@@ -123,8 +123,6 @@ export const useBottomSheetSnap = ({
       moved: false,
       source,
     }
-    setIsDragging(true)
-    setDragOffset(targetOffset)
   }
 
   const moveDrag = (clientY: number) => {
@@ -135,7 +133,15 @@ export const useBottomSheetSnap = ({
     if (dt > 0) state.velocity = (clientY - state.lastY) / dt
     state.lastY = clientY
     state.lastTime = now
-    if (Math.abs(clientY - state.startY) > DRAG_THRESHOLD) state.moved = true
+
+    if (!state.moved) {
+      if (Math.abs(clientY - state.startY) <= DRAG_THRESHOLD) return
+      state.moved = true
+      // 단순 터치만으로 지도의 입력 상태가 바뀌지 않도록 실제 드래그가
+      // 시작되는 시점에만 지도 상호작용을 잠근다.
+      setIsDragging(true)
+    }
+
     setDragOffset(clamp(state.startOffset + (clientY - state.startY)))
   }
 
