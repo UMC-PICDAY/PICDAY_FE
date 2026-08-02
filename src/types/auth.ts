@@ -57,9 +57,9 @@ export interface SocialLoginUser {
 
 export interface SocialInfo {
   id: string
-  email: string
-  name: string
-  phoneNumber: string
+  email: string | null
+  name: string | null
+  phoneNumber: string | null
 }
 
 export type SocialLoginResult =

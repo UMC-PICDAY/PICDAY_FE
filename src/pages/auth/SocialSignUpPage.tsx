@@ -1,9 +1,10 @@
 /**
  * Figma A-5 소셜 신규회원 약관 동의 (라우트: /signup/social)
  * OAuthCallbackPage에서 소셜 로그인 결과 isNewUser=true일 때 signupToken·socialInfo를 router state로 들고 진입.
- * 닉네임은 서버 자동배정, 이름은 소셜 제공자에게 이미 받아온 상태라 약관 동의만 받으면 됨.
- * 이메일·전화번호는 소셜 제공자가 내려준 값을 읽기전용으로 노출 — 카카오 비즈앱 검수에서
- * 필수 수집 항목임을 화면에 명시해야 하기 때문 (수정 불가, 약관 동의로만 수집에 동의).
+ * 닉네임은 서버 자동배정, 이름/이메일/전화번호는 소셜 제공자가 내려준 값을 읽기전용으로 노출 —
+ * 카카오 비즈앱 검수에서 필수 수집 항목임을 화면에 명시해야 하기 때문 (수정 불가, 약관 동의로만 수집에 동의).
+ * 단, 제공자가 동의 범위 미허용 등으로 값을 안 내려줄 수도 있어(email/name/phoneNumber 모두 nullable) —
+ * 이 경우 채울 수 없는 빈 필수칸으로 보이지 않도록 해당 필드 자체를 화면에서 뺌.
  */
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -93,14 +94,21 @@ const SocialSignUpPage = () => {
 
       {socialInfo && (
         <>
-          <InputField label="이메일 (필수)" placeholder="" value={socialInfo.email} disabled readOnly />
-          <InputField
-            label="전화번호 (필수)"
-            placeholder=""
-            value={socialInfo.phoneNumber}
-            disabled
-            readOnly
-          />
+          {socialInfo.name && (
+            <InputField label="이름 (필수)" placeholder="" value={socialInfo.name} disabled readOnly />
+          )}
+          {socialInfo.email && (
+            <InputField label="이메일 (필수)" placeholder="" value={socialInfo.email} disabled readOnly />
+          )}
+          {socialInfo.phoneNumber && (
+            <InputField
+              label="전화번호 (필수)"
+              placeholder=""
+              value={socialInfo.phoneNumber}
+              disabled
+              readOnly
+            />
+          )}
         </>
       )}
 
