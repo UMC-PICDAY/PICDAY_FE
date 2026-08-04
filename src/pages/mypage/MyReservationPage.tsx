@@ -23,6 +23,7 @@ import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import { IcEvent2 } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
+import { ReservationListSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { getMe } from '@/services/auth'
 import {
   getMyReservations,
@@ -395,11 +396,7 @@ const MyReservationPage = () => {
 
       <section className="flex flex-1 flex-col px-5 pb-5 pt-[10px]">
         {isLoading ? (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="font-b8 text-gray-60">
-              예약 내역을 불러오는 중입니다.
-            </p>
-          </div>
+          <ReservationListSkeleton />
         ) : hasError ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="flex flex-col items-center gap-5">
