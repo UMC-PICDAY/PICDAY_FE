@@ -250,6 +250,7 @@ const ComparePurposePage = () => {
 
     if (studios.length === 2) {
       navigate('/compare/two', {
+        replace: true,
         state: compareNavigationState,
       })
       return
@@ -257,10 +258,27 @@ const ComparePurposePage = () => {
 
     if (studios.length === 3) {
       navigate('/compare/three', {
+        replace: true,
         state: compareNavigationState,
       })
     }
   }
+
+  const handleBack = () => {
+    navigate(
+        {
+          pathname: STUDIO_LIST_PATH,
+          search: studioSearch,
+        },
+        {
+          replace: true,
+          state: {
+            purpose: selectedPurpose,
+            snap: 'expanded',
+          },
+        },
+      )
+    }
 
   const handleDeleteStudio = (studioId: string) => {
     setSelectedStudios((prevStudios) =>
@@ -286,6 +304,7 @@ const ComparePurposePage = () => {
           purpose: selectedPurpose,
           shootingCategory:
             PURPOSE_CATEGORY_MAP[selectedPurpose],
+          studioSearch,
         },
       },
     )
@@ -381,7 +400,7 @@ const ComparePurposePage = () => {
           type="button"
           aria-label="뒤로가기"
           className="flex size-9 items-center justify-center border-none bg-transparent p-0"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
         >
           <IcBack width={24} height={24} />
         </button>
