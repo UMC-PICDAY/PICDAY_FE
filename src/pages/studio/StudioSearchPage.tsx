@@ -259,15 +259,23 @@ const StudioSearchPage = () => {
           onStudioSelect={handleMapPinSelect}
         />
 
-        {mapError ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-10">
+        {/* 지도 실패는 지도 영역에만 표시한다. 시트를 덮어버리면 지도와 무관한
+            결과 목록·비교까지 못 쓰게 되므로, 시트 위치(translateY)만큼만
+            높이를 잡아 노출 중인 지도 영역 안에서 안내한다. */}
+        {mapError && (
+          <div
+            className="absolute inset-x-0 top-0 flex items-center justify-center overflow-hidden bg-gray-10"
+            style={{ height: translateY }}
+          >
             <ErrorNotice
               icon={<IcPin width={48} height={48} className="text-brand-80" />}
               title="지도를 불러오지 못했어요"
               onRetry={handleMapRetry}
             />
           </div>
-        ) : searchError ? (
+        )}
+
+        {searchError ? (
           // 조회 실패는 '결과 0곳'과 구분해서 재시도 가능한 에러로 보여준다.
           <StudioResultsBottomSheet
             {...sheetShellProps}
