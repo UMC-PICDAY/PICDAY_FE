@@ -36,6 +36,7 @@ interface Props {
   onItemDetailClick?: (key: string) => void
   variant?: 'boxed' | 'split'
   allAgreeDescription?: string
+  required?: boolean
   className?: string
 }
 
@@ -47,6 +48,7 @@ const Agreement = ({
   onItemDetailClick,
   variant = 'boxed',
   allAgreeDescription,
+  required = false,
   className,
 }: Props) => {
   const isAllAgreed = items.every(({ key }) => checked[key])
@@ -55,7 +57,12 @@ const Agreement = ({
     <>
       <Checkbox checked={isAllAgreed} onChange={onToggleAll} strong aria-label="약관 전체 동의" />
       <div className="flex flex-col items-start">
-        <p className="font-b7 text-black">약관 전체 동의</p>
+        <p className="font-b7 text-black">
+          약관 전체 동의
+          {required && (
+            <span className="ml-0.5 text-[#FF3B5B]">*</span>
+          )}
+        </p>
         {allAgreeDescription && <p className="font-b10 text-gray-40">{allAgreeDescription}</p>}
       </div>
     </>
