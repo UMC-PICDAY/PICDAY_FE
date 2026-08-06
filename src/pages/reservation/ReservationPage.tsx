@@ -320,6 +320,11 @@ const ReservationPage = () => {
         replace: true,
         state: {
           openTimeSelectModal: true,
+          rebookingInfo: {
+            reservationId: 0,
+            reserverName,
+            reserverPhone,
+          },
         },
       },
     )

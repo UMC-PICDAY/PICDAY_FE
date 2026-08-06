@@ -35,6 +35,18 @@ const toApiDate = ({ year, month, day }: CalendarDate) =>
 /** endTime은 화면에서 쓰지 않아 URL에 담지 않는다. */
 type SelectedDateTime = Omit<StudioDateTimeSelection, 'endTime'>
 
+interface RebookingInfo {
+  reservationId: number
+  reserverName: string
+  reserverPhone: string
+}
+
+interface ConceptListLocationState {
+  openTimeSelectModal?: boolean
+  isRebooking?: boolean
+  rebookingInfo?: RebookingInfo
+}
+
 const DATE_PARAM = 'date'
 const TIME_PARAM = 'time'
 const SLOT_PARAM = 'slotId'
@@ -67,6 +79,13 @@ const parseDateTimeSelection = (
 const ConceptListPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
+
+  const locationState =
+  location.state as ConceptListLocationState | null
+
+  const rebookingInfo =
+    locationState?.rebookingInfo
+
   const [searchParams, setSearchParams] = useSearchParams()
   const { studioId } = useParams()
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
@@ -126,7 +145,9 @@ const ConceptListPage = () => {
     nextParams.set(DATE_PARAM, toApiDate(selection.date))
     nextParams.set(TIME_PARAM, selection.startTime)
     nextParams.set(SLOT_PARAM, String(selection.slotId))
-    setSearchParams(nextParams, { replace: true })
+    setSearchParams(nextParams, { 
+      replace: true,
+      state: locationState, })
   }
 
   const showReservationToast = (message: string) => {
@@ -149,11 +170,11 @@ const ConceptListPage = () => {
     }
   }
 
-  // 예약 생성 중 슬롯 충돌(RESERVATION_4091)로 예약 도메인이 C-7로 되돌려보낼 때:
+  // 예약 생성 중 슬롯 충돌(RESERVATION_4091) 또는 재예약으로 C-7에 진입할 때:
   // state.openTimeSelectModal → 일시 선택 시트 자동 오픈 / ?toast=time → 안내 토스트
   useEffect(() => {
     if (entryHandledRef.current) return
-    const entryState = location.state as { openTimeSelectModal?: boolean } | null
+    const entryState = location.state as ConceptListLocationState | null
     const showTimeToast = searchParams.get('toast') === 'time'
     if (!entryState?.openTimeSelectModal && !showTimeToast) return
     entryHandledRef.current = true
@@ -174,7 +195,12 @@ const ConceptListPage = () => {
         pathname: location.pathname,
         search: nextParams.toString() ? `?${nextParams.toString()}` : '',
       },
-      { replace: true, state: null },
+      { replace: true,
+        state: {
+          ...entryState,
+          openTimeSelectModal: false,
+        },
+       },
     )
   }, [location, searchParams, navigate])
 
@@ -205,8 +231,8 @@ const ConceptListPage = () => {
           conceptName: product.productName,
           includedItems: product.shortDescription?.split(' · ') ?? [],
           reservationDateTime: `${selectedDate.replaceAll('-', '.')} ${selectedTime}`,
-          reserverName: '',
-          reserverPhone: '',
+          reserverName: rebookingInfo?.reserverName ?? '',
+          reserverPhone: rebookingInfo?.reserverPhone ?? '',
           price: product.price,
         },
       },
