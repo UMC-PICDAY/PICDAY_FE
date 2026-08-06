@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardStudioDetail from '@/components/cards/CardStudioDetail'
+import Alert3 from '@/components/common/Alert3'
 import FavoriteButton from '@/components/common/FavoriteButton'
 import Toast from '@/components/common/Toast'
 import { IcError } from '@/components/icons'
@@ -12,6 +13,7 @@ import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
 import { useStudioDetail, useStudioProducts, useStudioSlots } from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
+import { useAuthStore } from '@/stores/useAuthStore'
 import type { StudioDateTimeSelection, StudioProduct } from '@/types/studio'
 
 import type { CalendarDate } from '@/components/common/Calendar'
@@ -80,6 +82,8 @@ const ConceptListPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
+
   const locationState =
   location.state as ConceptListLocationState | null
 
@@ -89,6 +93,7 @@ const ConceptListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const { studioId } = useParams()
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
+  const [loginAlertOpen, setLoginAlertOpen] = useState(false)
   const dateTimeSelection = parseDateTimeSelection(searchParams)
   // 시트에서 선택 중인 날짜 (슬롯 조회 트리거)
   const [sheetDate, setSheetDate] = useState<CalendarDate | undefined>(undefined)
@@ -205,7 +210,24 @@ const ConceptListPage = () => {
     )
   }, [location, searchParams, navigate])
 
+  const handleLogin = () => {
+    navigate('/login', {
+      state: {
+        returnTo: `${location.pathname}${location.search}`,
+      },
+    })
+  }
+
+  const handleCloseLoginAlert = () => {
+    setLoginAlertOpen(false)
+  }
+
   const handleReserve = (product: StudioProduct) => {
+    if (!isLoggedIn) {
+      setLoginAlertOpen(true)
+      return
+    }
+
     if (!dateTimeSelection) {
       showReservationToast('날짜, 시간을 먼저 선택해 주세요')
       return
@@ -299,6 +321,18 @@ const ConceptListPage = () => {
             </section>
           ))}
         </main>
+      )}
+
+      {loginAlertOpen && (
+        <div className="fixed inset-0 z-50 mx-auto flex max-w-[390px] items-center justify-center bg-black/40 px-5">
+          <div className="w-full">
+            <Alert3
+              variant="variant3"
+              onClick={handleLogin}
+              onHelperClick={handleCloseLoginAlert}
+            />
+          </div>
+        </div>
       )}
 
       {dateSheetOpen && (

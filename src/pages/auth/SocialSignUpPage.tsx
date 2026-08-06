@@ -21,6 +21,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { REQUIRED_TERMS, TERM_ITEMS } from '@/constants/terms'
 import type { TermKey } from '@/constants/terms'
 import type { SocialInfo } from '@/types/auth'
+import { clearSocialLoginReturnTo, getSocialLoginReturnTo } from '@/utils/authRedirect'
 
 interface LocationState {
   signupToken?: string
@@ -32,6 +33,7 @@ const SocialSignUpPage = () => {
   const location = useLocation()
   const authLogin = useAuthStore((state) => state.login)
   const { signupToken, socialInfo } = (location.state as LocationState | null) ?? {}
+  const returnTo = getSocialLoginReturnTo()
 
   const [terms, setTerms] = useState<Record<TermKey, boolean>>({
     service: false,
@@ -43,8 +45,13 @@ const SocialSignUpPage = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!signupToken) navigate('/login')
-  }, [signupToken, navigate])
+    if (!signupToken) {
+      navigate('/login', {
+        replace: true,
+        state: { returnTo },
+      })
+    }
+  }, [signupToken, navigate, returnTo])
 
   useEffect(() => {
     if (!toastMessage) return
@@ -74,7 +81,8 @@ const SocialSignUpPage = () => {
         TERM_ITEMS.filter(({ key }) => terms[key]).map(({ id }) => id),
       )
       authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
-      navigate('/home')
+      clearSocialLoginReturnTo()
+      navigate(returnTo, { replace: true })
     } catch (error) {
       setToastMessage(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
     } finally {
@@ -84,7 +92,14 @@ const SocialSignUpPage = () => {
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
-      <NavigationBar showRight={false} onBack={() => navigate('/login')} />
+      <NavigationBar 
+        showRight={false} 
+        onBack={() => 
+          navigate('/login', {
+            state: { returnTo },
+          })
+        } 
+      />
 
       <Title
         variant="large"

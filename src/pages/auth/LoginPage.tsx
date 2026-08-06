@@ -1,6 +1,6 @@
 /** Figma A-2 로그인 화면 (라우트: /login) */
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
 import NavigationBar from '@/components/layout/NavigationBar'
 import LogoType from '@/components/layout/LogoType'
@@ -11,8 +11,13 @@ import { IcClose } from '@/components/icons'
 import { getSocialAuthUrl, login } from '@/services/auth'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { SocialProvider } from '@/types/auth'
+import { clearSocialLoginReturnTo, getSafeReturnTo, saveSocialLoginReturnTo } from '@/utils/authRedirect'
 
 type LoginToast = 'network' | 'auth' | null
+
+interface LoginLocationState {
+  returnTo?: string
+}
 
 const TOAST_MESSAGE: Record<Exclude<LoginToast, null>, string> = {
   network: '연결 상태를 확인해 주세요',
@@ -21,6 +26,11 @@ const TOAST_MESSAGE: Record<Exclude<LoginToast, null>, string> = {
 
 const LoginPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const loginState = location.state as LoginLocationState | null
+  const returnTo = getSafeReturnTo(loginState?.returnTo)
+
   const authLogin = useAuthStore((state) => state.login)
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
@@ -42,7 +52,8 @@ const LoginPage = () => {
     try {
       const { token } = await login(loginId, password)
       authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
-      navigate('/home')
+      clearSocialLoginReturnTo()
+      navigate(returnTo, { replace: true })
     } catch {
       setToast(navigator.onLine ? 'auth' : 'network')
     } finally {
@@ -52,9 +63,12 @@ const LoginPage = () => {
 
   const handleSocialLogin = async (provider: SocialProvider) => {
     try {
+      saveSocialLoginReturnTo(returnTo)
+
       const { authUrl } = await getSocialAuthUrl(provider)
       window.location.href = authUrl
     } catch {
+      clearSocialLoginReturnTo()
       setToast(navigator.onLine ? 'auth' : 'network')
     }
   }
