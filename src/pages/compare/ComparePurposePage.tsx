@@ -264,22 +264,6 @@ const ComparePurposePage = () => {
     }
   }
 
-  const handleBack = () => {
-    navigate(
-        {
-          pathname: STUDIO_LIST_PATH,
-          search: studioSearch,
-        },
-        {
-          replace: true,
-          state: {
-            purpose: selectedPurpose,
-            snap: 'expanded',
-          },
-        },
-      )
-    }
-
   const handleDeleteStudio = (studioId: string) => {
     setSelectedStudios((prevStudios) =>
       prevStudios.filter(
@@ -310,7 +294,8 @@ const ComparePurposePage = () => {
     )
   }
 
-  const handleSelectStudiosAgain = () => {
+  //뒤로가기 버튼+사진관 재선택
+  const navigateToStudioList = () => {
     navigate(
       {
         pathname: STUDIO_LIST_PATH,
@@ -400,7 +385,7 @@ const ComparePurposePage = () => {
           type="button"
           aria-label="뒤로가기"
           className="flex size-9 items-center justify-center border-none bg-transparent p-0"
-          onClick={handleBack}
+          onClick={navigateToStudioList}
         >
           <IcBack width={24} height={24} />
         </button>
@@ -446,7 +431,7 @@ const ComparePurposePage = () => {
             <div className="w-full max-w-[240px]">
               <Button
                 variant="primary"
-                onClick={handleSelectStudiosAgain}
+                onClick={navigateToStudioList}
               >
                 사진관 다시 선택하기
               </Button>
