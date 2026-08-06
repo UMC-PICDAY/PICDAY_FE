@@ -15,6 +15,7 @@ import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import StudioMapCanvas from '@/pages/studio/components/StudioMapCanvas'
 import StudioResultsBottomSheet from '@/pages/studio/components/StudioResultsBottomSheet'
 import StudioResultsList from '@/pages/studio/components/StudioResultsList'
+import StudioSearchSkeleton from '@/pages/studio/components/StudioSearchSkeleton'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import { getLocationLabel } from '@/constants/locationCategory'
@@ -90,7 +91,14 @@ const StudioSearchPage = () => {
   const queryClient = useQueryClient()
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
-  const { data, isLoading, isError: searchError, refetch } = useStudioSearch(filters)
+  // 필터를 바꿔도 이전 결과를 유지해, 조작할 때마다 목록이 비지 않게 한다.
+  const {
+    data,
+    isLoading,
+    isPlaceholderData,
+    isError: searchError,
+    refetch,
+  } = useStudioSearch(filters, { keepPrevious: true })
   const result = data ?? null
   const loading = isLoading
 
@@ -356,14 +364,25 @@ const StudioSearchPage = () => {
               </div>
             }
           >
-            <StudioResultsList
-              studios={sheetStudios}
-              showCompareButton={snap === 'expanded'}
-              selectedIds={selectedIds}
-              onSelect={(id) => navigate(`/studios/${id}`)}
-              onCompareToggle={handleCompareToggle}
-              onFavoriteToggle={handleFavoriteToggle}
-            />
+            {loading ? (
+              <StudioSearchSkeleton />
+            ) : (
+              // 필터 전환 중에는 이전 결과를 유지하되 갱신 중임을 흐리게 알린다.
+              <div
+                className={
+                  isPlaceholderData ? 'opacity-50 transition-opacity' : ''
+                }
+              >
+                <StudioResultsList
+                  studios={sheetStudios}
+                  showCompareButton={snap === 'expanded'}
+                  selectedIds={selectedIds}
+                  onSelect={(id) => navigate(`/studios/${id}`)}
+                  onCompareToggle={handleCompareToggle}
+                  onFavoriteToggle={handleFavoriteToggle}
+                />
+              </div>
+            )}
           </StudioResultsBottomSheet>
         )}
       </div>
