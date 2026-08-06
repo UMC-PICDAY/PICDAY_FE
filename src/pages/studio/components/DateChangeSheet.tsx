@@ -20,6 +20,9 @@ interface DateChangeSheetProps {
   onApply: (selection: StudioDateTimeSelection) => void
   onClose: () => void
   isSlotsLoading?: boolean
+  // 조회 실패를 '예약 가능한 시간 없음'과 구분해서 안내하기 위한 플래그.
+  // 재시도는 다른 날짜를 고르면 새 조회가 나가므로 별도 버튼을 두지 않는다.
+  isSlotsError?: boolean
 }
 
 const isSameDate = (left: CalendarDate, right: CalendarDate) =>
@@ -37,6 +40,7 @@ const DateChangeSheet = ({
   onClose,
   onApply,
   isSlotsLoading = false,
+  isSlotsError = false,
 }: DateChangeSheetProps) => {
   const today = useMemo(() => {
     const now = new Date()
@@ -137,7 +141,14 @@ const DateChangeSheet = ({
           </div>
         )}
 
-        {!isSlotsLoading && selectedDate && !hasAvailableSlot && (
+        {/* 조회 실패. 만석으로 오해하지 않도록 문구를 분리한다. */}
+        {!isSlotsLoading && isSlotsError && selectedDate && (
+          <div className="px-2 pb-2.5">
+            <NoticeBanner label="시간을 불러오지 못했어요." />
+          </div>
+        )}
+
+        {!isSlotsLoading && !isSlotsError && selectedDate && !hasAvailableSlot && (
           <div className="px-2 pb-2.5">
             <NoticeBanner label="예약 가능한 시간이 없어요. 다른 날짜를 선택해 주세요." />
           </div>
