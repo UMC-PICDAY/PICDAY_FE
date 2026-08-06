@@ -340,10 +340,7 @@ const MyReservationPage = () => {
             {
               state: {
                 openTimeSelectModal: true,
-                isRebooking:true,
                 rebookingInfo: {
-                  reservationId:
-                    reservation.reservationId,
                   reserverName:
                     reservationDetail.reserveeName,
                   reserverPhone: 

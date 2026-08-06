@@ -321,7 +321,6 @@ const ReservationPage = () => {
         state: {
           openTimeSelectModal: true,
           rebookingInfo: {
-            reservationId: 0,
             reserverName,
             reserverPhone,
           },

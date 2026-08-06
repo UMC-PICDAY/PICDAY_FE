@@ -38,14 +38,12 @@ const toApiDate = ({ year, month, day }: CalendarDate) =>
 type SelectedDateTime = Omit<StudioDateTimeSelection, 'endTime'>
 
 interface RebookingInfo {
-  reservationId: number
   reserverName: string
   reserverPhone: string
 }
 
 interface ConceptListLocationState {
   openTimeSelectModal?: boolean
-  isRebooking?: boolean
   rebookingInfo?: RebookingInfo
 }
 
