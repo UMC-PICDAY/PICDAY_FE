@@ -10,6 +10,10 @@ import NavigationBar from '@/components/layout/NavigationBar'
 
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
+import {
+  ReviewListSkeleton,
+  ReviewSummarySkeleton,
+} from '@/pages/studio/components/ReviewSkeleton'
 import { useStudioReviews } from '@/hooks/useStudioReviews'
 import type { ReviewSort } from '@/types/review'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -29,13 +33,21 @@ const ReviewDetailPage = () => {
   const [sortOpen, setSortOpen] = useState(false)
   const [sortValue, setSortValue] = useState<ReviewSort>('recent')
 
-  const { summary, reviews, isError, refetch, toggleLike, likePendingReviewId } =
-    useStudioReviews({
-      studioId,
-      sort: sortValue,
-      photoOnly,
-      enabled: isLoggedIn,
-    })
+  const {
+    summary,
+    reviews,
+    isLoading,
+    isPlaceholderData,
+    isError,
+    refetch,
+    toggleLike,
+    likePendingReviewId,
+  } = useStudioReviews({
+    studioId,
+    sort: sortValue,
+    photoOnly,
+    enabled: isLoggedIn,
+  })
 
   const sortLabel =
     SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? '최신순'
@@ -80,7 +92,8 @@ const ReviewDetailPage = () => {
       />
 
       {/* 별점 요약. 조회 실패 시 0.0 / 0개 평가로 보이지 않도록 숨긴다. */}
-      {!isError && (
+      {!isError && isLoading && <ReviewSummarySkeleton />}
+      {!isError && !isLoading && (
         <div className="flex flex-col items-center px-5 py-8">
           <div className="flex items-center pb-1">
             <div className="flex">
@@ -146,7 +159,12 @@ const ReviewDetailPage = () => {
       </div>
 
       {/* 리뷰 리스트. 조회 실패는 '리뷰 없음'과 구분해서 재시도 가능한 에러로 보여준다. */}
-      <div className="flex flex-col gap-5 pb-5">
+      <div
+        className={`flex flex-col gap-5 pb-5 ${
+          // 필터 전환 중에는 이전 목록을 유지하되 갱신 중임을 흐리게 알린다.
+          isPlaceholderData ? 'opacity-50 transition-opacity' : ''
+        }`}
+      >
         {isError && (
           <div className="flex justify-center py-20">
             <ErrorNotice
@@ -156,7 +174,9 @@ const ReviewDetailPage = () => {
             />
           </div>
         )}
+        {!isError && isLoading && <ReviewListSkeleton />}
         {!isError &&
+          !isLoading &&
           reviews.map((review) => (
             <ReviewCard
               key={review.reviewId}
@@ -176,7 +196,7 @@ const ReviewDetailPage = () => {
               onLikeChange={handleLikeChange}
             />
           ))}
-        {!isError && reviews.length === 0 && (
+        {!isError && !isLoading && reviews.length === 0 && (
           <Notice2
             variant="message"
             title="조건에 맞는 리뷰가 없어요"

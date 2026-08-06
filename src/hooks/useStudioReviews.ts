@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 
 import { getStudioReviews, likeReview, unlikeReview } from '@/services/review'
 import type { ReviewListData, ReviewSort } from '@/types/review'
@@ -36,6 +41,9 @@ export const useStudioReviews = ({
     queryFn: () =>
       getStudioReviews(studioId ?? '', { sort, photoOnly, page: 1, size: 10 }),
     enabled: Boolean(studioId) && enabled,
+    // 정렬·사진필터가 queryKey에 있어 값이 바뀔 때마다 새 쿼리가 된다.
+    // 이전 목록을 유지하지 않으면 조작할 때마다 화면이 통째로 비워진다.
+    placeholderData: keepPreviousData,
   })
 
   // 캐시된 목록에서 특정 리뷰의 좋아요 상태/카운트만 갱신
@@ -96,7 +104,12 @@ export const useStudioReviews = ({
   return {
     summary: query.data?.summary ?? null,
     reviews: query.data?.items ?? [],
-    isPending: query.isPending,
+    // isPending은 enabled:false일 때도 true라 studioId가 없으면 영영 로딩으로
+    // 남는다. isLoading(= isPending && isFetching)이라야 그 경우를 걸러낸다.
+    isLoading: query.isLoading,
+    // 필터 전환 중인지 구분용. isFetching은 포커스 복귀 재조회에도 반응해
+    // 목록이 이유 없이 흐려진다. 이전 목록을 보여주는 동안만 true인 쪽을 쓴다.
+    isPlaceholderData: query.isPlaceholderData,
     isError: query.isError,
     refetch: query.refetch,
     toggleLike: (reviewId: number, nextLiked: boolean) =>
