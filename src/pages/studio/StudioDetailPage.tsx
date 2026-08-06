@@ -23,6 +23,7 @@ import BottomSheet from '@/pages/studio/components/BottomSheet'
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import HairMakeupSheet from '@/pages/studio/components/HairMakeupSheet'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
+import StudioDetailSkeleton from '@/pages/studio/components/StudioDetailSkeleton'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { STUDIO_SERVICE_LABEL } from '@/constants/studioService'
@@ -156,8 +157,9 @@ const StudioDetailPage = () => {
 
   if (!detail) {
     return (
-      <div className="flex min-h-dvh flex-col bg-white">
-        <NavigationBar variant="default" showRight={false} onBack={() => navigate(-1)} />
+      // 로드 후 레이아웃과 같은 컨테이너를 써야 데이터 도착 시 흔들리지 않는다.
+      <div className="relative flex min-h-dvh flex-col bg-white pb-24">
+        <StudioDetailSkeleton onBack={() => navigate(-1)} />
       </div>
     )
   }
