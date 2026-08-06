@@ -5,9 +5,10 @@ import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
 import Dropdown from '@/components/common/Dropdown'
 import Notice2 from '@/components/common/Notice2'
-import { IcFilter, IcStar, IcStarHalf } from '@/components/icons'
+import { IcError, IcFilter, IcStar, IcStarHalf } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
+import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
 import { useStudioReviews } from '@/hooks/useStudioReviews'
 import type { ReviewSort } from '@/types/review'
@@ -28,12 +29,13 @@ const ReviewDetailPage = () => {
   const [sortOpen, setSortOpen] = useState(false)
   const [sortValue, setSortValue] = useState<ReviewSort>('recent')
 
-  const { summary, reviews, toggleLike, likePendingReviewId } = useStudioReviews({
-    studioId,
-    sort: sortValue,
-    photoOnly,
-    enabled: isLoggedIn,
-  })
+  const { summary, reviews, isError, refetch, toggleLike, likePendingReviewId } =
+    useStudioReviews({
+      studioId,
+      sort: sortValue,
+      photoOnly,
+      enabled: isLoggedIn,
+    })
 
   const sortLabel =
     SORT_OPTIONS.find((option) => option.value === sortValue)?.label ?? '최신순'
@@ -77,24 +79,26 @@ const ReviewDetailPage = () => {
         }
       />
 
-      {/* 별점 요약 */}
-      <div className="flex flex-col items-center px-5 py-8">
-        <div className="flex items-center pb-1">
-          <div className="flex">
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStarHalf width={36} height={36} className="text-brand-80" />
+      {/* 별점 요약. 조회 실패 시 0.0 / 0개 평가로 보이지 않도록 숨긴다. */}
+      {!isError && (
+        <div className="flex flex-col items-center px-5 py-8">
+          <div className="flex items-center pb-1">
+            <div className="flex">
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStarHalf width={36} height={36} className="text-brand-80" />
+            </div>
+            <span className="pl-2 font-h2 text-black">
+              {(summary?.avgRating ?? 0).toFixed(1)}
+            </span>
           </div>
-          <span className="pl-2 font-h2 text-black">
-            {(summary?.avgRating ?? 0).toFixed(1)}
+          <span className="font-b6 text-gray-60">
+            ({summary?.totalCount ?? 0}개 평가)
           </span>
         </div>
-        <span className="font-b6 text-gray-60">
-          ({summary?.totalCount ?? 0}개 평가)
-        </span>
-      </div>
+      )}
 
       {/* 필터 행 */}
       <div className="flex items-center justify-between border-y border-gray-10 px-5 py-3">
@@ -103,8 +107,9 @@ const ReviewDetailPage = () => {
             checked={photoOnly}
             onChange={() => setPhotoOnly((prev) => !prev)}
           />
+          {/* 개수는 요약을 받아온 뒤에만 붙인다(실패·로딩 중 (0)으로 보이지 않도록). */}
           <span className="font-b6 text-gray-60">
-            사진 리뷰만 보기 ({summary?.photoReviewCount ?? 0})
+            사진 리뷰만 보기{summary ? ` (${summary.photoReviewCount})` : ''}
           </span>
         </label>
         <div className="relative">
@@ -140,28 +145,38 @@ const ReviewDetailPage = () => {
         </div>
       </div>
 
-      {/* 리뷰 리스트 */}
+      {/* 리뷰 리스트. 조회 실패는 '리뷰 없음'과 구분해서 재시도 가능한 에러로 보여준다. */}
       <div className="flex flex-col gap-5 pb-5">
-        {reviews.map((review) => (
-          <ReviewCard
-            key={review.reviewId}
-            reviewId={review.reviewId}
-            variant="full"
-            reviewerName={review.writerNickname}
-            isBest={review.isBest}
-            rating={review.rating}
-            date={review.createdAt.slice(0, 10).replaceAll('-', '.')}
-            conceptTitle={review.conceptName}
-            body={review.content}
-            photos={review.images}
-            helpfulText={`${review.likeCount}명에게 도움이 된 리뷰예요`}
-            likeCount={review.likeCount}
-            liked={review.isLiked}
-            likePending={likePendingReviewId === review.reviewId}
-            onLikeChange={handleLikeChange}
-          />
-        ))}
-        {reviews.length === 0 && (
+        {isError && (
+          <div className="flex justify-center py-20">
+            <ErrorNotice
+              icon={<IcError width={48} height={48} className="text-brand-80" />}
+              title="리뷰를 불러오지 못했어요"
+              onRetry={() => refetch()}
+            />
+          </div>
+        )}
+        {!isError &&
+          reviews.map((review) => (
+            <ReviewCard
+              key={review.reviewId}
+              reviewId={review.reviewId}
+              variant="full"
+              reviewerName={review.writerNickname}
+              isBest={review.isBest}
+              rating={review.rating}
+              date={review.createdAt.slice(0, 10).replaceAll('-', '.')}
+              conceptTitle={review.conceptName}
+              body={review.content}
+              photos={review.images}
+              helpfulText={`${review.likeCount}명에게 도움이 된 리뷰예요`}
+              likeCount={review.likeCount}
+              liked={review.isLiked}
+              likePending={likePendingReviewId === review.reviewId}
+              onLikeChange={handleLikeChange}
+            />
+          ))}
+        {!isError && reviews.length === 0 && (
           <Notice2
             variant="message"
             title="조건에 맞는 리뷰가 없어요"

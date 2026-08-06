@@ -102,6 +102,7 @@ const ConceptListPage = () => {
   )
   const slots = slotsQuery.data ?? []
   const isSlotsLoading = slotsQuery.isLoading
+  const isSlotsError = slotsQuery.isError
 
   useEffect(() => {
     if (!reservationToast) return
@@ -279,6 +280,7 @@ const ConceptListPage = () => {
           initialSelection={dateTimeSelection}
           slots={slots}
           isSlotsLoading={isSlotsLoading}
+          isSlotsError={isSlotsError}
           onDateChange={setSheetDate}
           onClose={() => setDateSheetOpen(false)}
           onApply={(selection) => {

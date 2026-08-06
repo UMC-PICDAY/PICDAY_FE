@@ -98,6 +98,7 @@ export const useStudioReviews = ({
     reviews: query.data?.items ?? [],
     isPending: query.isPending,
     isError: query.isError,
+    refetch: query.refetch,
     toggleLike: (reviewId: number, nextLiked: boolean) =>
       likeMutation.mutate({ reviewId, nextLiked }),
     // 처리 중인 리뷰만 잠그기 위해 대상 id를 넘긴다(전체 잠금 방지).
