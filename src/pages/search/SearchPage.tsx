@@ -12,11 +12,16 @@ import Button from '@/components/common/Button'
 import { useSearchDraftStore, formatSearchDate } from '@/stores/useSearchDraftStore'
 import { formatCalendarDateForUrl, serializeStudioSearchParams } from '@/utils/studioSearchParams'
 import type { StudioSearchFilters } from '@/utils/studioSearchParams'
+import { useCompareStore } from '@/stores/useCompareStore'
 
 const SearchPage = () => {
   const navigate = useNavigate()
   const { keyword, keywordType, studioId, date, isDateUndecided, purpose } =
     useSearchDraftStore()
+
+  const clearCompare = useCompareStore(
+    (state) => state.clear,
+  )
 
   const dateLabel = isDateUndecided ? '날짜 미정' : date ? formatSearchDate(date) : undefined
   // 지역칩 '전체'(keywordType 'all')와 '날짜 미정'(date null)은 표시용일 뿐
@@ -36,6 +41,8 @@ const SearchPage = () => {
       concepts: purpose ? [purpose] : [],
       services: [],
     }
+    
+    clearCompare()
 
     navigate(`/studios?${serializeStudioSearchParams(filters).toString()}`)
   }

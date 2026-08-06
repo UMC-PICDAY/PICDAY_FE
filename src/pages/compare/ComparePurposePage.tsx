@@ -250,6 +250,7 @@ const ComparePurposePage = () => {
 
     if (studios.length === 2) {
       navigate('/compare/two', {
+        replace: true,
         state: compareNavigationState,
       })
       return
@@ -257,6 +258,7 @@ const ComparePurposePage = () => {
 
     if (studios.length === 3) {
       navigate('/compare/three', {
+        replace: true,
         state: compareNavigationState,
       })
     }
@@ -286,12 +288,14 @@ const ComparePurposePage = () => {
           purpose: selectedPurpose,
           shootingCategory:
             PURPOSE_CATEGORY_MAP[selectedPurpose],
+          studioSearch,
         },
       },
     )
   }
 
-  const handleSelectStudiosAgain = () => {
+  //뒤로가기 버튼+사진관 재선택
+  const navigateToStudioList = () => {
     navigate(
       {
         pathname: STUDIO_LIST_PATH,
@@ -381,7 +385,7 @@ const ComparePurposePage = () => {
           type="button"
           aria-label="뒤로가기"
           className="flex size-9 items-center justify-center border-none bg-transparent p-0"
-          onClick={() => navigate(-1)}
+          onClick={navigateToStudioList}
         >
           <IcBack width={24} height={24} />
         </button>
@@ -427,7 +431,7 @@ const ComparePurposePage = () => {
             <div className="w-full max-w-[240px]">
               <Button
                 variant="primary"
-                onClick={handleSelectStudiosAgain}
+                onClick={navigateToStudioList}
               >
                 사진관 다시 선택하기
               </Button>

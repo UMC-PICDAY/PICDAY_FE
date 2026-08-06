@@ -310,6 +310,7 @@ const CompareTwoPage = () => {
 
   const handleBack = () => {
     navigate('/compare', {
+      replace: true,
       state: {
         studioIds:
           currentStudioIds.length > 0
