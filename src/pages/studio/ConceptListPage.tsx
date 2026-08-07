@@ -264,25 +264,29 @@ const ConceptListPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <NavigationBar
-        variant="subtitle"
-        title={products?.studioName ?? ''}
-        date={subtitleDate}
-        count={subtitleTime}
-        rightNode={<FavoriteButton active={favorited} onClick={handleToggleFavorite} />}
-        onBack={() => navigate(-1)}
-        onSubtitleClick={openDateSheet}
-      />
+      {/* 목록을 내려도 사진관명·선택한 일시와 안내 토스트가 계속 보이도록 상단 고정.
+          일시 변경 시트가 top-[60px](네비게이션바 높이)에서 시작하므로 겹치지 않는다. */}
+      <div className="sticky top-0 z-30 bg-white">
+        <NavigationBar
+          variant="subtitle"
+          title={products?.studioName ?? ''}
+          date={subtitleDate}
+          count={subtitleTime}
+          rightNode={<FavoriteButton active={favorited} onClick={handleToggleFavorite} />}
+          onBack={() => navigate(-1)}
+          onSubtitleClick={openDateSheet}
+        />
 
-      {reservationToast && (
-        <div className="flex justify-center px-5 py-2">
-          <Toast
-            key={reservationToast.id}
-            message={reservationToast.message}
-            className="flex items-center justify-center whitespace-nowrap rounded-[100px] bg-brand-60 px-4 py-2 font-b10 text-white"
-          />
-        </div>
-      )}
+        {reservationToast && (
+          <div className="flex justify-center px-5 py-2">
+            <Toast
+              key={reservationToast.id}
+              message={reservationToast.message}
+              className="flex items-center justify-center whitespace-nowrap rounded-[100px] bg-brand-60 px-4 py-2 font-b10 text-white"
+            />
+          </div>
+        )}
+      </div>
 
       {productsError ? (
         <div className="flex flex-1 items-center justify-center px-5 py-10">
