@@ -27,7 +27,7 @@ const ReservationCardSkeleton = () => (
 )
 
 export const ReservationListSkeleton = () => (
-  <div className="flex flex-col items-center gap-3">
+  <div className="flex flex-col items-center gap-5">
     {Array.from({ length: 3 }).map((_, index) => (
       <ReservationCardSkeleton key={index} />
     ))}
