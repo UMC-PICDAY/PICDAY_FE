@@ -380,19 +380,6 @@ const ReservationDetailPage = () => {
       </div>
 
       <div className="fixed bottom-0 left-1/2 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10">
-        {isReserved && (
-          <Button
-            variant="primary"
-            onClick={() =>
-              navigate(
-                `/mypage/reservations/${reservationId}/cancel`,
-              )
-            }
-          >
-            예약 취소
-          </Button>
-        )}
-
         {isShooting && (
           <Button
             variant="primary"
