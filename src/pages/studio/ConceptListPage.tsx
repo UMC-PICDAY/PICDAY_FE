@@ -94,6 +94,10 @@ const ConceptListPage = () => {
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
   const [loginAlertOpen, setLoginAlertOpen] = useState(false)
   const dateTimeSelection = parseDateTimeSelection(searchParams)
+  // 검색(B-4)에서 날짜만 고르고 넘어오면 time·slotId가 없어 위 판정은 null이다.
+  // 그래도 고른 날짜는 그대로 보여주고 시간만 마저 고르게 한다.
+  const selectedDate =
+    dateTimeSelection?.date ?? parseCalendarDate(searchParams.get(DATE_PARAM))
   // 시트에서 선택 중인 날짜 (슬롯 조회 트리거)
   const [sheetDate, setSheetDate] = useState<CalendarDate | undefined>(undefined)
   const [reservationToast, setReservationToast] =
@@ -135,13 +139,16 @@ const ConceptListPage = () => {
     return () => window.clearTimeout(timer)
   }, [reservationToast])
 
-  const subtitleDate = dateTimeSelection
-    ? formatDate(dateTimeSelection.date)
-    : '날짜, 시간 선택'
-  const subtitleTime = dateTimeSelection?.startTime ?? ''
+  const subtitleDate = selectedDate ? formatDate(selectedDate) : '날짜, 시간 선택'
+  // 날짜만 정해진 상태에서는 시간 자리에 남은 할 일을 띄운다.
+  const subtitleTime = dateTimeSelection
+    ? dateTimeSelection.startTime
+    : selectedDate
+      ? '시간 선택'
+      : ''
 
   const openDateSheet = () => {
-    setSheetDate(dateTimeSelection?.date)
+    setSheetDate(selectedDate ?? undefined)
     setDateSheetOpen(true)
   }
 
@@ -229,7 +236,9 @@ const ConceptListPage = () => {
     }
 
     if (!dateTimeSelection) {
-      showReservationToast('날짜, 시간을 먼저 선택해 주세요')
+      showReservationToast(
+        selectedDate ? '시간을 먼저 설정해 주세요' : '날짜, 시간을 먼저 선택해 주세요',
+      )
       return
     }
 
@@ -242,8 +251,8 @@ const ConceptListPage = () => {
     setReservationToast(null)
 
     // 예약 생성(3-x)은 예약 도메인 담당 → 검증 통과 시 예약 화면으로 계약 데이터 전달
-    const selectedDate = toApiDate(dateTimeSelection.date)
-    const selectedTime = dateTimeSelection.startTime
+    const reservationDate = toApiDate(dateTimeSelection.date)
+    const reservationTime = dateTimeSelection.startTime
     navigate('/reservation', {
       state: {
         reservation: {
@@ -253,7 +262,7 @@ const ConceptListPage = () => {
           studioName: products?.studioName ?? '',
           conceptName: product.productName,
           includedItems: product.shortDescription?.split(' · ') ?? [],
-          reservationDateTime: `${selectedDate.replaceAll('-', '.')} ${selectedTime}`,
+          reservationDateTime: `${reservationDate.replaceAll('-', '.')} ${reservationTime}`,
           reserverName: rebookingInfo?.reserverName ?? '',
           reserverPhone: rebookingInfo?.reserverPhone ?? '',
           price: product.price,
@@ -343,7 +352,9 @@ const ConceptListPage = () => {
 
       {dateSheetOpen && (
         <DateChangeSheet
-          initialSelection={dateTimeSelection}
+          initialSelection={
+            dateTimeSelection ?? (selectedDate ? { date: selectedDate } : null)
+          }
           slots={slots}
           isSlotsLoading={isSlotsLoading}
           isSlotsError={isSlotsError}

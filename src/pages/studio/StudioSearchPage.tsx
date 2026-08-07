@@ -149,6 +149,16 @@ const StudioSearchPage = () => {
     }
   }
 
+  // 검색에서 고른 날짜를 상세로 넘긴다. 상세가 컨셉 목록(C-7)까지 이어주면
+  // 예약 단계에서 날짜를 다시 고르지 않고 시간만 정하면 된다.
+  const goToStudio = (studioId: number) => {
+    navigate(
+      filters.date
+        ? `/studios/${studioId}?date=${filters.date}`
+        : `/studios/${studioId}`,
+    )
+  }
+
   const handleCompare = () => {
     if (compareItems.length < 2) return
     navigate('/compare', {
@@ -327,7 +337,7 @@ const StudioSearchPage = () => {
                         }
                         price={`₩${studio.minPrice.toLocaleString()}~`}
                         rating={`★${studio.rating}`}
-                        onClick={() => navigate(`/studios/${studio.studioId}`)}
+                        onClick={() => goToStudio(studio.studioId)}
                       />
                     ))}
                   </div>
@@ -377,7 +387,7 @@ const StudioSearchPage = () => {
                   studios={sheetStudios}
                   showCompareButton={snap === 'expanded'}
                   selectedIds={selectedIds}
-                  onSelect={(id) => navigate(`/studios/${id}`)}
+                  onSelect={goToStudio}
                   onCompareToggle={handleCompareToggle}
                   onFavoriteToggle={handleFavoriteToggle}
                 />

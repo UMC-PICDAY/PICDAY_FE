@@ -15,7 +15,11 @@ import type {
 
 interface DateChangeSheetProps {
   // 시트는 초기 날짜·슬롯만 필요하므로 시간 정보 전체를 요구하지 않는다.
-  initialSelection: Pick<StudioDateTimeSelection, 'date' | 'slotId'> | null
+  // 검색에서 날짜만 정하고 들어오는 경우가 있어 slotId는 없을 수 있다.
+  initialSelection:
+    | (Pick<StudioDateTimeSelection, 'date'> &
+        Partial<Pick<StudioDateTimeSelection, 'slotId'>>)
+    | null
   slots: readonly StudioTimeSlot[]
   onDateChange: (date: CalendarDate) => void
   onApply: (selection: StudioDateTimeSelection) => void

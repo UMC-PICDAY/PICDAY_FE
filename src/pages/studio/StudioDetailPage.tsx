@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
 import ReviewZero from '@/components/common/ReviewZero'
@@ -63,6 +63,9 @@ const Divider = () => <div className="h-1.5 w-full bg-gray-10" />
 const StudioDetailPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
+  const [searchParams] = useSearchParams()
+  // 검색에서 고른 날짜. 상세는 쓰지 않고 컨셉 목록(C-7)까지 넘겨주기만 한다.
+  const searchDate = searchParams.get('date')
   const { data: detail, isError, refetch } = useStudioDetail(studioId)
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
@@ -108,7 +111,12 @@ const StudioDetailPage = () => {
 
   const closeSheet = () => setOpenSheet(null)
   const goToReviews = () => navigate(`/studios/${studioId}/reviews`)
-  const goToConcepts = () => navigate(`/studios/${studioId}/concepts`)
+  const goToConcepts = () =>
+    navigate(
+      searchDate
+        ? `/studios/${studioId}/concepts?date=${searchDate}`
+        : `/studios/${studioId}/concepts`,
+    )
 
   const fullAddress = detail?.location.address ?? ''
 
