@@ -19,6 +19,7 @@ import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import Toggle from '@/components/common/Toggle'
 import AppTabBar from '@/components/layout/AppTabBar'
+import { ProfileHeaderSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import {
   checkNicknameAvailable,
   getMe,
@@ -258,18 +259,18 @@ const ProfileSettingPage = () => {
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
-      <Profile
-        variant="userInfo"
-        userName={
-          isLoading
-            ? '불러오는 중...'
-            : originalNickname
-        }
-        accountText={accountText}
-        userImageSrc={
-          profileImageUrl || logoIcon
-        }
-      />
+      {isLoading ? (
+        <ProfileHeaderSkeleton />
+      ) : (
+        <Profile
+          variant="userInfo"
+          userName={originalNickname}
+          accountText={accountText}
+          userImageSrc={
+            profileImageUrl || logoIcon
+          }
+        />
+      )}
 
       <SegmentedTab
         items={[
