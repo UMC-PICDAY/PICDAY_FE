@@ -18,10 +18,10 @@ const ReservationCardSkeleton = () => (
     </div>
 
     <div className="flex w-full flex-col gap-[10px] px-[12px] py-[8px]">
-      <Skeleton className="h-5 w-2/3" />
-      <Skeleton className="h-4 w-1/2" />
-      <Skeleton className="h-4 w-1/3" />
-      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-5 w-2/3 rounded-lg" />
+      <Skeleton className="h-4 w-1/2 rounded-lg" />
+      <Skeleton className="h-4 w-1/3 rounded-lg" />
+      <Skeleton className="h-10 w-full rounded-lg" />
     </div>
   </div>
 )
@@ -38,18 +38,18 @@ export const ReviewDetailSkeleton = () => (
   <>
     <div className="px-5 pt-5">
       <div className="rounded-[8px] bg-brand-20/30 px-4 py-3">
-        <Skeleton className="h-5 w-1/2" />
-        <Skeleton className="mt-2 h-4 w-2/3" />
+        <Skeleton className="h-5 w-1/2 rounded-lg" />
+        <Skeleton className="mt-2 h-4 w-2/3 rounded-lg" />
       </div>
     </div>
 
     <article className="mx-5 mt-3 flex flex-col gap-3 rounded-[8px] px-0 pb-5 pt-2 shadow-[0_15px_48px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
-      <Skeleton className="h-6 w-1/3" />
-      <Skeleton className="h-4 w-1/4" />
+      <Skeleton className="h-6 w-1/3 rounded-lg" />
+      <Skeleton className="h-4 w-1/4 rounded-lg" />
       <Skeleton className="h-8 w-2/3 rounded-[32px]" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-2/3 rounded-lg" />
       <Skeleton className="h-[88px] w-full rounded-[8px]" />
     </article>
 

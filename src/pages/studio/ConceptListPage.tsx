@@ -8,6 +8,7 @@ import Toast from '@/components/common/Toast'
 import { IcError } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
+import ConceptListSkeleton from '@/pages/studio/components/ConceptListSkeleton'
 import DateChangeSheet from '@/pages/studio/components/DateChangeSheet'
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
@@ -104,6 +105,7 @@ const ConceptListPage = () => {
   // 시간대가 정해지면 응답에 selectedSlot(예약 가능 여부)이 실리도록 재조회한다.
   const {
     data: products,
+    isLoading: isProductsLoading,
     isError: productsError,
     refetch: refetchProducts,
   } = useStudioProducts(
@@ -290,6 +292,8 @@ const ConceptListPage = () => {
             onRetry={() => refetchProducts()}
           />
         </div>
+      ) : isProductsLoading ? (
+        <ConceptListSkeleton />
       ) : (
         <main className="flex flex-col px-5 pb-6">
           {products?.productGroups.map((group) => (

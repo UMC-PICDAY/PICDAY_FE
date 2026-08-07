@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import {
   getStudioDetail,
@@ -48,7 +48,12 @@ export const studioSearchQueryKey = (filters: StudioSearchFilters) =>
 
 // 2-3. 사진관 검색 — studioId가 있으면 이름 검색(2-3-2), 없으면 통합 검색을 호출한다.
 // 통합 검색은 기본 조건(location/date/concept)이 하나라도 있어야 한다.
-export const useStudioSearch = (filters: StudioSearchFilters) =>
+// keepPrevious는 옵트인이다. 결과 목록 화면에선 필터를 바꿔도 목록이 사라지지
+// 않게 켜지만, FilterPage는 이전 필터의 개수가 버튼에 남으면 안 되므로 끈다.
+export const useStudioSearch = (
+  filters: StudioSearchFilters,
+  { keepPrevious = false }: { keepPrevious?: boolean } = {},
+) =>
   useQuery({
     queryKey: studioSearchQueryKey(filters),
     queryFn: () =>
@@ -56,6 +61,7 @@ export const useStudioSearch = (filters: StudioSearchFilters) =>
         ? searchStudiosByName(toSearchByNameParams(filters, filters.studioId))
         : searchStudios(toSearchParams(filters)),
     enabled: hasBaseSearchCondition(filters),
+    placeholderData: keepPrevious ? keepPreviousData : undefined,
   })
 
 // 2-4. 사진관 상세
