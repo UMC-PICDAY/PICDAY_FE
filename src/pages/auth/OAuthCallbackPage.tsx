@@ -13,6 +13,7 @@ import LogoType from '@/components/layout/LogoType'
 import { socialLogin } from '@/services/auth'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { SocialProvider } from '@/types/auth'
+import { clearSocialLoginReturnTo, getSocialLoginReturnTo } from '@/utils/authRedirect'
 
 const OAuthCallbackPage = () => {
   const navigate = useNavigate()
@@ -20,6 +21,7 @@ const OAuthCallbackPage = () => {
   const [searchParams] = useSearchParams()
   const authLogin = useAuthStore((state) => state.login)
   const hasRequested = useRef(false)
+  const returnTo = getSocialLoginReturnTo()
 
   useEffect(() => {
     if (hasRequested.current) return
@@ -27,7 +29,10 @@ const OAuthCallbackPage = () => {
 
     const code = searchParams.get('code')
     if (!provider || !code) {
-      navigate('/login')
+      navigate('/login', {
+        replace: true,
+        state: { returnTo },
+      })
       return
     }
 
@@ -38,18 +43,31 @@ const OAuthCallbackPage = () => {
         if (result.isNewUser) {
           navigate('/signup/social', {
             state: { signupToken: result.signupToken, socialInfo: result.socialInfo },
+            replace: true,
           })
           return
         }
         authLogin({ accessToken: result.token.accessToken, refreshToken: result.token.refreshToken })
-        navigate('/home')
+        clearSocialLoginReturnTo()
+        navigate(returnTo, { replace: true })
       })
-      .catch(() => navigate('/login'))
-  }, [provider, searchParams, navigate, authLogin])
+      .catch(() => {
+        navigate('/login', {
+          replace: true,
+          state: { returnTo },
+        })
+      })
+  }, [provider, searchParams, navigate, authLogin, returnTo])
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
-      <NavigationBar showRight={false} onBack={() => navigate('/login')} />
+      <NavigationBar 
+        showRight={false} 
+        onBack={() => 
+          navigate('/login', {
+            state: { returnTo },
+          })
+        } />
 
       <div className="flex flex-1 flex-col items-center justify-center gap-[30px]">
         <div className="flex flex-col items-center gap-[5px]">
