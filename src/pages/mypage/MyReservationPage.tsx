@@ -160,7 +160,7 @@ const MyReservationPage = () => {
   useEffect(() => {
     getMe()
       .then((result) => {
-        setUserName(result.user.name)
+        setUserName(result.user.nickname)
         setProfileImageUrl(result.user.profileImageUrl ?? '')
         setProvider(result.user.provider)
       })

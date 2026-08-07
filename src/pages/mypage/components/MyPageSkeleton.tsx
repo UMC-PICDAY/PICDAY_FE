@@ -1,14 +1,28 @@
 /**
  * MyPageSkeleton 사용법
  *
- * MyReservationPage, MyReviewPage 전용 로딩 스켈레톤.
- * 카드/본문의 실제 레이아웃(CardReservationHistory, MyReviewPage 뷰 모드)을 그대로 따라가되,
- * 내용물(이미지·텍스트·버튼) 자리만 공용 Skeleton 블록으로 채워서 로딩 중임을 표시함.
+ * MyReservationPage, MyReviewPage, ProfileSettingPage 전용 로딩 스켈레톤.
+ * 카드/본문의 실제 레이아웃(CardReservationHistory, MyReviewPage 뷰 모드, Profile
+ * userInfo 영역)을 그대로 따라가되, 내용물(이미지·텍스트·버튼) 자리만 공용 Skeleton
+ * 블록으로 채워서 로딩 중임을 표시함.
  *
  *   <ReservationListSkeleton />
  *   <ReviewDetailSkeleton />
+ *   <ProfileHeaderSkeleton />
  */
 import Skeleton from '@/components/common/Skeleton'
+
+export const ProfileHeaderSkeleton = () => (
+  <div className="flex w-full max-w-[402px] flex-col items-start gap-5">
+    <div className="flex w-full items-center gap-[15px] px-5 py-[10px]">
+      <Skeleton className="h-[40px] w-[40px] shrink-0 rounded-full" />
+      <div className="flex flex-col gap-1">
+        <Skeleton className="h-4 w-24 rounded-lg" />
+        <Skeleton className="h-3 w-16 rounded-lg" />
+      </div>
+    </div>
+  </div>
+)
 
 const ReservationCardSkeleton = () => (
   <div className="relative flex w-[362px] flex-col items-center gap-[10px] rounded-[20px] border border-[rgba(254,228,235,0.3)] bg-[rgba(252,252,252,0.75)] py-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
@@ -27,7 +41,7 @@ const ReservationCardSkeleton = () => (
 )
 
 export const ReservationListSkeleton = () => (
-  <div className="flex flex-col items-center gap-3">
+  <div className="flex flex-col items-center gap-5">
     {Array.from({ length: 3 }).map((_, index) => (
       <ReservationCardSkeleton key={index} />
     ))}
