@@ -76,7 +76,7 @@ const CardPortfolio = ({
   price = '₩55,000~',
 }: CardPortfolioItem) => {
   return (
-    <div className="relative flex w-[178px] shrink-0 flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+    <div className="relative flex w-full min-w-0 flex-col items-start overflow-hidden rounded-[12px] border border-[rgba(238,238,238,0.6)] bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
       <div className="relative flex h-[124px] w-full shrink-0 items-center justify-center overflow-hidden bg-white">
         {imageSrc ? (
           <img alt={title} className="h-full w-full object-cover" src={imageSrc} />
@@ -86,7 +86,7 @@ const CardPortfolio = ({
       </div>
 
       <div className="flex w-full shrink-0 flex-col items-start gap-[4px] bg-[rgba(252,252,252,0.75)] px-[12px] py-[10px]">
-        <p className="h-[20px] w-[154px] truncate text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)] text-black">
+        <p className="h-[20px] w-full truncate text-[var(--font-b7-size)] font-[var(--font-b7-weight)] leading-[var(--font-b7-line-height)] tracking-[var(--font-b7-letter-spacing)] text-black">
           {title}
         </p>
         <p className="shrink-0 whitespace-nowrap pr-[4px] text-[var(--font-cap3-size)] font-[400] leading-[var(--font-cap3-line-height)] tracking-[var(--font-cap3-letter-spacing)] text-gray-80">
@@ -102,7 +102,9 @@ const CardPortfolio = ({
 
 const CardPortfolioGrid = ({ className, items = DEFAULT_ITEMS }: Props) => {
   return (
-    <div className={className || 'relative flex w-[402px] items-center justify-center gap-[8px] px-[20px]'}>
+    // 카드 폭을 고정하면 좁은 화면에서 컨테이너 밖으로 밀려 잘린다.
+    // 화면 폭을 나눠 갖도록 2열 그리드로 두고 카드는 칸을 채우게 한다.
+    <div className={className || 'grid w-full grid-cols-2 gap-2'}>
       {items.map((item, index) => (
         <CardPortfolio key={`${item.title ?? 'portfolio'}-${index}`} {...item} />
       ))}

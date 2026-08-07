@@ -258,7 +258,7 @@ const StudioDetailPage = () => {
       <section className="px-5 pb-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">촬영 컨셉</h2>
         <CardPortfolioGrid
-          className="flex w-full items-center justify-center gap-2"
+          className="grid w-full grid-cols-2 gap-2"
           items={detail.representativeProducts.map((product) => ({
             imageSrc: product.thumbnailUrl,
             title: product.productName,
