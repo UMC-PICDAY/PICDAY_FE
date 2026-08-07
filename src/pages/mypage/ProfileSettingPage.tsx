@@ -44,7 +44,6 @@ const ProfileSettingPage = () => {
   }
 
   // 사용자 정보
-  const [userName, setUserName] = useState('')
   const [nickname, setNickname] = useState('')
   const [originalNickname, setOriginalNickname] =
     useState('')
@@ -99,7 +98,6 @@ const ProfileSettingPage = () => {
         const result = await getMe()
         const user = result.user
 
-        setUserName(user.name)
         setNickname(user.nickname)
         setOriginalNickname(user.nickname)
         setProfileImageUrl(user.profileImageUrl ?? '')
@@ -265,7 +263,7 @@ const ProfileSettingPage = () => {
         userName={
           isLoading
             ? '불러오는 중...'
-            : userName
+            : nickname
         }
         accountText={accountText}
         userImageSrc={
