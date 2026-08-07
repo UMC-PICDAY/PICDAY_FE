@@ -116,7 +116,7 @@ const DateChangeSheet = ({
         <div className="flex justify-center py-5">
           <Calendar
             startMonth={startMonth}
-            monthCount={2}
+            minMonth={startMonth}
             selectedDate={selectedDate}
             onDateSelect={handleDateSelect}
             isDateDisabled={(date) => toLocalDate(date) < today}
