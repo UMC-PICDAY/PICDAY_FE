@@ -14,6 +14,8 @@
  *
  * [disabled] 특정 날짜 비활성화
  *   <Calendar startMonth={month} disabledDates={disabledDates} />
+ *
+ * 오늘 날짜는 별도 설정 없이 항상 표시된다.
  */
 
 import { Fragment } from "react";
@@ -59,6 +61,16 @@ const isSameDate = (left: CalendarDate, right: CalendarDate) =>
   left.month === right.month &&
   left.day === right.day;
 
+const getToday = (): CalendarDate => {
+  const now = new Date();
+
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate(),
+  };
+};
+
 /** Weekday와 DayCell을 조합해 연속된 여러 달을 표시하는 controlled calendar입니다. */
 const Calendar = ({
   startMonth,
@@ -70,6 +82,7 @@ const Calendar = ({
   onDateSelect,
   isDateDisabled,
 }: CalendarProps) => {
+  const today = getToday();
   const normalizedMonthCount = Number.isFinite(monthCount)
     ? Math.max(1, Math.floor(monthCount))
     : 1;
@@ -128,6 +141,7 @@ const Calendar = ({
                       selectedDate !== undefined &&
                       isSameDate(selectedDate, date)
                     }
+                    today={isSameDate(today, date)}
                     disabled={disabled}
                     aria-label={`${year}년 ${month}월 ${day}일`}
                     onClick={() => onDateSelect?.(date)}
