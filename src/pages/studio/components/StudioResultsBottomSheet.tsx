@@ -75,13 +75,16 @@ const StudioResultsBottomSheet = ({
   return (
     <section
       aria-label="검색 결과"
-      className="absolute inset-x-0 top-0 flex h-full flex-col rounded-t-[20px] border border-gray-10/60 bg-white shadow-[0px_-4px_24px_rgba(206,206,206,0.12)]"
+      className="absolute inset-x-0 top-0 flex flex-col rounded-t-[20px] border border-gray-10/60 bg-white shadow-[0px_-4px_24px_rgba(206,206,206,0.12)]"
       style={{
         transform: `translateY(${translateY}px)`,
+        // 높이를 화면에 보이는 만큼으로 잡아야 하단바가 시트 바닥이 아니라
+        // 화면 바닥에 붙는다. h-full이면 아래 translateY만큼이 화면 밖이다.
+        height: `calc(100% - ${translateY}px)`,
         transition:
           isDragging || reduceMotion
             ? 'none'
-            : 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
+            : 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), height 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
       }}
     >
       <button
@@ -118,7 +121,8 @@ const StudioResultsBottomSheet = ({
         {children}
       </div>
 
-      {isExpanded && footer ? <div className="shrink-0">{footer}</div> : null}
+      {/* 반펼침에서도 펼침과 같은 하단바를 둔다. 접힘에서는 손잡이만 남긴다. */}
+      {showContent && footer ? <div className="shrink-0">{footer}</div> : null}
     </section>
   )
 }

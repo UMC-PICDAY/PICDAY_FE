@@ -24,6 +24,9 @@ export interface SnapOffsets {
 const SNAP_ORDER: SheetSnap[] = ['collapsed', 'half', 'expanded']
 const FLICK_VELOCITY = 0.5 // px/ms
 const COLLAPSED_VISIBLE = 48
+// 반펼침은 사진관 카드 한 장이 딱 떨어지는 높이로 맞춘다.
+// 손잡이 20 + 헤더 41 + 카드 328.6 + 탭바 63.4 + 시트 위아래 테두리 2
+const HALF_VISIBLE = 455
 const DRAG_THRESHOLD = 6
 
 export const step = (snap: SheetSnap, dir: number): SheetSnap => {
@@ -70,7 +73,7 @@ export const useBottomSheetSnap = ({
     const el = containerRef.current
     if (!el) return
     const height = el.clientHeight
-    const halfVisible = Math.min(Math.max(height * 0.52, 300), height)
+    const halfVisible = Math.min(HALF_VISIBLE, height)
     setCollapsedOffset(Math.max(height - COLLAPSED_VISIBLE, 0))
     setHalfOffset(Math.max(height - halfVisible, 0))
   }, [])

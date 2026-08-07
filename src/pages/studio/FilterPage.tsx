@@ -21,10 +21,14 @@ const RATINGS = [
   { value: 4.8, label: '★4.8이상' },
 ] as const
 
-const PRICE_MIN = 30000
+const PRICE_MIN = 0
 const PRICE_MAX = 150000
 
 const formatKRW = (value: number) => `₩${value.toLocaleString('ko-KR')}`
+
+// 상한이 최대치면 maxPrice를 보내지 않아 실제로는 상한이 없다. 슬라이더 눈금과 같게 +를 붙인다.
+const formatUpperKRW = (value: number) =>
+  value === PRICE_MAX ? `${formatKRW(value)}+` : formatKRW(value)
 
 const toggle = <T extends string>(list: T[], value: T) =>
   list.includes(value)
@@ -110,7 +114,7 @@ const FilterPage = () => {
           <p className="pb-3 font-b8 text-gray-40">모든 추가금 포함</p>
           <div className="mb-3 flex items-center justify-center rounded-lg bg-brand-20 px-3 py-2">
             <span className="font-b7 text-black">
-              {formatKRW(price[0])} ~ {formatKRW(price[1])}
+              {formatKRW(price[0])} ~ {formatUpperKRW(price[1])}
             </span>
           </div>
           <RangeSlider

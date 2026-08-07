@@ -149,6 +149,16 @@ const StudioSearchPage = () => {
     }
   }
 
+  // 검색에서 고른 날짜를 상세로 넘긴다. 상세가 컨셉 목록(C-7)까지 이어주면
+  // 예약 단계에서 날짜를 다시 고르지 않고 시간만 정하면 된다.
+  const goToStudio = (studioId: number) => {
+    navigate(
+      filters.date
+        ? `/studios/${studioId}?date=${filters.date}`
+        : `/studios/${studioId}`,
+    )
+  }
+
   const handleCompare = () => {
     if (compareItems.length < 2) return
     navigate('/compare', {
@@ -327,7 +337,7 @@ const StudioSearchPage = () => {
                         }
                         price={`₩${studio.minPrice.toLocaleString()}~`}
                         rating={`★${studio.rating}`}
-                        onClick={() => navigate(`/studios/${studio.studioId}`)}
+                        onClick={() => goToStudio(studio.studioId)}
                       />
                     ))}
                   </div>
@@ -346,22 +356,28 @@ const StudioSearchPage = () => {
               </p>
             }
             footer={
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-x-0 -top-14 flex justify-center">
-                  <div className="pointer-events-auto">
-                    <MapButton onClick={() => setSnap('collapsed')} />
+              // 반펼침에서는 탭바만 둔다. 비교는 목록을 다 펼쳐 고르는 동작이라
+              // 카드 한 장만 보이는 반펼침에 비교바를 띄울 이유가 없다.
+              snap === 'expanded' ? (
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-x-0 -top-14 flex justify-center">
+                    <div className="pointer-events-auto">
+                      <MapButton onClick={() => setSnap('collapsed')} />
+                    </div>
                   </div>
+                  <CompareActionBar
+                    selected={compareItems}
+                    maxSlots={MAX_COMPARE}
+                    disabled={compareItems.length < 2}
+                    onCompare={handleCompare}
+                    onRemove={removeCompare}
+                    className="flex w-full flex-col items-start"
+                  />
+                  <AppTabBar activeTab="search" />
                 </div>
-                <CompareActionBar
-                  selected={compareItems}
-                  maxSlots={MAX_COMPARE}
-                  disabled={compareItems.length < 2}
-                  onCompare={handleCompare}
-                  onRemove={removeCompare}
-                  className="flex w-full flex-col items-start"
-                />
+              ) : (
                 <AppTabBar activeTab="search" />
-              </div>
+              )
             }
           >
             {loading ? (
@@ -377,7 +393,7 @@ const StudioSearchPage = () => {
                   studios={sheetStudios}
                   showCompareButton={snap === 'expanded'}
                   selectedIds={selectedIds}
-                  onSelect={(id) => navigate(`/studios/${id}`)}
+                  onSelect={goToStudio}
                   onCompareToggle={handleCompareToggle}
                   onFavoriteToggle={handleFavoriteToggle}
                 />
