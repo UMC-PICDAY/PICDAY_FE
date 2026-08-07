@@ -263,7 +263,7 @@ const ProfileSettingPage = () => {
         userName={
           isLoading
             ? '불러오는 중...'
-            : nickname
+            : originalNickname
         }
         accountText={accountText}
         userImageSrc={
