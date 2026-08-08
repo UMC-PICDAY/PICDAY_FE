@@ -46,9 +46,11 @@ import ChatRoomPage from '@/pages/chat/ChatRoomPage'
 
 import TermsDetailPage from '@/pages/common/TermsDetailPage'
 
-
+import { useScrollToTop } from '@/hooks/useScrollToTop'
 
 function App() {
+  useScrollToTop()
+
   return (
     <Routes>
       {/* 홈 */}

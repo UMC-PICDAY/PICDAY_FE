@@ -264,6 +264,7 @@ const StudioDetailPage = () => {
             title: product.productName,
             price: `₩${product.price.toLocaleString()}~`,
           }))}
+          onPortfolioClick={goToConcepts}
         />
         <button
           type="button"
