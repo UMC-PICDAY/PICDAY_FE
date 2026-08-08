@@ -22,6 +22,7 @@ interface SearchDraftState {
   setDate: (date: CalendarDate) => void
   setDateUndecided: () => void
   setPurpose: (purpose: string) => void
+  reset: () => void
 }
 
 /** 검색 위저드(자동완성/날짜/목적)에서 고른 값을 SearchPage로 되돌려주기 위한 임시 상태 */
@@ -37,6 +38,15 @@ export const useSearchDraftStore = create<SearchDraftState>((set) => ({
   setDate: (date) => set({ date, isDateUndecided: false }),
   setDateUndecided: () => set({ date: null, isDateUndecided: true }),
   setPurpose: (purpose) => set({ purpose }),
+  reset: () =>
+    set({
+      keyword: '',
+      keywordType: null,
+      studioId: null,
+      date: null,
+      isDateUndecided: false,
+      purpose: null,
+    }),
 }))
 
 export const formatSearchDate = (date: CalendarDate) => {

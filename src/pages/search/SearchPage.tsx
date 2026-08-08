@@ -8,6 +8,7 @@ import NavigationBar from '@/components/layout/NavigationBar'
 import MiniTitle from '@/components/common/MiniTitle'
 import SearchField from '@/components/common/SearchField'
 import SelectField from '@/components/common/SelectField'
+import ResetChip from '@/components/common/ResetChip'
 import Button from '@/components/common/Button'
 import { useSearchDraftStore, formatSearchDate } from '@/stores/useSearchDraftStore'
 import { formatCalendarDateForUrl, serializeStudioSearchParams } from '@/utils/studioSearchParams'
@@ -16,7 +17,7 @@ import { useCompareStore } from '@/stores/useCompareStore'
 
 const SearchPage = () => {
   const navigate = useNavigate()
-  const { keyword, keywordType, studioId, date, isDateUndecided, purpose } =
+  const { keyword, keywordType, studioId, date, isDateUndecided, purpose, reset } =
     useSearchDraftStore()
 
   const clearCompare = useCompareStore(
@@ -49,20 +50,24 @@ const SearchPage = () => {
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
-      <NavigationBar title="검색" showRight={false} onBack={() => navigate(-1)} />
+      <NavigationBar title="검색" onBack={() => navigate(-1)} onClose={() => navigate('/home')} />
 
       <MiniTitle title="어떤 사진관을 찾고 있나요?" />
 
-      <div className="flex w-full flex-col items-start gap-3 px-5">
-        <div className="w-full" onClick={() => navigate('/search/autocomplete')}>
-          <SearchField
-            variant="input"
-            value={keyword}
-            placeholder="지역이나 사진관명을 검색해 보세요"
-          />
+      <div className="flex w-full flex-col items-start gap-[25px] px-5">
+        <div className="flex w-full flex-col items-start gap-3">
+          <div className="w-full" onClick={() => navigate('/search/autocomplete')}>
+            <SearchField
+              variant="input"
+              value={keyword}
+              placeholder="지역이나 사진관명을 검색해 보세요"
+            />
+          </div>
+          <SelectField variant="date" value={dateLabel} onClick={() => navigate('/search/date')} />
+          <SelectField variant="purpose" value={purpose ?? undefined} onClick={() => navigate('/search/purpose')} />
         </div>
-        <SelectField variant="date" value={dateLabel} onClick={() => navigate('/search/date')} />
-        <SelectField variant="purpose" value={purpose ?? undefined} onClick={() => navigate('/search/purpose')} />
+
+        {hasAnyFilter && <ResetChip onClick={reset} />}
       </div>
 
       <div className="mt-auto w-full p-5">
