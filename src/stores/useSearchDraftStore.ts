@@ -22,6 +22,7 @@ interface SearchDraftState {
   setDate: (date: CalendarDate) => void
   setDateUndecided: () => void
   setPurpose: (purpose: string) => void
+  clearKeyword: () => void
   reset: () => void
 }
 
@@ -38,6 +39,7 @@ export const useSearchDraftStore = create<SearchDraftState>((set) => ({
   setDate: (date) => set({ date, isDateUndecided: false }),
   setDateUndecided: () => set({ date: null, isDateUndecided: true }),
   setPurpose: (purpose) => set({ purpose }),
+  clearKeyword: () => set({ keyword: '', keywordType: null, studioId: null }),
   reset: () =>
     set({
       keyword: '',

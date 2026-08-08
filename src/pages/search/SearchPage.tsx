@@ -17,7 +17,7 @@ import { useCompareStore } from '@/stores/useCompareStore'
 
 const SearchPage = () => {
   const navigate = useNavigate()
-  const { keyword, keywordType, studioId, date, isDateUndecided, purpose, reset } =
+  const { keyword, keywordType, studioId, date, isDateUndecided, purpose, clearKeyword, reset } =
     useSearchDraftStore()
 
   const clearCompare = useCompareStore(
@@ -61,6 +61,10 @@ const SearchPage = () => {
               variant="input"
               value={keyword}
               placeholder="지역이나 사진관명을 검색해 보세요"
+              onClear={(event) => {
+                event.stopPropagation()
+                clearKeyword()
+              }}
             />
           </div>
           <SelectField variant="date" value={dateLabel} onClick={() => navigate('/search/date')} />
