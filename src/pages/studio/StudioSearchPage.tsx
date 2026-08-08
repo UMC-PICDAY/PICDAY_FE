@@ -216,12 +216,32 @@ const StudioSearchPage = () => {
     setSnap('half')
   }
 
-  const focusedStudio =
-    studios.find((studio) => studio.studioId === focusedStudioId) ?? null
-  // half에서는 목록이 스크롤되지 않아 상단 카드만 보인다. 핀으로 고른 사진관을
-  // 확인할 수 있도록 그 카드만 단독으로 띄우고, 펼치면 원래 정렬의 전체 목록을 둔다.
-  const sheetStudios =
-    focusedStudio && snap !== 'expanded' ? [focusedStudio] : studios
+  // 핀으로 고른 사진관을 목록에서 찾아 맨 위로 스크롤한다. 목록을 그 사진관
+  // 하나로 갈아끼우면 시트를 펼치는 순간 원래 정렬로 되돌아가 선택이 사라진다.
+  // 정렬은 그대로 두고 보이는 위치만 옮기면, half에서는 카드 한 장 높이라
+  // 그 카드만 보이고 펼쳐도 스크롤 위치가 남아 이어서 보인다.
+  useEffect(() => {
+    const list = listRef.current
+    if (!list) return
+
+    if (focusedStudioId === null) {
+      list.scrollTop = 0
+      return
+    }
+
+    const card = list.querySelector<HTMLElement>(
+      `[data-studio-id="${focusedStudioId}"]`,
+    )
+    if (!card) return
+
+    // half에서는 목록이 overflow-hidden이라 scrollIntoView가 바깥 컨테이너까지
+    // 건드린다. 목록 기준 상대 위치만 더해 스크롤 위치를 직접 잡는다.
+    list.scrollTop +=
+      card.getBoundingClientRect().top - list.getBoundingClientRect().top
+    // studios는 매 렌더 새 배열이라 의존성에 넣으면 렌더마다 스크롤을 다시 잡아
+    // 펼침에서 사용자가 스크롤한 위치가 튕긴다. 검색이 바뀌면 위 effect가
+    // focusedStudioId를 풀어주므로 그때 다시 실행된다.
+  }, [focusedStudioId, listRef])
 
   const handleQuickFilterChange = (value: string) => {
     if (!canQuickFilter) return
@@ -390,7 +410,7 @@ const StudioSearchPage = () => {
                 }
               >
                 <StudioResultsList
-                  studios={sheetStudios}
+                  studios={studios}
                   showCompareButton={snap === 'expanded'}
                   selectedIds={selectedIds}
                   onSelect={goToStudio}

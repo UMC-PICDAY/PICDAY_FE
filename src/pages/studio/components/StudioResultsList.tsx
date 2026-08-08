@@ -32,29 +32,33 @@ const StudioResultsList = ({
       const isSelected = selectedIds?.has(studio.studioId) ?? false
 
       return (
-        <CardStudioPreview
-          key={studio.studioId}
-          name={studio.studioName}
-          location={getLocationLabel(studio.locationCategory)}
-          category={getShootingCategoryLabel(studio.shootingCategories[0] ?? '')}
-          secondaryCategory={getShootingCategoryLabel(
-            studio.shootingCategories[1] ?? '',
-          )}
-          services={studio.serviceCodes.map(getStudioServiceShortLabel)}
-          price={formatPrice(studio.minPrice)}
-          rating={String(studio.rating)}
-          reviewCount={String(studio.reviewCount)}
-          imageSrc={studio.thumbnailUrls[0] ?? null}
-          secondImageSrc={studio.thumbnailUrls[1] ?? null}
-          isFavorite={studio.isWishlisted}
-          showCompareButton={showCompareButton}
-          compareButtonLabel={isSelected ? '비교취소' : '비교추가'}
-          isCompareSelected={isSelected}
-          onCompareClick={() => onCompareToggle?.(studio)}
-          onFavoriteClick={() => onFavoriteToggle?.(studio)}
-          onClick={() => onSelect?.(studio.studioId)}
-          className="relative w-full rounded-[20px] border border-[rgba(254,228,235,0.4)] bg-white/75 p-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]"
-        />
+        // 지도 핀으로 고른 사진관을 페이지가 찾아 스크롤할 수 있도록 표식을 남긴다.
+        <div key={studio.studioId} data-studio-id={studio.studioId}>
+          <CardStudioPreview
+            name={studio.studioName}
+            location={getLocationLabel(studio.locationCategory)}
+            category={getShootingCategoryLabel(
+              studio.shootingCategories[0] ?? '',
+            )}
+            secondaryCategory={getShootingCategoryLabel(
+              studio.shootingCategories[1] ?? '',
+            )}
+            services={studio.serviceCodes.map(getStudioServiceShortLabel)}
+            price={formatPrice(studio.minPrice)}
+            rating={String(studio.rating)}
+            reviewCount={String(studio.reviewCount)}
+            imageSrc={studio.thumbnailUrls[0] ?? null}
+            secondImageSrc={studio.thumbnailUrls[1] ?? null}
+            isFavorite={studio.isWishlisted}
+            showCompareButton={showCompareButton}
+            compareButtonLabel={isSelected ? '비교취소' : '비교추가'}
+            isCompareSelected={isSelected}
+            onCompareClick={() => onCompareToggle?.(studio)}
+            onFavoriteClick={() => onFavoriteToggle?.(studio)}
+            onClick={() => onSelect?.(studio.studioId)}
+            className="relative w-full rounded-[20px] border border-[rgba(254,228,235,0.4)] bg-white/75 p-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]"
+          />
+        </div>
       )
     })}
   </div>
