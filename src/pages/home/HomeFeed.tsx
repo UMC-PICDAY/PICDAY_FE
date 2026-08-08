@@ -8,6 +8,7 @@ import Title from '@/components/common/Title'
 import CardStudioLarge from '@/components/cards/CardStudioLarge'
 import CardStudio from '@/components/cards/CardStudio'
 import { getLocationLabel } from '@/constants/locationCategory'
+import HomeSkeleton from '@/pages/home/components/HomeSkeleton'
 import { getHome } from '@/services/studio'
 import type { StudioSummary } from '@/types/studio'
 
@@ -205,32 +206,38 @@ const HomeFeed = () => {
         </div>
       </div>
 
-      {bannerCount > 0 && (
-        <div
-          ref={largeCardScrollRef}
-          className="w-full overflow-x-auto py-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
-        </div>
-      )}
-
-      {recentStudios.length > 0 && (
+      {!data ? (
+        <HomeSkeleton />
+      ) : (
         <>
-          <Title variant="onlyTitle" title="최근 본 사진관" />
-          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(recentStudios)}</div>
-        </>
-      )}
+          {bannerCount > 0 && (
+            <div
+              ref={largeCardScrollRef}
+              className="w-full overflow-x-auto py-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
+            </div>
+          )}
 
-      <Title variant="onlyTitle" title="지금 인기 있는 사진관" />
-      <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(popularStudios)}</div>
+          {recentStudios.length > 0 && (
+            <>
+              <Title variant="onlyTitle" title="최근 본 사진관" />
+              <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(recentStudios)}</div>
+            </>
+          )}
 
-      {regionalStudios && (
-        <>
-          <Title
-            variant="onlyTitle"
-            title={`${getLocationLabel(regionalStudios.locationCategory)}의 사진관`}
-          />
-          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(regionalStudios.studios)}</div>
+          <Title variant="onlyTitle" title="지금 인기 있는 사진관" />
+          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(popularStudios)}</div>
+
+          {regionalStudios && (
+            <>
+              <Title
+                variant="onlyTitle"
+                title={`${getLocationLabel(regionalStudios.locationCategory)}의 사진관`}
+              />
+              <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(regionalStudios.studios)}</div>
+            </>
+          )}
         </>
       )}
     </>

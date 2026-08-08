@@ -9,6 +9,7 @@ import NavigationBar from '@/components/layout/NavigationBar'
 import CardStudioFavorite from '@/components/cards/CardStudioFavorite'
 import NoticeLogin from '@/components/common/NoticeLogin'
 import { IcFavorite } from '@/components/icons'
+import WishlistSkeleton from '@/pages/wishlist/components/WishlistSkeleton'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { getWishlists, removeWishlist } from '@/services/wishlist'
 import type { WishlistResult } from '@/types/wishlist'
@@ -23,7 +24,7 @@ const WishlistPage = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const queryClient = useQueryClient()
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: WISHLIST_QUERY_KEY,
     queryFn: () => getWishlists(),
     enabled: isLoggedIn,
@@ -52,6 +53,8 @@ const WishlistPage = () => {
         <div className="flex flex-1 flex-col items-center justify-center p-[10px]">
           <NoticeLogin onLoginClick={() => navigate('/login')} />
         </div>
+      ) : isLoading ? (
+        <WishlistSkeleton />
       ) : wishlistItems.length === 0 ? (
         // G-1 위시리스트 비어있음
         <div className="flex flex-1 flex-col items-center justify-center gap-5 p-[10px]">
