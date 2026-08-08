@@ -67,7 +67,7 @@ const SearchPage = () => {
           <SelectField variant="purpose" value={purpose ?? undefined} onClick={() => navigate('/search/purpose')} />
         </div>
 
-        {hasAnyFilter && <ResetChip onClick={reset} />}
+        <ResetChip onClick={reset} />
       </div>
 
       <div className="mt-auto w-full p-5">
