@@ -7,8 +7,10 @@ import SearchField from '@/components/common/SearchField'
 import Title from '@/components/common/Title'
 import CardStudioLarge from '@/components/cards/CardStudioLarge'
 import CardStudio from '@/components/cards/CardStudio'
+import { IcError } from '@/components/icons'
 import { getLocationLabel } from '@/constants/locationCategory'
 import HomeSkeleton from '@/pages/home/components/HomeSkeleton'
+import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import { getHome } from '@/services/studio'
 import type { StudioSummary } from '@/types/studio'
 
@@ -81,7 +83,7 @@ const HomeFeed = () => {
     return () => window.clearTimeout(fallbackTimer)
   }, [])
 
-  const { data } = useQuery({
+  const { data, isError, refetch } = useQuery({
     queryKey: ['home', coords],
     queryFn: () => getHome(coords ?? undefined),
     enabled: locationSettled,
@@ -206,7 +208,15 @@ const HomeFeed = () => {
         </div>
       </div>
 
-      {!data ? (
+      {isError ? (
+        <div className="flex flex-1 items-center justify-center px-5 py-20">
+          <ErrorNotice
+            icon={<IcError width={48} height={48} className="text-brand-80" />}
+            title="사진관 정보를 불러오지 못했어요"
+            onRetry={() => refetch()}
+          />
+        </div>
+      ) : !data ? (
         <HomeSkeleton />
       ) : (
         <>

@@ -8,7 +8,8 @@ import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
 import CardStudioFavorite from '@/components/cards/CardStudioFavorite'
 import NoticeLogin from '@/components/common/NoticeLogin'
-import { IcFavorite } from '@/components/icons'
+import { IcError, IcFavorite } from '@/components/icons'
+import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import WishlistSkeleton from '@/pages/wishlist/components/WishlistSkeleton'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { getWishlists, removeWishlist } from '@/services/wishlist'
@@ -24,7 +25,7 @@ const WishlistPage = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const queryClient = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: WISHLIST_QUERY_KEY,
     queryFn: () => getWishlists(),
     enabled: isLoggedIn,
@@ -52,6 +53,14 @@ const WishlistPage = () => {
         // G-1 비로그인 로그인 유도
         <div className="flex flex-1 flex-col items-center justify-center p-[10px]">
           <NoticeLogin onLoginClick={() => navigate('/login')} />
+        </div>
+      ) : isError ? (
+        <div className="flex flex-1 items-center justify-center p-[10px]">
+          <ErrorNotice
+            icon={<IcError width={48} height={48} className="text-brand-80" />}
+            title="위시리스트를 불러오지 못했어요"
+            onRetry={() => refetch()}
+          />
         </div>
       ) : isLoading ? (
         <WishlistSkeleton />
