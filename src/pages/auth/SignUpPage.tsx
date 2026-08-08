@@ -185,41 +185,43 @@ const SignUpPage = () => {
     <div className="flex min-h-dvh w-full flex-col bg-white">
       <NavigationBar title="회원가입" showRight={false} onBack={() => navigate(-1)} />
 
-      <InputField label="이름" placeholder="이름을 입력해 주세요" {...name.fieldProps} />
-      <InputField
-        label="아이디"
-        placeholder="영문 소문자, 숫자를 포함하여 4~12자로 작성"
-        {...id.fieldProps}
-        error={idError}
-        onBlur={handleIdBlur}
-      />
-      <InputField
-        label="비밀번호"
-        placeholder="영문, 숫자, 특수문자를 포함하여 8-20자로 작성"
-        type="password"
-        {...password.fieldProps}
-      />
-      <InputField
-        label="이메일 (필수)"
-        placeholder="이메일을 입력해 주세요"
-        type="email"
-        {...email.fieldProps}
-      />
-      <InputField
-        label="전화번호 (필수)"
-        placeholder="휴대폰 번호를 입력해 주세요"
-        prefix="+82"
-        type="tel"
-        {...phone.fieldProps}
-      />
+      <div className="flex w-full flex-col pt-5">
+        <InputField label="이름" placeholder="이름을 입력해 주세요" {...name.fieldProps} />
+        <InputField
+          label="아이디"
+          placeholder="영문 소문자, 숫자를 포함하여 4~12자로 작성"
+          {...id.fieldProps}
+          error={idError}
+          onBlur={handleIdBlur}
+        />
+        <InputField
+          label="비밀번호"
+          placeholder="영문, 숫자, 특수문자를 포함하여 8-20자로 작성"
+          type="password"
+          {...password.fieldProps}
+        />
+        <InputField
+          label="이메일 (필수)"
+          placeholder="이메일을 입력해 주세요"
+          type="email"
+          {...email.fieldProps}
+        />
+        <InputField
+          label="전화번호 (필수)"
+          placeholder="휴대폰 번호를 입력해 주세요"
+          prefix="+82"
+          type="tel"
+          {...phone.fieldProps}
+        />
 
-      <Agreement
-        items={TERM_ITEMS}
-        checked={terms}
-        onToggleAll={toggleAll}
-        onToggleItem={(key) => toggleTerm(key as TermKey)}
-        onItemDetailClick={(key) => navigate(`/terms/${key}`)}
-      />
+        <Agreement
+          items={TERM_ITEMS}
+          checked={terms}
+          onToggleAll={toggleAll}
+          onToggleItem={(key) => toggleTerm(key as TermKey)}
+          onItemDetailClick={(key) => navigate(`/terms/${key}`)}
+        />
+      </div>
 
       <div className="sticky bottom-0 mt-auto w-full bg-white p-5">
         <Button variant={canSubmit ? 'primary' : 'disabled'} onClick={canSubmit ? handleSubmit : undefined}>
