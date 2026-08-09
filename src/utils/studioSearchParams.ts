@@ -7,40 +7,13 @@ import {
   getLocationLabel,
   LOCATION_CATEGORY_LABEL,
 } from '@/constants/locationCategory'
-import type { StudioSort } from '@/types/studio'
-
-/** 백엔드 StudioSort enum 값과 표시 라벨을 한곳에서 관리합니다. */
-export const STUDIO_SORT_OPTIONS = [
-  { value: 'RECOMMENDED', label: '추천순' },
-  { value: 'PRICE_LOW', label: '가격낮은순' },
-  { value: 'RATING_HIGH', label: '별점순' },
-  { value: 'REVIEW_COUNT', label: '리뷰많은순' },
-] as const satisfies readonly { value: StudioSort; label: string }[]
-
-export const STUDIO_SERVICE_OPTIONS = [
-  { value: 'HAIR_MAKEUP', label: '헤어·메이크업 연계', quickLabel: '헤어·메이크업' },
-  { value: 'COSTUME', label: '의상비치', quickLabel: '의상' },
-  { value: 'PARKING', label: '주차가능', quickLabel: '주차' },
-] as const
-
-export type StudioServiceTag = (typeof STUDIO_SERVICE_OPTIONS)[number]['value']
-
-// URL 쿼리와 API 파라미터 이름·값을 동일하게 맞춘다.
-// location/concepts/services에는 한글 라벨이 아니라 백엔드 enum 코드가 들어간다.
-export interface StudioSearchFilters {
-  location?: string
-  date?: string
-  concepts: string[]
-  /** 이름 검색(2-3-2) 대상. 있으면 통합 검색 대신 이름 검색 API를 호출한다. */
-  studioId?: number
-  /** 표시 전용. API는 studioId만 쓰지만 검색 칩에 사진관 이름을 보여주려면 필요하다. */
-  studioName?: string
-  sort?: StudioSort
-  minPrice?: number
-  maxPrice?: number
-  services: StudioServiceTag[]
-  minRating?: number
-}
+import { isStudioServiceTag } from '@/constants/studioService'
+import { isStudioSort } from '@/constants/studioSort'
+import type {
+  StudioSearchFilters,
+  StudioServiceTag,
+  StudioSort,
+} from '@/types/studio'
 
 const OWNED_PARAM_KEYS = [
   'locationCategory',
@@ -54,9 +27,6 @@ const OWNED_PARAM_KEYS = [
   'serviceCode',
   'minRating',
 ] as const
-
-const SERVICE_VALUES = new Set<string>(STUDIO_SERVICE_OPTIONS.map(({ value }) => value))
-const SORT_VALUES = new Set<string>(STUDIO_SORT_OPTIONS.map(({ value }) => value))
 
 /**
  * 검색 위저드(B-2~B-5)는 한글 라벨('홍대')을 넘기고 API는 코드('HONGDAE')를 받는다.
@@ -78,7 +48,7 @@ const parseOptionalNumber = (value: string | null) => {
 
 const parseSort = (value: string | null): StudioSort | undefined => {
   const trimmed = value?.trim()
-  return trimmed && SORT_VALUES.has(trimmed) ? (trimmed as StudioSort) : undefined
+  return trimmed && isStudioSort(trimmed) ? trimmed : undefined
 }
 
 export const parseStudioSearchParams = (params: URLSearchParams): StudioSearchFilters => ({
@@ -92,9 +62,7 @@ export const parseStudioSearchParams = (params: URLSearchParams): StudioSearchFi
   sort: parseSort(params.get('sort')),
   minPrice: parseOptionalNumber(params.get('minPrice')),
   maxPrice: parseOptionalNumber(params.get('maxPrice')),
-  services: uniqueNonEmpty(params.getAll('serviceCode')).filter(
-    (value): value is StudioServiceTag => SERVICE_VALUES.has(value),
-  ),
+  services: uniqueNonEmpty(params.getAll('serviceCode')).filter(isStudioServiceTag),
   minRating: parseOptionalNumber(params.get('minRating')),
 })
 
@@ -142,12 +110,6 @@ export const resetStudioSearchFilters = (
   services: [],
   minRating: undefined,
 })
-
-export const isStudioServiceTag = (value: string): value is StudioServiceTag =>
-  SERVICE_VALUES.has(value)
-
-export const isStudioSort = (value: string): value is StudioSort =>
-  SORT_VALUES.has(value)
 
 export const toggleStudioService = (
   services: StudioServiceTag[],

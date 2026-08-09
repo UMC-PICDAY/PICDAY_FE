@@ -29,14 +29,16 @@ import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
 import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
 import {
-  buildStudioSearchChipLabel,
+  getStudioServiceShortLabel,
   isStudioServiceTag,
-  isStudioSort,
+  STUDIO_SERVICE_FILTER_CODES,
+} from '@/constants/studioService'
+import { isStudioSort, STUDIO_SORT_OPTIONS } from '@/constants/studioSort'
+import {
+  buildStudioSearchChipLabel,
   parseStudioSearchParams,
   resetStudioSearchFilters,
   serializeStudioSearchParams,
-  STUDIO_SERVICE_OPTIONS,
-  STUDIO_SORT_OPTIONS,
   toggleStudioService,
 } from '@/utils/studioSearchParams'
 
@@ -62,9 +64,9 @@ const SHOOTING_CATEGORY_TO_PURPOSE: Record<
   
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
-  ...STUDIO_SERVICE_OPTIONS
-    .filter(({ value }) => value !== 'COSTUME')
-    .map(({ value, quickLabel }) => ({ value, label: quickLabel })),
+  ...STUDIO_SERVICE_FILTER_CODES
+    .filter((code) => code !== 'COSTUME')
+    .map((code) => ({ value: code, label: getStudioServiceShortLabel(code) })),
 ]
 
 const StudioSearchPage = () => {

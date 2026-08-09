@@ -7,11 +7,14 @@ import NavigationBar from '@/components/layout/NavigationBar'
 import { hasBaseSearchCondition, useStudioSearch } from '@/hooks/useStudio'
 import { SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
 import {
+  getStudioServiceLabel,
+  STUDIO_SERVICE_FILTER_CODES,
+} from '@/constants/studioService'
+import {
   parseStudioSearchParams,
   serializeStudioSearchParams,
-  STUDIO_SERVICE_OPTIONS,
-  type StudioServiceTag,
 } from '@/utils/studioSearchParams'
+import type { StudioServiceTag } from '@/types/studio'
 
 const RATINGS = [
   { value: undefined, label: '전체' },
@@ -129,13 +132,13 @@ const FilterPage = () => {
         <section className="pb-5">
           <h2 className="pb-3 font-b5 text-black">연계 서비스</h2>
           <div className="flex flex-wrap gap-2">
-            {STUDIO_SERVICE_OPTIONS.map((service) => (
+            {STUDIO_SERVICE_FILTER_CODES.map((code) => (
               <FilterChip
-                key={service.value}
-                label={service.label}
+                key={code}
+                label={getStudioServiceLabel(code)}
                 size="large"
-                selected={services.includes(service.value)}
-                onClick={() => setServices((prev) => toggle(prev, service.value))}
+                selected={services.includes(code)}
+                onClick={() => setServices((prev) => toggle(prev, code))}
               />
             ))}
           </div>

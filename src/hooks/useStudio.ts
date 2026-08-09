@@ -12,10 +12,10 @@ import {
 import type {
   StudioProductsParams,
   StudioSearchByNameParams,
+  StudioSearchFilters,
   StudioSearchParams,
 } from '@/types/studio'
 import { serializeStudioSearchParams } from '@/utils/studioSearchParams'
-import type { StudioSearchFilters } from '@/utils/studioSearchParams'
 
 type StudioNameSearchFilters = StudioSearchFilters & { studioId: number }
 
