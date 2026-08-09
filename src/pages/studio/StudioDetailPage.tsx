@@ -71,6 +71,7 @@ const StudioDetailPage = () => {
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
+  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
   const [introExpanded, setIntroExpanded] = useState(false)
   const [introOverflow, setIntroOverflow] = useState(false)
   const introRef = useRef<HTMLParagraphElement>(null)
@@ -133,6 +134,8 @@ const StudioDetailPage = () => {
       }
     } catch {
       setFavorited(!next)
+      setFavoriteErrorMessage('찜 처리에 실패했어요. 다시 시도해 주세요')
+      setTimeout(() => setFavoriteErrorMessage(null), 2000)
     }
   }
 
@@ -467,6 +470,12 @@ const StudioDetailPage = () => {
       {addressCopied && (
         <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
           <Toast message="주소가 복사되었어요" />
+        </div>
+      )}
+
+      {favoriteErrorMessage && (
+        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
+          <Toast message={favoriteErrorMessage} />
         </div>
       )}
 

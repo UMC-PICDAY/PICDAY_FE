@@ -7,6 +7,7 @@ import CompareActionBar from '@/components/common/CompareActionBar'
 import FilterBar2 from '@/components/common/FilterBar2'
 import MapButton from '@/components/common/MapButton'
 import Notice2 from '@/components/common/Notice2'
+import Toast from '@/components/common/Toast'
 import { IcError, IcFilter, IcPin } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
@@ -88,6 +89,7 @@ const StudioSearchPage = () => {
     navigationPurpose ?? searchPurpose
 
   const [mapError, setMapError] = useState(false)
+  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
@@ -146,6 +148,8 @@ const StudioSearchPage = () => {
       }
     } catch {
       queryClient.invalidateQueries({ queryKey })
+      setFavoriteErrorMessage('찜 처리에 실패했어요. 다시 시도해 주세요')
+      setTimeout(() => setFavoriteErrorMessage(null), 2000)
     }
   }
 
@@ -422,6 +426,12 @@ const StudioSearchPage = () => {
           </StudioResultsBottomSheet>
         )}
       </div>
+
+      {favoriteErrorMessage && (
+        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
+          <Toast message={favoriteErrorMessage} />
+        </div>
+      )}
     </div>
   )
 }
