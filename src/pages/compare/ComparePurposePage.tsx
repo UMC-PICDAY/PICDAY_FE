@@ -55,6 +55,7 @@ import {
   type CompareShootingPurpose,
   type ShootingCategory,
 } from '@/services/studio'
+import ComparePurposeSkeleton from '@/pages/compare/components/ComparePurposeSkeleton'
 import { useCompareStore } from '@/stores/useCompareStore'
 
 type PurposeType =
@@ -445,14 +446,7 @@ const ComparePurposePage = () => {
         </section>
 
         {isLoading ? (
-          <div
-            className="flex min-h-[200px] items-center justify-center"
-            role="status"
-          >
-            <p className="font-b6 text-gray-40">
-              비교 정보를 불러오는 중이에요.
-            </p>
-          </div>
+          <ComparePurposeSkeleton />
         ) : errorMessage ? (
           <div
             className="flex min-h-[240px] flex-col items-center justify-center gap-4"
