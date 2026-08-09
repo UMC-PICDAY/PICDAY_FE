@@ -20,6 +20,7 @@ import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
+import CompareSkeleton from '@/pages/compare/components/CompareSkeleton'
 import CardStudioCompare from '@/components/cards/CardStudioCompare'
 import AddButton from '@/components/common/AddButton'
 import Button from '@/components/common/Button'
@@ -410,14 +411,7 @@ const CompareThreePage = () => {
 
       <main className="pb-[166px]">
         {isLoading ? (
-          <div
-            className="flex min-h-[200px] items-center justify-center px-5"
-            role="status"
-          >
-            <p className="font-b6 text-center text-gray-40">
-              비교 정보를 불러오는 중이에요.
-            </p>
-          </div>
+          <CompareSkeleton count={3} />
         ) : errorMessage ? (
           <div
             className="flex min-h-[200px] items-center justify-center px-5"
