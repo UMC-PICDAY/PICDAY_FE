@@ -43,26 +43,6 @@ import {
   serializeStudioSearchParams,
 } from '@/utils/studioSearchParams'
 
-type ComparePurpose =
-  | '증명'
-  | '프로필'
-  | '개인화보'
-  | '취업'
-  | '가족'
-  | '우정'
-
-const SHOOTING_CATEGORY_TO_PURPOSE: Record<
-  string,
-  ComparePurpose
-> = {
-  ID_PHOTO: '증명',
-  PROFILE: '프로필',
-  PERSONAL_PORTRAIT: '개인화보',
-  JOB_PHOTO: '취업',
-  FAMILY: '가족',
-  FRIENDSHIP: '우정',
-}
-  
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
   ...STUDIO_SERVICE_FILTER_CODES
@@ -109,8 +89,10 @@ const StudioSearchPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
+  // purpose는 촬영 컨셉의 한글 라벨('증명' 등). 받는 쪽(ComparePurposePage)이
+  // isPurposeType으로 검증하고 실패하면 기본값으로 떨어뜨린다.
   const navigationState = location.state as {
-    purpose?: ComparePurpose
+    purpose?: string
     snap?: SheetSnap
     } | null
 
@@ -120,10 +102,9 @@ const StudioSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
 
-  const searchPurpose =
-    SHOOTING_CATEGORY_TO_PURPOSE[
-      filters.concepts[0] ?? ''
-    ]
+  const searchPurpose = filters.concepts[0]
+    ? getShootingCategoryLabel(filters.concepts[0])
+    : undefined
 
   const comparePurpose =
     navigationPurpose ?? searchPurpose
