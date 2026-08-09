@@ -19,6 +19,7 @@ import {
   getReservationDetail,
   type ReservationDetailData,
 } from '@/services/reservation'
+import { formatReservationDateTimeShort } from '@/utils/formatReservationDateTime'
 
 interface CancelCompleteReservation {
   reservationId: number
@@ -32,17 +33,6 @@ interface CancelCompleteReservation {
 
 interface CancelCompleteLocationState {
   reservation?: CancelCompleteReservation
-}
-
-const formatReservationDateTime = (
-  reservationDate: string,
-  reservationTime: string,
-) => {
-  const [year, month, day] = reservationDate
-    .split('-')
-    .map(Number)
-
-  return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')} ${reservationTime}`
 }
 
 const CancelCompletePage = () => {
@@ -95,13 +85,13 @@ const CancelCompletePage = () => {
     }
 
     if ('studioName' in reservation) {
-      return `${reservation.studioName} · ${formatReservationDateTime(
+      return `${reservation.studioName} · ${formatReservationDateTimeShort(
         reservation.reservationDate,
         reservation.reservationTime,
       )}`
     }
 
-    return `${reservation.studio.name} · ${formatReservationDateTime(
+    return `${reservation.studio.name} · ${formatReservationDateTimeShort(
       reservation.timeSlot.date,
       reservation.timeSlot.startTime,
     )}`
