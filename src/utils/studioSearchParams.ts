@@ -1,19 +1,9 @@
 import type { CalendarDate } from '@/components/common/Calendar'
-import {
-  getShootingCategoryLabel,
-  SHOOTING_CATEGORY_LABEL,
-} from '@/constants/shootingCategory'
-import {
-  getLocationLabel,
-  LOCATION_CATEGORY_LABEL,
-} from '@/constants/locationCategory'
+import { SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
+import { LOCATION_CATEGORY_LABEL } from '@/constants/locationCategory'
 import { isStudioServiceTag } from '@/constants/studioService'
 import { isStudioSort } from '@/constants/studioSort'
-import type {
-  StudioSearchFilters,
-  StudioServiceTag,
-  StudioSort,
-} from '@/types/studio'
+import type { StudioSearchFilters, StudioSort } from '@/types/studio'
 
 const OWNED_PARAM_KEYS = [
   'locationCategory',
@@ -95,46 +85,6 @@ export const serializeStudioSearchParams = (
   return params
 }
 
-/** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
-export const resetStudioSearchFilters = (
-  filters: StudioSearchFilters,
-): StudioSearchFilters => ({
-  location: filters.location,
-  date: filters.date,
-  concepts: filters.concepts,
-  studioId: filters.studioId,
-  studioName: filters.studioName,
-  sort: undefined,
-  minPrice: undefined,
-  maxPrice: undefined,
-  services: [],
-  minRating: undefined,
-})
-
-export const toggleStudioService = (
-  services: StudioServiceTag[],
-  service: StudioServiceTag,
-) => services.includes(service)
-  ? services.filter((value) => value !== service)
-  : [...services, service]
-
+/** URL·API가 쓰는 YYYY-MM-DD 포맷의 정의부. parse가 이 포맷을 전제한다. */
 export const formatCalendarDateForUrl = ({ year, month, day }: CalendarDate) =>
   `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-
-const formatUrlDateForChip = (value: string) => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-  if (!match) return value
-  return `${Number(match[2])}월${Number(match[3])}일`
-}
-
-export const buildStudioSearchChipLabel = (filters: StudioSearchFilters) => {
-  // 필터에는 코드가 들어 있으므로 칩에는 한글 라벨로 바꿔 보여준다.
-  const labels = [
-    filters.concepts.map(getShootingCategoryLabel).join(','),
-    filters.studioName ??
-      (filters.location ? getLocationLabel(filters.location) : undefined),
-    filters.date ? formatUrlDateForChip(filters.date) : undefined,
-  ].filter((label): label is string => Boolean(label))
-
-  return labels.length > 0 ? labels.join('·') : '사진관 검색'
-}

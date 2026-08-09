@@ -27,7 +27,11 @@ import {
 } from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
-import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
+import type {
+  StudioSearchFilters,
+  StudioSearchItem,
+  StudioSearchResult,
+} from '@/types/studio'
 import {
   getStudioServiceShortLabel,
   isStudioServiceTag,
@@ -35,11 +39,8 @@ import {
 } from '@/constants/studioService'
 import { isStudioSort, STUDIO_SORT_OPTIONS } from '@/constants/studioSort'
 import {
-  buildStudioSearchChipLabel,
   parseStudioSearchParams,
-  resetStudioSearchFilters,
   serializeStudioSearchParams,
-  toggleStudioService,
 } from '@/utils/studioSearchParams'
 
 type ComparePurpose =
@@ -68,6 +69,41 @@ const QUICK_FILTER_ITEMS = [
     .filter((code) => code !== 'COSTUME')
     .map((code) => ({ value: code, label: getStudioServiceShortLabel(code) })),
 ]
+
+const toggle = <T extends string>(list: T[], value: T) =>
+  list.includes(value)
+    ? list.filter((item) => item !== value)
+    : [...list, value]
+
+/** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
+const resetStudioSearchFilters = (
+  filters: StudioSearchFilters,
+): StudioSearchFilters => ({
+  ...filters,
+  sort: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
+  services: [],
+  minRating: undefined,
+})
+
+const formatUrlDateForChip = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return value
+  return `${Number(match[2])}월${Number(match[3])}일`
+}
+
+const buildStudioSearchChipLabel = (filters: StudioSearchFilters) => {
+  // 필터에는 코드가 들어 있으므로 칩에는 한글 라벨로 바꿔 보여준다.
+  const labels = [
+    filters.concepts.map(getShootingCategoryLabel).join(','),
+    filters.studioName ??
+      (filters.location ? getLocationLabel(filters.location) : undefined),
+    filters.date ? formatUrlDateForChip(filters.date) : undefined,
+  ].filter((label): label is string => Boolean(label))
+
+  return labels.length > 0 ? labels.join('·') : '사진관 검색'
+}
 
 const StudioSearchPage = () => {
   const navigate = useNavigate()
@@ -252,7 +288,7 @@ const StudioSearchPage = () => {
     if (!canQuickFilter) return
 
     const nextFilters = isStudioServiceTag(value)
-      ? { ...filters, services: toggleStudioService(filters.services, value) }
+      ? { ...filters, services: toggle(filters.services, value) }
       : isStudioSort(value)
         ? // 서비스 칩과 동일하게 같은 정렬을 다시 누르면 해제한다.
           { ...filters, sort: filters.sort === value ? undefined : value }
