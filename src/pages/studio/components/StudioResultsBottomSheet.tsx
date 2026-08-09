@@ -68,9 +68,10 @@ const StudioResultsBottomSheet = ({
   children,
 }: StudioResultsBottomSheetProps) => {
   const reduceMotion = usePrefersReducedMotion()
-  const isExpanded = snap === 'expanded'
   // collapsed에서는 핸들 바만 노출. 단 드래그 중에는 내용을 유지해 슬라이드를 매끄럽게.
   const showContent = snap !== 'collapsed' || isDragging
+  // 반펼침도 전체 목록을 담으므로 펼침과 똑같이 스크롤한다.
+  const canScrollList = snap !== 'collapsed'
 
   return (
     <section
@@ -111,11 +112,11 @@ const StudioResultsBottomSheet = ({
         className={`min-h-0 flex-1 px-5 ${
           !showContent
             ? 'hidden'
-            : isExpanded
+            : canScrollList
               ? 'overflow-y-auto overscroll-contain'
               : 'overflow-hidden'
         }`}
-        style={{ touchAction: isExpanded ? 'pan-y' : 'none' }}
+        style={{ touchAction: canScrollList ? 'pan-y' : 'none' }}
         {...listHandlers}
       >
         {children}

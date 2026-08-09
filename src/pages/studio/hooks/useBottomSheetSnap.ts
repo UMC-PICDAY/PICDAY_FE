@@ -221,15 +221,17 @@ export const useBottomSheetSnap = ({
     },
   }
 
-  // 목록도 시트 조작 표면으로 쓴다.
-  // - expanded: 스크롤이 우선이라 최상단에서 아래로 당길 때만 시트로 넘긴다.
-  // - half: 목록이 스크롤되지 않으므로 위아래 어느 쪽 드래그든 시트를 움직인다.
+  // 목록도 시트 조작 표면으로 쓴다. half·expanded 모두 전체 목록을 담고
+  // 스크롤되므로, 스크롤이 우선이고 최상단에서 아래로 당길 때만 시트로 넘긴다.
+  // collapsed에서는 목록이 숨겨져 이 표면 자체가 노출되지 않는다.
+  const listScrolls = snap !== 'collapsed'
+
   const listHandlers = {
     onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => {
       suppressListClick.current = false
       const list = listRef.current
       if (!list) return
-      if (snap === 'expanded' && list.scrollTop > 0) return
+      if (listScrolls && list.scrollTop > 0) return
       pendingList.current = { startY: event.clientY }
     },
     onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -241,17 +243,17 @@ export const useBottomSheetSnap = ({
       const list = listRef.current
       if (!pending || !list) return
       const delta = event.clientY - pending.startY
-      const shouldDrag =
-        snap === 'expanded'
-          ? delta > DRAG_THRESHOLD && list.scrollTop <= 0
-          : Math.abs(delta) > DRAG_THRESHOLD
+      const shouldDrag = listScrolls
+        ? delta > DRAG_THRESHOLD && list.scrollTop <= 0
+        : Math.abs(delta) > DRAG_THRESHOLD
 
       if (shouldDrag) {
         event.currentTarget.setPointerCapture?.(event.pointerId)
         beginDrag(pending.startY, 'list')
         pendingList.current = null
         moveDrag(event.clientY)
-      } else if (snap === 'expanded' && delta < 0) {
+      } else if (listScrolls && delta < 0) {
+        // 위로 미는 제스처는 스크롤에 넘긴다.
         pendingList.current = null
       }
     },
