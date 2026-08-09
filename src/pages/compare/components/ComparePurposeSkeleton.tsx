@@ -19,7 +19,7 @@ const ComparePurposeSkeleton = () => (
     {Array.from({ length: 6 }).map((_, index) => (
       <Skeleton
         key={`purpose-${index}`}
-        className="h-[48px] w-full rounded-[8px]"
+        className="h-[98px] w-full rounded-[8px]"
       />
     ))}
   </section>

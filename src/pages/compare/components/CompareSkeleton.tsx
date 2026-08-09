@@ -38,44 +38,69 @@ const CompareSkeleton = ({ count }: CompareSkeletonProps) => {
         {Array.from({ length: count }).map((_, index) => (
           <div
             key={`studio-${index}`}
-            className="flex min-w-0 flex-col gap-2"
+            className="flex min-w-0 flex-col"
           >
-            <Skeleton className="aspect-square w-full rounded-[16px]" />
+            {/* 사진관 이미지 */}
+            <Skeleton
+              className={
+                count === 2
+                  ? 'h-[173px] w-full rounded-t-[12px]'
+                  : 'aspect-square w-full rounded-t-[12px]'
+              }
+            />
 
-            <Skeleton className="h-[18px] w-[70%] rounded-[4px]" />
+            {/* 사진관 이름 / 별점 */}
+            <div className="flex flex-col gap-[2px] px-[10px] py-[10px]">
+              <Skeleton
+                className={
+                  count === 2
+                    ? 'h-[24px] w-[70%] rounded-[4px]'
+                    : 'h-[18px] w-[70%] rounded-[4px]'
+                }
+              />
 
-            <Skeleton className="h-[14px] w-[50%] rounded-[4px]" />
+              <Skeleton
+                className={
+                  count === 2
+                    ? 'h-[21px] w-[50%] rounded-[4px]'
+                    : 'h-[14px] w-[50%] rounded-[4px]'
+                }
+              />
+            </div>
           </div>
         ))}
       </section>
 
       <section className="flex w-full flex-col gap-3">
         {/* 비교하는 컨셉 */}
-        <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] px-5 py-[10px]">
-          <Skeleton className="mb-2 h-[18px] w-[90px] rounded-[4px]" />
+        <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+          {/* 섹션 제목 / 촬영 목적 */}
+          <div className="px-5 py-[10px]">
+            <Skeleton className="h-[18px] w-[90px] rounded-[4px]" />
 
-          <Skeleton className="mb-[10px] h-[14px] w-[50px] rounded-[4px]" />
+            <Skeleton className="mt-1 h-[14px] w-[50px] rounded-[4px]" />
+          </div>
 
-          <div className={`grid ${gridClass}`}>
+          {/* 가격 */}
+          <div
+            className={`grid ${gridClass} px-5 pb-[10px]`}
+          >
             {Array.from({ length: count }).map(
               (_, index) => (
-                <div
+                <Skeleton
                   key={`price-${index}`}
-                  className="flex min-w-0 flex-col gap-1"
-                >
-                  <Skeleton className="h-[22px] w-[75%] rounded-[4px]" />
-
-                  <Skeleton className="h-[14px] w-full rounded-[4px]" />
-
-                  <Skeleton className="h-[22px] w-[65px] rounded-full" />
-                </div>
+                  className="h-[29px] w-[75%] rounded-[4px]"
+                />
               ),
             )}
           </div>
         </div>
 
         {/* 연계 서비스 */}
-        <SkeletonRow count={count} />
+        <SkeletonRow
+          count={count}
+          variant="service"
+        />
 
         {/* 위치 */}
         <SkeletonRow count={count} />
@@ -83,9 +108,15 @@ const CompareSkeleton = ({ count }: CompareSkeletonProps) => {
         {/* 예약 가능일 */}
         <SkeletonRow count={count} />
 
-        {/* 사진관 추가 영역 */}
+        {/* 사진관 추가 / 최대 비교 안내 */}
         <div className="px-5 py-5">
-          <Skeleton className="h-[56px] w-full rounded-[8px]" />
+            <Skeleton
+                className={
+                    count === 3
+                        ? 'h-[45px] w-full rounded-[8px]'
+                        : 'h-[74px] w-full rounded-xl'
+                }
+            />
         </div>
       </section>
     </div>
@@ -94,29 +125,47 @@ const CompareSkeleton = ({ count }: CompareSkeletonProps) => {
 
 interface SkeletonRowProps {
   count: 2 | 3
+  variant?: 'default' | 'service'
 }
 
-const SkeletonRow = ({ count }: SkeletonRowProps) => (
-  <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] px-5 py-[10px]">
-    {/* 섹션 제목 */}
-    <Skeleton className="mb-[10px] h-[18px] w-[72px] rounded-[4px]" />
+const SkeletonRow = ({
+  count,
+  variant = 'default',
+}: SkeletonRowProps) => {
+  const isService = variant === 'service'
 
-    {/* 사진관별 데이터 */}
+  return (
     <div
-      className={`grid ${
-        count === 2
-          ? 'grid-cols-2 gap-4'
-          : 'grid-cols-3 gap-[10px]'
+      className={`flex w-full flex-col bg-[rgba(252,252,252,0.75)] px-5 py-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px] ${
+        isService ? 'h-[100px]' : 'h-[72px]'
       }`}
     >
-      {Array.from({ length: count }).map((_, index) => (
-        <Skeleton
-          key={`row-${index}`}
-          className="h-[22px] w-[75%] rounded-[4px]"
-        />
-      ))}
+      {/* 섹션 제목 */}
+      <Skeleton className="mb-[10px] h-[18px] w-[72px] rounded-[4px]" />
+
+      {/* 사진관별 데이터 */}
+      <div
+        className={`grid ${
+          count === 2
+            ? 'grid-cols-2 gap-4'
+            : 'grid-cols-3 gap-[10px]'
+        }`}
+      >
+        {Array.from({ length: count }).map((_, index) => (
+          <div
+            key={`row-${index}`}
+            className="flex min-w-0 flex-col gap-[5px]"
+          >
+            <Skeleton className="h-[21px] w-[75%] rounded-[4px]" />
+
+            {isService && (
+              <Skeleton className="h-[21px] w-[55%] rounded-[4px]" />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 export default CompareSkeleton
