@@ -65,7 +65,7 @@ type PurposeType =
   | '가족'
   | '우정'
 
-type AlertType = 'exclude' | null
+type AlertType = 'exclude' | 'reselect' | null
 
 interface Studio {
   id: string
@@ -256,6 +256,19 @@ const ComparePurposePage = () => {
     return supportedStudioCount < 2
   }
 
+  const areAllPurposesDisabled =
+    !isLoading &&
+    errorMessage === null &&
+    shootingPurposes.length > 0 &&
+    PURPOSES.every((purpose) => isPurposeDisabled(purpose))
+
+  useEffect(() => {
+    if (areAllPurposesDisabled) {
+      setAlertType('reselect')
+    }
+  }, [areAllPurposesDisabled])
+
+
   const isCompareDisabled =
     isLoading || 
     errorMessage !== null || 
@@ -395,6 +408,10 @@ const ComparePurposePage = () => {
     `${unavailableStudioNames}엔 선택하신 컨셉이 없어요.\n` +
     '제외하고 비교할까요?'
 
+  const reselectAlertDescription =
+    '선택하신 사진관끼리 비교 가능한 촬영 목적이 없어요.\n' +
+    '다른 사진관을 선택해 주세요.'
+
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-white text-black">
       <header className="flex w-full items-center justify-between px-5 py-3">
@@ -527,19 +544,27 @@ const ComparePurposePage = () => {
         </footer>
       )}
 
-      {alertType === 'exclude' && (
+      {alertType && (
         <div
           className="absolute inset-0 z-50 flex items-center justify-center bg-gray-80/90 px-[14px]"
           role="dialog"
           aria-modal="true"
           aria-label="사진관 비교 안내"
         >
+          {alertType === 'exclude' ? (
             <Alert2
               variant="alert"
               description={excludeAlertDescription}
               onCancel={handleCloseAlert}
               onConfirm={handleCompareWithoutUnavailableStudios}
             />
+          ) : (
+            <Alert2
+              variant="alert2"
+              description={reselectAlertDescription}
+              onConfirm={navigateToStudioList}
+            />
+          )}
         </div>
       )}
     </div>
