@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useLocation, useNavigate, useParams } from 'react-router'
 
 import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
@@ -27,6 +27,7 @@ const SORT_OPTIONS = [
 
 const ReviewDetailPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { studioId } = useParams()
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const [photoOnly, setPhotoOnly] = useState(false)
@@ -56,6 +57,15 @@ const ReviewDetailPage = () => {
     toggleLike(reviewId, nextLiked)
   }
 
+  // 로그인 후 홈이 아니라 보려던 리뷰 화면으로 돌아오도록 현재 경로를 넘긴다.
+  const handleLogin = () => {
+    navigate('/login', {
+      state: {
+        returnTo: `${location.pathname}${location.search}`,
+      },
+    })
+  }
+
   // 리뷰는 로그인한 사용자만 볼 수 있어, 비로그인 진입 시 로그인 유도 모달만 노출한다.
   if (!isLoggedIn) {
     return (
@@ -65,7 +75,7 @@ const ReviewDetailPage = () => {
           <div className="w-full">
             <Alert3
               variant="variant3"
-              onClick={() => navigate('/login')}
+              onClick={handleLogin}
               onHelperClick={() => navigate(-1)}
             />
           </div>

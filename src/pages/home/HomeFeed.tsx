@@ -7,7 +7,10 @@ import SearchField from '@/components/common/SearchField'
 import Title from '@/components/common/Title'
 import CardStudioLarge from '@/components/cards/CardStudioLarge'
 import CardStudio from '@/components/cards/CardStudio'
+import { IcError } from '@/components/icons'
 import { getLocationLabel } from '@/constants/locationCategory'
+import HomeSkeleton from '@/pages/home/components/HomeSkeleton'
+import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import { getHome } from '@/services/studio'
 import type { StudioSummary } from '@/types/studio'
 
@@ -80,7 +83,7 @@ const HomeFeed = () => {
     return () => window.clearTimeout(fallbackTimer)
   }, [])
 
-  const { data } = useQuery({
+  const { data, isError, refetch } = useQuery({
     queryKey: ['home', coords],
     queryFn: () => getHome(coords ?? undefined),
     enabled: locationSettled,
@@ -205,32 +208,46 @@ const HomeFeed = () => {
         </div>
       </div>
 
-      {bannerCount > 0 && (
-        <div
-          ref={largeCardScrollRef}
-          className="w-full overflow-x-auto py-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
-        </div>
-      )}
-
-      {recentStudios.length > 0 && (
-        <>
-          <Title variant="onlyTitle" title="최근 본 사진관" />
-          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(recentStudios)}</div>
-        </>
-      )}
-
-      <Title variant="onlyTitle" title="지금 인기 있는 사진관" />
-      <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(popularStudios)}</div>
-
-      {regionalStudios && (
-        <>
-          <Title
-            variant="onlyTitle"
-            title={`${getLocationLabel(regionalStudios.locationCategory)}의 사진관`}
+      {isError ? (
+        <div className="flex flex-1 items-center justify-center px-5 py-20">
+          <ErrorNotice
+            icon={<IcError width={48} height={48} className="text-brand-80" />}
+            title="사진관 정보를 불러오지 못했어요"
+            onRetry={() => refetch()}
           />
-          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(regionalStudios.studios)}</div>
+        </div>
+      ) : !data ? (
+        <HomeSkeleton />
+      ) : (
+        <>
+          {bannerCount > 0 && (
+            <div
+              ref={largeCardScrollRef}
+              className="w-full overflow-x-auto py-[10px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <CardStudioLarge items={largeCardItems} className="relative flex items-center gap-[20px]" />
+            </div>
+          )}
+
+          {recentStudios.length > 0 && (
+            <>
+              <Title variant="onlyTitle" title="최근 본 사진관" />
+              <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(recentStudios)}</div>
+            </>
+          )}
+
+          <Title variant="onlyTitle" title="지금 인기 있는 사진관" />
+          <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(popularStudios)}</div>
+
+          {regionalStudios && (
+            <>
+              <Title
+                variant="onlyTitle"
+                title={`${getLocationLabel(regionalStudios.locationCategory)}의 사진관`}
+              />
+              <div className={HORIZONTAL_SCROLL_CLASS}>{renderStudioRow(regionalStudios.studios)}</div>
+            </>
+          )}
         </>
       )}
     </>
