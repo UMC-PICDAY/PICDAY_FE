@@ -78,7 +78,12 @@ const FilterPage = () => {
     if (!canApply) return
 
     const params = serializeStudioSearchParams(draftFilters, searchParams)
-    navigate({ pathname: '/studios', search: `?${params.toString()}` })
+    // 적용을 끝낸 필터 화면은 히스토리에서 걷어낸다. 그대로 쌓으면 결과 화면에서
+    // 뒤로가기를 눌렀을 때 방금 닫은 필터 화면이 다시 열린다.
+    navigate(
+      { pathname: '/studios', search: `?${params.toString()}` },
+      { replace: true },
+    )
   }
 
   return (

@@ -252,12 +252,17 @@ const StudioSearchPage = () => {
         ? // 서비스 칩과 동일하게 같은 정렬을 다시 누르면 해제한다.
           { ...filters, sort: filters.sort === value ? undefined : value }
         : filters
-    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
+    // 칩 조작은 화면 이동이 아니라 같은 화면의 조건 변경이므로 히스토리를 쌓지
+    // 않는다. 쌓으면 칩을 누른 횟수만큼 뒤로가기를 눌러야 화면을 빠져나간다.
+    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams), {
+      replace: true,
+    })
   }
 
   const handleResetFilters = () => {
     setSearchParams(
       serializeStudioSearchParams(resetStudioSearchFilters(filters), searchParams),
+      { replace: true },
     )
   }
 
