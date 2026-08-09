@@ -20,8 +20,10 @@
  *   - X 버튼: 사진관 삭제
  *   - + 버튼: 사진관 추가 (/studios 이동)
  *
+ * 촬영 목적 선택
+ *  - 해당 목적을 지원하는 사진관이 2개 미만이면 버튼 비활성화
+ * 
  * 비교 시작
- *   - 선택 목적을 지원하는 사진관이 2개 미만이면 재선택 Alert 표시
  *   - 선택한 사진관 중 일부만 지원하면 제외 확인 Alert 표시
  *   - 2개 비교 → /compare/two
  *   - 3개 비교 → /compare/three
@@ -36,6 +38,7 @@
  *
  * 비교 버튼
  *   사진관이 1개 이하이거나 API 로딩/에러 시 비활성화
+ *   선택한 촬영 목적을 지원하는 사진관이 2개 미만이면 비활성화
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -133,9 +136,6 @@ const ComparePurposePage = () => {
   const [unavailableStudios, setUnavailableStudios] = useState<Studio[]>([])
 
   const selectedStudioCount = selectedStudios.length
-
-  const isCompareDisabled =
-    isLoading || errorMessage !== null || selectedStudioCount <= 1
 
   useEffect(() => {
     if (isPurposeType(navigationPurpose)) {
@@ -238,6 +238,44 @@ const ComparePurposePage = () => {
     )
   }
 
+  const isPurposeDisabled = (purpose: PurposeType) => {
+    const category = PURPOSE_CATEGORY_MAP[purpose]
+
+    const shootingPurpose = shootingPurposes.find(
+      (item) => item.shootingCategory === category,
+    )
+
+    if (!shootingPurpose) {
+      return true
+    }
+
+    const supportedStudioCount = selectedStudios.filter((studio) =>
+      shootingPurpose.supportedStudioIds.includes(studio.id),
+    ).length
+
+    return supportedStudioCount < 2
+  }
+
+  const areAllPurposesDisabled =
+    !isLoading &&
+    errorMessage === null &&
+    shootingPurposes.length > 0 &&
+    PURPOSES.every((purpose) => isPurposeDisabled(purpose))
+
+  useEffect(() => {
+    if (areAllPurposesDisabled) {
+      setAlertType('reselect')
+    }
+  }, [areAllPurposesDisabled])
+
+
+  const isCompareDisabled =
+    isLoading || 
+    errorMessage !== null || 
+    selectedStudioCount <= 1 ||
+    isPurposeDisabled(selectedPurpose)
+  
+
   const navigateToComparePage = (studios: Studio[]) => {
     const compareNavigationState = {
       studioIds: studios.map((studio) => studio.id),
@@ -320,8 +358,6 @@ const ComparePurposePage = () => {
       getSelectedShootingPurpose()
 
     if (!selectedShootingPurpose) {
-      setUnavailableStudios(selectedStudios)
-      setAlertType('reselect')
       return
     }
 
@@ -339,9 +375,8 @@ const ComparePurposePage = () => {
 
     setUnavailableStudios(unavailableStudioList)
 
-    // 선택 목적을 지원하는 사진관이 0개 또는 1개인 경우
+    // 비교 가능한 사진관이 2개 미만이면 진행하지 않음
     if (availableStudioCount < 2) {
-      setAlertType('reselect')
       return
     }
 
@@ -374,9 +409,8 @@ const ComparePurposePage = () => {
     '제외하고 비교할까요?'
 
   const reselectAlertDescription =
-    `${unavailableStudioNames}엔\n` +
-    '선택하신 컨셉이 없어요.\n' +
-    '다른 컨셉을 선택해 주세요.'
+    '선택하신 사진관끼리 비교 가능한 촬영 목적이 없어요.\n' +
+    '다른 사진관을 선택해 주세요.'
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-white text-black">
@@ -442,16 +476,24 @@ const ComparePurposePage = () => {
             className="grid grid-cols-2 gap-4 py-[10px]"
             aria-label="촬영 목적 선택"
           >
-            {PURPOSES.map((purpose) => (
-              <CategoryButton
-                key={purpose}
-                type={purpose}
-                active={selectedPurpose === purpose}
-                onClick={() =>
-                  setSelectedPurpose(purpose)
+            {PURPOSES.map((purpose) => {
+              const disabled = isPurposeDisabled(purpose)
+
+              return (
+                <CategoryButton
+                  key={purpose}
+                  type={purpose}
+                  active={selectedPurpose === purpose && !disabled}
+                  disabled={disabled}
+                  onClick={() => {
+                    if (!disabled) {
+                      setSelectedPurpose(purpose)
+                    }
+                  }
                 }
               />
-            ))}
+              )
+            })}
           </section>
         )}
       </main>
@@ -514,15 +556,13 @@ const ComparePurposePage = () => {
               variant="alert"
               description={excludeAlertDescription}
               onCancel={handleCloseAlert}
-              onConfirm={
-                handleCompareWithoutUnavailableStudios
-              }
+              onConfirm={handleCompareWithoutUnavailableStudios}
             />
           ) : (
             <Alert2
               variant="alert2"
               description={reselectAlertDescription}
-              onConfirm={handleCloseAlert}
+              onConfirm={navigateToStudioList}
             />
           )}
         </div>
