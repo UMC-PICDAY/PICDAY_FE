@@ -127,17 +127,6 @@ export const serializeStudioSearchParams = (
   return params
 }
 
-/**
- * 이름 검색은 studioId 하나로 조회 가능하고,
- * 통합 검색은 위치·날짜·컨셉 중 최소 1개가 필요하다(없으면 STUDIO_40012).
- */
-export const isStudioNameSearch = (filters: StudioSearchFilters) =>
-  filters.studioId !== undefined
-
-export const hasBaseSearchCondition = (filters: StudioSearchFilters) =>
-  isStudioNameSearch(filters) ||
-  Boolean(filters.location || filters.date || filters.concepts.length > 0)
-
 /** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
 export const resetStudioSearchFilters = (
   filters: StudioSearchFilters,
@@ -169,13 +158,6 @@ export const toggleStudioService = (
 
 export const formatCalendarDateForUrl = ({ year, month, day }: CalendarDate) =>
   `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-
-export const formatCalendarDateForDisplay = ({ year, month, day }: CalendarDate) => {
-  const yy = String(year).slice(2)
-  const mm = String(month).padStart(2, '0')
-  const dd = String(day).padStart(2, '0')
-  return `${yy}.${mm}.${dd}`
-}
 
 const formatUrlDateForChip = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)

@@ -20,13 +20,16 @@ import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import { getLocationLabel } from '@/constants/locationCategory'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
-import { studioSearchQueryKey, useStudioSearch } from '@/hooks/useStudio'
+import {
+  hasBaseSearchCondition,
+  studioSearchQueryKey,
+  useStudioSearch,
+} from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
 import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
 import {
   buildStudioSearchChipLabel,
-  hasBaseSearchCondition,
   isStudioServiceTag,
   isStudioSort,
   parseStudioSearchParams,

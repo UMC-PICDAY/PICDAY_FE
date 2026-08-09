@@ -4,10 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router'
 import FilterChip from '@/components/common/FilterChip'
 import RangeSlider from '@/components/common/RangeSlider'
 import NavigationBar from '@/components/layout/NavigationBar'
-import { useStudioSearch } from '@/hooks/useStudio'
+import { hasBaseSearchCondition, useStudioSearch } from '@/hooks/useStudio'
 import { SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
 import {
-  hasBaseSearchCondition,
   parseStudioSearchParams,
   serializeStudioSearchParams,
   STUDIO_SERVICE_OPTIONS,
