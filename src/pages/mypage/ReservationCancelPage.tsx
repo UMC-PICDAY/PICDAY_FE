@@ -189,7 +189,7 @@ const ReservationCancelPage = () => {
 
   if (!reservation) {
     return (
-      <main className="flex min-h-dvh w-full flex-col bg-white">
+      <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white">
         <NavigationBar
           title="예약 취소"
           showRight={false}
@@ -212,7 +212,7 @@ const ReservationCancelPage = () => {
     )
 
   return (
-    <main className="flex min-h-dvh w-full flex-col bg-white">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white">
       <NavigationBar
         title="예약 취소"
         showRight={false}

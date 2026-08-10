@@ -316,7 +316,7 @@ const ReservationDetailPage = () => {
 
   if (!reservation) {
     return (
-      <div className="flex min-h-dvh w-full flex-col bg-white">
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white">
         <NavigationBar
           title="예약 상세"
           showRight={false}
@@ -353,7 +353,7 @@ const ReservationDetailPage = () => {
     )
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-white">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white">
       <NavigationBar
         title="예약 상세"
         showRight={false}

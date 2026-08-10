@@ -95,7 +95,7 @@ const ReservationDetail = ({
   const isChecklistCard = property1 === 'checklistCard'
 
   return (
-    <section className={className || 'flex w-[402px] flex-col items-start px-[20px] py-[10px]'}>
+    <section className={className || 'flex w-full flex-col items-start px-[20px] py-[10px]'}>
       <div
         className={`flex w-full flex-col items-start justify-center rounded-[8px] border border-gray-10 bg-white p-[20px] ${
           isChecklistCard ? '' : 'gap-[20px]'
