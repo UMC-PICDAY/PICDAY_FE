@@ -20,56 +20,79 @@ import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import { getLocationLabel } from '@/constants/locationCategory'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
-import { studioSearchQueryKey, useStudioSearch } from '@/hooks/useStudio'
+import {
+  hasBaseSearchCondition,
+  studioSearchQueryKey,
+  useStudioSearch,
+} from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
-import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
+import type {
+  StudioSearchFilters,
+  StudioSearchItem,
+  StudioSearchResult,
+} from '@/types/studio'
 import {
-  buildStudioSearchChipLabel,
-  hasBaseSearchCondition,
+  getStudioServiceShortLabel,
   isStudioServiceTag,
-  isStudioSort,
+  STUDIO_SERVICE_FILTER_CODES,
+} from '@/constants/studioService'
+import { isStudioSort, STUDIO_SORT_OPTIONS } from '@/constants/studioSort'
+import {
   parseStudioSearchParams,
-  resetStudioSearchFilters,
   serializeStudioSearchParams,
-  STUDIO_SERVICE_OPTIONS,
-  STUDIO_SORT_OPTIONS,
-  toggleStudioService,
 } from '@/utils/studioSearchParams'
 
-type ComparePurpose =
-  | '증명'
-  | '프로필'
-  | '개인화보'
-  | '취업'
-  | '가족'
-  | '우정'
-
-const SHOOTING_CATEGORY_TO_PURPOSE: Record<
-  string,
-  ComparePurpose
-> = {
-  ID_PHOTO: '증명',
-  PROFILE: '프로필',
-  PERSONAL_PORTRAIT: '개인화보',
-  JOB_PHOTO: '취업',
-  FAMILY: '가족',
-  FRIENDSHIP: '우정',
-}
-  
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
-  ...STUDIO_SERVICE_OPTIONS
-    .filter(({ value }) => value !== 'COSTUME')
-    .map(({ value, quickLabel }) => ({ value, label: quickLabel })),
+  ...STUDIO_SERVICE_FILTER_CODES
+    .filter((code) => code !== 'COSTUME')
+    .map((code) => ({ value: code, label: getStudioServiceShortLabel(code) })),
 ]
+
+const toggle = <T extends string>(list: T[], value: T) =>
+  list.includes(value)
+    ? list.filter((item) => item !== value)
+    : [...list, value]
+
+/** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
+const resetStudioSearchFilters = (
+  filters: StudioSearchFilters,
+): StudioSearchFilters => ({
+  ...filters,
+  sort: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
+  services: [],
+  minRating: undefined,
+})
+
+const formatUrlDateForChip = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return value
+  return `${Number(match[2])}월${Number(match[3])}일`
+}
+
+const buildStudioSearchChipLabel = (filters: StudioSearchFilters) => {
+  // 필터에는 코드가 들어 있으므로 칩에는 한글 라벨로 바꿔 보여준다.
+  const labels = [
+    filters.concepts.map(getShootingCategoryLabel).join(','),
+    filters.studioName ??
+      (filters.location ? getLocationLabel(filters.location) : undefined),
+    filters.date ? formatUrlDateForChip(filters.date) : undefined,
+  ].filter((label): label is string => Boolean(label))
+
+  return labels.length > 0 ? labels.join('·') : '사진관 검색'
+}
 
 const StudioSearchPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
+  // purpose는 촬영 컨셉의 한글 라벨('증명' 등). 받는 쪽(ComparePurposePage)이
+  // isPurposeType으로 검증하고 실패하면 기본값으로 떨어뜨린다.
   const navigationState = location.state as {
-    purpose?: ComparePurpose
+    purpose?: string
     snap?: SheetSnap
     } | null
 
@@ -79,10 +102,9 @@ const StudioSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
 
-  const searchPurpose =
-    SHOOTING_CATEGORY_TO_PURPOSE[
-      filters.concepts[0] ?? ''
-    ]
+  const searchPurpose = filters.concepts[0]
+    ? getShootingCategoryLabel(filters.concepts[0])
+    : undefined
 
   const comparePurpose =
     navigationPurpose ?? searchPurpose
@@ -247,7 +269,7 @@ const StudioSearchPage = () => {
     if (!canQuickFilter) return
 
     const nextFilters = isStudioServiceTag(value)
-      ? { ...filters, services: toggleStudioService(filters.services, value) }
+      ? { ...filters, services: toggle(filters.services, value) }
       : isStudioSort(value)
         ? // 서비스 칩과 동일하게 같은 정렬을 다시 누르면 해제한다.
           { ...filters, sort: filters.sort === value ? undefined : value }
