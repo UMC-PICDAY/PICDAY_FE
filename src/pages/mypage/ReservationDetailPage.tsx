@@ -35,23 +35,69 @@ interface ChecklistItem {
 
 // 체크리스트 체크 여부를 저장하는 백엔드 API가 없어서, 예약 ID별로 localStorage에
 // 체크된 항목 id만 저장해두고 재진입 시 복원한다 (기기·브라우저 간 동기화는 안 됨).
+// 예약을 볼 때마다 키가 하나씩 쌓이므로, 저장할 때마다 가장 최근에 손댄 순으로
+// MAX_STORED_CHECKLISTS개만 남기고 오래된 것부터 지운다.
 const CHECKLIST_STORAGE_KEY_PREFIX = 'picday-reservation-checklist-'
+const MAX_STORED_CHECKLISTS = 20
+
+interface StoredChecklistState {
+  checkedIds: string[]
+  updatedAt: number
+}
 
 const getStoredCheckedIds = (reservationId: string): Set<string> => {
   try {
     const raw = localStorage.getItem(`${CHECKLIST_STORAGE_KEY_PREFIX}${reservationId}`)
-    return raw ? new Set(JSON.parse(raw)) : new Set()
+    if (!raw) return new Set()
+
+    const parsed = JSON.parse(raw) as StoredChecklistState
+    return new Set(parsed.checkedIds)
   } catch {
     return new Set()
   }
 }
 
+// 촬영이 끝났거나(COMPLETED) 취소된(CANCELLED) 예약은 "촬영 전 체크리스트"가
+// 더 이상 의미 없으므로, 상세 조회 시점에 그 예약의 저장된 체크 상태를 지운다.
+const clearStoredChecklist = (reservationId: string) => {
+  try {
+    localStorage.removeItem(`${CHECKLIST_STORAGE_KEY_PREFIX}${reservationId}`)
+  } catch {
+    // ignore
+  }
+}
+
+const pruneOldChecklistEntries = () => {
+  const entries = Object.keys(localStorage)
+    .filter((key) => key.startsWith(CHECKLIST_STORAGE_KEY_PREFIX))
+    .map((key) => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(key) ?? '') as StoredChecklistState
+        return { key, updatedAt: parsed.updatedAt }
+      } catch {
+        return { key, updatedAt: 0 }
+      }
+    })
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+
+  entries
+    .slice(MAX_STORED_CHECKLISTS)
+    .forEach(({ key }) => localStorage.removeItem(key))
+}
+
 const saveCheckedIds = (reservationId: string, checkedIds: string[]) => {
   try {
+    const state: StoredChecklistState = {
+      checkedIds,
+      updatedAt: Date.now(),
+    }
+
     localStorage.setItem(
       `${CHECKLIST_STORAGE_KEY_PREFIX}${reservationId}`,
-      JSON.stringify(checkedIds),
+      JSON.stringify(state),
     )
+
+    pruneOldChecklistEntries()
   } catch {
     // 프라이빗 브라우징 등으로 localStorage 접근이 막혀있어도
     // 체크 자체(화면 동작)는 계속 되어야 하니 조용히 무시
@@ -253,8 +299,16 @@ const ReservationDetailPage = () => {
 
           setReservation(result)
 
+          // 촬영완료(COMPLETED)나 취소(CANCELLED)로 넘어간 예약은 체크리스트가
+          // 더 이상 필요 없으므로 저장해둔 체크 상태를 지운다.
+          if (result.status !== 'RESERVED') {
+            clearStoredChecklist(reservationId)
+          }
+
           const storedCheckedIds =
-            getStoredCheckedIds(reservationId)
+            result.status === 'RESERVED'
+              ? getStoredCheckedIds(reservationId)
+              : new Set<string>()
 
           setChecklistItems(
             (result.checklist ?? []).map(
@@ -301,6 +355,8 @@ const ReservationDetailPage = () => {
           : item,
       )
 
+      // 체크할 때마다 localStorage에도 같이 저장해서, 화면을 나갔다가
+      // 다시 들어와도 체크 상태가 복원되게 한다.
       if (reservationId) {
         saveCheckedIds(
           reservationId,
