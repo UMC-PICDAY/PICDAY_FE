@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import {
   getStudioDetail,
@@ -12,13 +12,25 @@ import {
 import type {
   StudioProductsParams,
   StudioSearchByNameParams,
+  StudioSearchFilters,
   StudioSearchParams,
 } from '@/types/studio'
-import {
-  hasBaseSearchCondition,
-  serializeStudioSearchParams,
-} from '@/utils/studioSearchParams'
-import type { StudioSearchFilters } from '@/utils/studioSearchParams'
+import { serializeStudioSearchParams } from '@/utils/studioSearchParams'
+
+type StudioNameSearchFilters = StudioSearchFilters & { studioId: number }
+
+/**
+ * 이름 검색(2-3-2)은 studioId 하나로 조회 가능하고,
+ * 통합 검색(2-3)은 위치·날짜·컨셉 중 최소 1개가 필요하다(없으면 STUDIO_40012).
+ * UI 활성화 조건과 useStudioSearch의 enabled가 이 판정 하나를 공유한다.
+ */
+export const isStudioNameSearch = (
+  filters: StudioSearchFilters,
+): filters is StudioNameSearchFilters => filters.studioId !== undefined
+
+export const hasBaseSearchCondition = (filters: StudioSearchFilters) =>
+  isStudioNameSearch(filters) ||
+  Boolean(filters.location || filters.date || filters.concepts.length > 0)
 
 const toSearchParams = (filters: StudioSearchFilters): StudioSearchParams => ({
   locationCategory: filters.location,
@@ -32,10 +44,9 @@ const toSearchParams = (filters: StudioSearchFilters): StudioSearchParams => ({
 })
 
 const toSearchByNameParams = (
-  filters: StudioSearchFilters,
-  studioId: number,
+  filters: StudioNameSearchFilters,
 ): StudioSearchByNameParams => ({
-  studioId,
+  studioId: filters.studioId,
   sort: filters.sort,
   minPrice: filters.minPrice,
   maxPrice: filters.maxPrice,
@@ -48,14 +59,20 @@ export const studioSearchQueryKey = (filters: StudioSearchFilters) =>
 
 // 2-3. 사진관 검색 — studioId가 있으면 이름 검색(2-3-2), 없으면 통합 검색을 호출한다.
 // 통합 검색은 기본 조건(location/date/concept)이 하나라도 있어야 한다.
-export const useStudioSearch = (filters: StudioSearchFilters) =>
+// keepPrevious는 옵트인이다. 결과 목록 화면에선 필터를 바꿔도 목록이 사라지지
+// 않게 켜지만, FilterPage는 이전 필터의 개수가 버튼에 남으면 안 되므로 끈다.
+export const useStudioSearch = (
+  filters: StudioSearchFilters,
+  { keepPrevious = false }: { keepPrevious?: boolean } = {},
+) =>
   useQuery({
     queryKey: studioSearchQueryKey(filters),
     queryFn: () =>
-      filters.studioId !== undefined
-        ? searchStudiosByName(toSearchByNameParams(filters, filters.studioId))
+      isStudioNameSearch(filters)
+        ? searchStudiosByName(toSearchByNameParams(filters))
         : searchStudios(toSearchParams(filters)),
     enabled: hasBaseSearchCondition(filters),
+    placeholderData: keepPrevious ? keepPreviousData : undefined,
   })
 
 // 2-4. 사진관 상세

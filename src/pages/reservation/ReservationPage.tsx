@@ -41,6 +41,7 @@ import { ApiError } from '@/types/common'
 
 interface InfoFieldProps {
   label: string
+  required: boolean
   value: string
   type?: 'text' | 'tel'
   errorMessage?: string
@@ -319,6 +320,10 @@ const ReservationPage = () => {
         replace: true,
         state: {
           openTimeSelectModal: true,
+          rebookingInfo: {
+            reserverName,
+            reserverPhone,
+          },
         },
       },
     )
@@ -343,24 +348,12 @@ const ReservationPage = () => {
         agreedTermIds,
       })
 
-      navigate('/reservation/complete', {
+      navigate(`/reservation/complete/${result.reservationId}`,
+        {
         replace: true,
-        state: {
-          reservation: {
-            reservationId:
-              result.reservationId,
-            status: result.status,
-            createdAt: result.createdAt,
-            studioName:
-              reservation.studioName,
-            reservationDateTime:
-              reservation.reservationDateTime,
-            conceptName:
-              reservation.conceptName,
-            totalAmount: result.totalPrice,
-          },
         },
-      })
+      )
+        
     } catch (error) {
       if (!(error instanceof ApiError)) {
         setModalType('reservationFailed')
@@ -445,6 +438,7 @@ const ReservationPage = () => {
           <div className="flex flex-col gap-1">
             <InfoField
               label="이름"
+              required
               value={reserverName}
               onChange={(event) =>
                 setReserverName(
@@ -455,6 +449,7 @@ const ReservationPage = () => {
 
             <InfoField
               label="연락처"
+              required
               type="tel"
               value={reserverPhone}
               errorMessage={
@@ -498,7 +493,12 @@ const ReservationPage = () => {
 
         <Section className="flex flex-col px-5 pb-[10px]">
           <MiniTitle
-            title="결제 수단"
+            title={
+              <>
+                결제 수단
+                <span className="ml-0.5 text-[#FF3B5B]">*</span>
+              </>
+            }
             className="-mx-5 flex w-[402px] items-start p-5"
           />
 
@@ -557,7 +557,7 @@ const ReservationPage = () => {
             onItemDetailClick={
               handleOpenAgreementDetail
             }
-              
+            required
             className="w-full"
           />
         </Section>
@@ -649,6 +649,7 @@ const Section = ({
 
 const InfoField = ({
   label,
+  required = false,
   value,
   type = 'text',
   errorMessage,
@@ -657,6 +658,9 @@ const InfoField = ({
   <label className="flex flex-col gap-[5px]">
     <span className="font-cap3 text-gray-80">
       {label}
+      {required && (
+        <span className="ml-0.5 text-[#FF3B5B]">*</span>
+      )}
     </span>
 
     <input

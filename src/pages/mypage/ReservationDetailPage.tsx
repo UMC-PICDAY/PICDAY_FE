@@ -25,6 +25,7 @@ import {
   getReservationDetail,
   type ReservationDetailData,
 } from '@/services/reservation'
+import { formatReservationDateTimeLong } from '@/utils/formatReservationDateTime'
 
 interface ChecklistItem {
   id: string
@@ -32,28 +33,29 @@ interface ChecklistItem {
   checked: boolean
 }
 
-const formatReservationDateTime = (
-  reservationDate: string,
-  reservationTime: string,
-) => {
-  const [year, month, day] = reservationDate
-    .split('-')
-    .map(Number)
+// 체크리스트 체크 여부를 저장하는 백엔드 API가 없어서, 예약 ID별로 localStorage에
+// 체크된 항목 id만 저장해두고 재진입 시 복원한다 (기기·브라우저 간 동기화는 안 됨).
+const CHECKLIST_STORAGE_KEY_PREFIX = 'picday-reservation-checklist-'
 
-  const date = new Date(
-    year,
-    month - 1,
-    day,
-  )
+const getStoredCheckedIds = (reservationId: string): Set<string> => {
+  try {
+    const raw = localStorage.getItem(`${CHECKLIST_STORAGE_KEY_PREFIX}${reservationId}`)
+    return raw ? new Set(JSON.parse(raw)) : new Set()
+  } catch {
+    return new Set()
+  }
+}
 
-  const weekday = new Intl.DateTimeFormat(
-    'ko-KR',
-    {
-      weekday: 'short',
-    },
-  ).format(date)
-
-  return `${year}년 ${month}월 ${day}일 (${weekday}) ${reservationTime}`
+const saveCheckedIds = (reservationId: string, checkedIds: string[]) => {
+  try {
+    localStorage.setItem(
+      `${CHECKLIST_STORAGE_KEY_PREFIX}${reservationId}`,
+      JSON.stringify(checkedIds),
+    )
+  } catch {
+    // 프라이빗 브라우징 등으로 localStorage 접근이 막혀있어도
+    // 체크 자체(화면 동작)는 계속 되어야 하니 조용히 무시
+  }
 }
 
 const formatCanceledAt = (
@@ -251,13 +253,20 @@ const ReservationDetailPage = () => {
 
           setReservation(result)
 
+          const storedCheckedIds =
+            getStoredCheckedIds(reservationId)
+
           setChecklistItems(
             (result.checklist ?? []).map(
-              (label, index) => ({
-                id: `checklist-${index}`,
-                label,
-                checked: false,
-              }),
+              (label, index) => {
+                const id = `checklist-${index}`
+
+                return {
+                  id,
+                  label,
+                  checked: storedCheckedIds.has(id),
+                }
+              },
             ),
           )
         } catch (error) {
@@ -268,6 +277,10 @@ const ReservationDetailPage = () => {
 
           navigate('/mypage', {
             replace: true,
+            state: {
+              toastMessage:
+                '예약 정보를 불러오지 못했습니다.',
+            },
           })
         }
       }
@@ -278,16 +291,27 @@ const ReservationDetailPage = () => {
   const handleChecklistItemClick = (
     id: string,
   ) => {
-    setChecklistItems((prev) =>
-      prev.map((item) =>
+    setChecklistItems((prev) => {
+      const next = prev.map((item) =>
         item.id === id
           ? {
               ...item,
               checked: !item.checked,
             }
           : item,
-      ),
-    )
+      )
+
+      if (reservationId) {
+        saveCheckedIds(
+          reservationId,
+          next
+            .filter((item) => item.checked)
+            .map((item) => item.id),
+        )
+      }
+
+      return next
+    })
   }
 
   if (!reservation) {
@@ -318,7 +342,7 @@ const ReservationDetailPage = () => {
       : '취소'
 
   const formattedReservationDate =
-    formatReservationDateTime(
+    formatReservationDateTimeLong(
       reservation.timeSlot.date,
       reservation.timeSlot.startTime,
     )
@@ -380,19 +404,6 @@ const ReservationDetailPage = () => {
       </div>
 
       <div className="fixed bottom-0 left-1/2 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10">
-        {isReserved && (
-          <Button
-            variant="primary"
-            onClick={() =>
-              navigate(
-                `/mypage/reservations/${reservationId}/cancel`,
-              )
-            }
-          >
-            예약 취소
-          </Button>
-        )}
-
         {isShooting && (
           <Button
             variant="primary"

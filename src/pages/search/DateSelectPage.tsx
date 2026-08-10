@@ -50,6 +50,7 @@ const DateSelectPage = () => {
       <div className="flex w-full flex-col items-center px-5 py-5">
         <Calendar
           startMonth={startMonth}
+          minMonth={startMonth}
           monthCount={2}
           selectedDate={selectedDate}
           onDateSelect={(date) => {

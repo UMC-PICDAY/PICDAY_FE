@@ -1,14 +1,19 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useLocation, useNavigate, useParams } from 'react-router'
 
 import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
 import Dropdown from '@/components/common/Dropdown'
 import Notice2 from '@/components/common/Notice2'
-import { IcFilter, IcStar, IcStarHalf } from '@/components/icons'
+import { IcError, IcFilter, IcStar, IcStarHalf } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
+import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
+import {
+  ReviewListSkeleton,
+  ReviewSummarySkeleton,
+} from '@/pages/studio/components/ReviewSkeleton'
 import { useStudioReviews } from '@/hooks/useStudioReviews'
 import type { ReviewSort } from '@/types/review'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -22,13 +27,23 @@ const SORT_OPTIONS = [
 
 const ReviewDetailPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { studioId } = useParams()
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const [photoOnly, setPhotoOnly] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [sortValue, setSortValue] = useState<ReviewSort>('recent')
 
-  const { summary, reviews, toggleLike, likePendingReviewId } = useStudioReviews({
+  const {
+    summary,
+    reviews,
+    isLoading,
+    isPlaceholderData,
+    isError,
+    refetch,
+    toggleLike,
+    likePendingReviewId,
+  } = useStudioReviews({
     studioId,
     sort: sortValue,
     photoOnly,
@@ -42,6 +57,15 @@ const ReviewDetailPage = () => {
     toggleLike(reviewId, nextLiked)
   }
 
+  // 로그인 후 홈이 아니라 보려던 리뷰 화면으로 돌아오도록 현재 경로를 넘긴다.
+  const handleLogin = () => {
+    navigate('/login', {
+      state: {
+        returnTo: `${location.pathname}${location.search}`,
+      },
+    })
+  }
+
   // 리뷰는 로그인한 사용자만 볼 수 있어, 비로그인 진입 시 로그인 유도 모달만 노출한다.
   if (!isLoggedIn) {
     return (
@@ -51,7 +75,7 @@ const ReviewDetailPage = () => {
           <div className="w-full">
             <Alert3
               variant="variant3"
-              onClick={() => navigate('/login')}
+              onClick={handleLogin}
               onHelperClick={() => navigate(-1)}
             />
           </div>
@@ -77,24 +101,27 @@ const ReviewDetailPage = () => {
         }
       />
 
-      {/* 별점 요약 */}
-      <div className="flex flex-col items-center px-5 py-8">
-        <div className="flex items-center pb-1">
-          <div className="flex">
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStar width={36} height={36} className="text-brand-80" />
-            <IcStarHalf width={36} height={36} className="text-brand-80" />
+      {/* 별점 요약. 조회 실패 시 0.0 / 0개 평가로 보이지 않도록 숨긴다. */}
+      {!isError && isLoading && <ReviewSummarySkeleton />}
+      {!isError && !isLoading && (
+        <div className="flex flex-col items-center px-5 py-8">
+          <div className="flex items-center pb-1">
+            <div className="flex">
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStar width={36} height={36} className="text-brand-80" />
+              <IcStarHalf width={36} height={36} className="text-brand-80" />
+            </div>
+            <span className="pl-2 font-h2 text-black">
+              {(summary?.avgRating ?? 0).toFixed(1)}
+            </span>
           </div>
-          <span className="pl-2 font-h2 text-black">
-            {(summary?.avgRating ?? 0).toFixed(1)}
+          <span className="font-b6 text-gray-60">
+            ({summary?.totalCount ?? 0}개 평가)
           </span>
         </div>
-        <span className="font-b6 text-gray-60">
-          ({summary?.totalCount ?? 0}개 평가)
-        </span>
-      </div>
+      )}
 
       {/* 필터 행 */}
       <div className="flex items-center justify-between border-y border-gray-10 px-5 py-3">
@@ -103,8 +130,9 @@ const ReviewDetailPage = () => {
             checked={photoOnly}
             onChange={() => setPhotoOnly((prev) => !prev)}
           />
+          {/* 개수는 요약을 받아온 뒤에만 붙인다(실패·로딩 중 (0)으로 보이지 않도록). */}
           <span className="font-b6 text-gray-60">
-            사진 리뷰만 보기 ({summary?.photoReviewCount ?? 0})
+            사진 리뷰만 보기{summary ? ` (${summary.photoReviewCount})` : ''}
           </span>
         </label>
         <div className="relative">
@@ -140,28 +168,45 @@ const ReviewDetailPage = () => {
         </div>
       </div>
 
-      {/* 리뷰 리스트 */}
-      <div className="flex flex-col gap-5 pb-5">
-        {reviews.map((review) => (
-          <ReviewCard
-            key={review.reviewId}
-            reviewId={review.reviewId}
-            variant="full"
-            reviewerName={review.writerNickname}
-            isBest={review.isBest}
-            rating={review.rating}
-            date={review.createdAt.slice(0, 10).replaceAll('-', '.')}
-            conceptTitle={review.conceptName}
-            body={review.content}
-            photos={review.images}
-            helpfulText={`${review.likeCount}명에게 도움이 된 리뷰예요`}
-            likeCount={review.likeCount}
-            liked={review.isLiked}
-            likePending={likePendingReviewId === review.reviewId}
-            onLikeChange={handleLikeChange}
-          />
-        ))}
-        {reviews.length === 0 && (
+      {/* 리뷰 리스트. 조회 실패는 '리뷰 없음'과 구분해서 재시도 가능한 에러로 보여준다. */}
+      <div
+        className={`flex flex-col gap-5 pb-5 ${
+          // 필터 전환 중에는 이전 목록을 유지하되 갱신 중임을 흐리게 알린다.
+          isPlaceholderData ? 'opacity-50 transition-opacity' : ''
+        }`}
+      >
+        {isError && (
+          <div className="flex justify-center py-20">
+            <ErrorNotice
+              icon={<IcError width={48} height={48} className="text-brand-80" />}
+              title="리뷰를 불러오지 못했어요"
+              onRetry={() => refetch()}
+            />
+          </div>
+        )}
+        {!isError && isLoading && <ReviewListSkeleton />}
+        {!isError &&
+          !isLoading &&
+          reviews.map((review) => (
+            <ReviewCard
+              key={review.reviewId}
+              reviewId={review.reviewId}
+              variant="full"
+              reviewerName={review.writerNickname}
+              isBest={review.isBest}
+              rating={review.rating}
+              date={review.createdAt.slice(0, 10).replaceAll('-', '.')}
+              conceptTitle={review.conceptName}
+              body={review.content}
+              photos={review.images}
+              helpfulText={`${review.likeCount}명에게 도움이 된 리뷰예요`}
+              likeCount={review.likeCount}
+              liked={review.isLiked}
+              likePending={likePendingReviewId === review.reviewId}
+              onLikeChange={handleLikeChange}
+            />
+          ))}
+        {!isError && !isLoading && reviews.length === 0 && (
           <Notice2
             variant="message"
             title="조건에 맞는 리뷰가 없어요"

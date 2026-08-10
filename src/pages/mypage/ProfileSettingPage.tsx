@@ -19,6 +19,7 @@ import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
 import Toggle from '@/components/common/Toggle'
 import AppTabBar from '@/components/layout/AppTabBar'
+import { ProfileHeaderSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import {
   checkNicknameAvailable,
   getMe,
@@ -44,7 +45,6 @@ const ProfileSettingPage = () => {
   }
 
   // 사용자 정보
-  const [userName, setUserName] = useState('')
   const [nickname, setNickname] = useState('')
   const [originalNickname, setOriginalNickname] =
     useState('')
@@ -99,7 +99,6 @@ const ProfileSettingPage = () => {
         const result = await getMe()
         const user = result.user
 
-        setUserName(user.name)
         setNickname(user.nickname)
         setOriginalNickname(user.nickname)
         setProfileImageUrl(user.profileImageUrl ?? '')
@@ -112,6 +111,7 @@ const ProfileSettingPage = () => {
         )
       } catch (error) {
         console.error('내 정보 조회 실패:', error)
+        showToast('내 정보를 불러오지 못했습니다.')
       } finally {
         setIsLoading(false)
       }
@@ -260,18 +260,18 @@ const ProfileSettingPage = () => {
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
-      <Profile
-        variant="userInfo"
-        userName={
-          isLoading
-            ? '불러오는 중...'
-            : userName
-        }
-        accountText={accountText}
-        userImageSrc={
-          profileImageUrl || logoIcon
-        }
-      />
+      {isLoading ? (
+        <ProfileHeaderSkeleton />
+      ) : (
+        <Profile
+          variant="userInfo"
+          userName={originalNickname}
+          accountText={accountText}
+          userImageSrc={
+            profileImageUrl || logoIcon
+          }
+        />
+      )}
 
       <SegmentedTab
         items={[

@@ -4,8 +4,10 @@
  * 검색 관련 화면 상단의 안내 문구
  *   <MiniTitle title="어떤 사진관을 찾고 있나요?" />
  */
+import type { ReactNode } from 'react'
+
 interface Props {
-  title: string
+  title: ReactNode
   className?: string
 }
 

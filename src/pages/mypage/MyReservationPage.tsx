@@ -12,6 +12,7 @@ import {
   useState,
 } from 'react'
 import {
+  useLocation,
   useNavigate,
   useSearchParams,
 } from 'react-router'
@@ -21,8 +22,10 @@ import CardReservationHistory from '@/components/cards/CardReservationHistory'
 import FilterBar1 from '@/components/common/FilterBar1'
 import Profile from '@/components/common/Profile'
 import SegmentedTab from '@/components/common/SegmentedTab'
+import Toast from '@/components/common/Toast'
 import { IcEvent2 } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
+import { ReservationListSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { getMe } from '@/services/auth'
 import {
   getMyReservations,
@@ -30,6 +33,7 @@ import {
   type ReservationListItem,
   type ReservationStatus,
 } from '@/services/reservation'
+import { formatReservationDateTimeLong } from '@/utils/formatReservationDateTime'
 
 type FilterType =
   | 'all'
@@ -54,28 +58,6 @@ const isFilterType = (
   value === 'shooting' ||
   value === 'canceled'
 
-const formatReservationDateTime = (
-  reservationDate: string,
-  reservationTime: string,
-) => {
-  const [year, month, day] = reservationDate
-    .split('-')
-    .map(Number)
-
-  const date = new Date(
-    year,
-    month - 1,
-    day,
-  )
-
-  const weekday =
-    new Intl.DateTimeFormat('ko-KR', {
-      weekday: 'short',
-    }).format(date)
-
-  return `${year}년 ${month}월 ${day}일 (${weekday}) ${reservationTime}`
-}
-
 const getStatusTag = (
   status: ReservationStatus,
 ) => {
@@ -93,7 +75,29 @@ const getStatusTag = (
 
 const MyReservationPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const showToast = (message: string) => {
+    setToastMessage(message)
+    window.setTimeout(() => setToastMessage(null), 3000)
+  }
+
+  // 다른 화면(예약 상세 등)에서 조회 실패로 이 화면으로 돌아올 때 넘겨준 안내
+  // 메시지를 한 번만 보여주고, history state에서 지워 새로고침해도 다시 안 뜨게 한다.
+  useEffect(() => {
+    const incomingToast = (location.state as { toastMessage?: string } | null)
+      ?.toastMessage
+    if (!incomingToast) return
+
+    showToast(incomingToast)
+    navigate(location.pathname + location.search, {
+      replace: true,
+      state: null,
+    })
+  }, [location, navigate])
 
   const [
     reservations,
@@ -159,7 +163,7 @@ const MyReservationPage = () => {
   useEffect(() => {
     getMe()
       .then((result) => {
-        setUserName(result.user.name)
+        setUserName(result.user.nickname)
         setProfileImageUrl(result.user.profileImageUrl ?? '')
         setProvider(result.user.provider)
       })
@@ -340,6 +344,12 @@ const MyReservationPage = () => {
             {
               state: {
                 openTimeSelectModal: true,
+                rebookingInfo: {
+                  reserverName:
+                    reservationDetail.reserveeName,
+                  reserverPhone: 
+                    reservationDetail.reserveePhone
+                },
               },
             },
           )
@@ -350,7 +360,7 @@ const MyReservationPage = () => {
           error,
         )
 
-        alert(
+        setToastMessage(
           '예약 정보를 불러오지 못했습니다. 다시 시도해 주세요.'
         )
       }
@@ -395,11 +405,7 @@ const MyReservationPage = () => {
 
       <section className="flex flex-1 flex-col px-5 pb-5 pt-[10px]">
         {isLoading ? (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="font-b8 text-gray-60">
-              예약 내역을 불러오는 중입니다.
-            </p>
-          </div>
+          <ReservationListSkeleton />
         ) : hasError ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="flex flex-col items-center gap-5">
@@ -472,7 +478,7 @@ const MyReservationPage = () => {
                   studioName={
                     reservation.studioName
                   }
-                  dateTime={formatReservationDateTime(
+                  dateTime={formatReservationDateTimeLong(
                     reservation.reservationDate,
                     reservation.reservationTime,
                   )}
@@ -507,6 +513,12 @@ const MyReservationPage = () => {
       <div className="sticky bottom-0 mt-auto w-full">
         <AppTabBar activeTab="mypage" />
       </div>
+
+      {toastMessage && (
+        <div className="fixed bottom-[110px] left-1/2 z-[60] -translate-x-1/2">
+          <Toast message={toastMessage} />
+        </div>
+      )}
     </div>
   )
 }

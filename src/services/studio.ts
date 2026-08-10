@@ -138,6 +138,14 @@ export type ShootingCategory =
   | 'FAMILY'
   | 'FRIENDSHIP'
 
+export type PurposeType =
+  | '증명'
+  | '프로필'
+  | '개인화보'
+  | '취업'
+  | '가족'
+  | '우정'
+
 // 2-9. 비교 목적 조회
 
 export interface ComparePurposeStudio {

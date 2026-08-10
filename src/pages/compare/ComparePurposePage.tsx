@@ -5,7 +5,7 @@
  *   navigate('/compare', {
  *     state: {
  *       studioIds,
- *       purpose,
+ *       shootingCategory,
  *     },
  *   })
  *
@@ -20,8 +20,10 @@
  *   - X 버튼: 사진관 삭제
  *   - + 버튼: 사진관 추가 (/studios 이동)
  *
+ * 촬영 목적 선택
+ *  - 해당 목적을 지원하는 사진관이 2개 미만이면 버튼 비활성화
+ * 
  * 비교 시작
- *   - 선택 목적을 지원하는 사진관이 2개 미만이면 재선택 Alert 표시
  *   - 선택한 사진관 중 일부만 지원하면 제외 확인 Alert 표시
  *   - 2개 비교 → /compare/two
  *   - 3개 비교 → /compare/three
@@ -30,12 +32,12 @@
  *   {
  *     studioIds: string[]
  *     shootingCategory: ShootingCategory
- *     purpose: PurposeType
  *     studios: Studio[]
  *   }
  *
  * 비교 버튼
  *   사진관이 1개 이하이거나 API 로딩/에러 시 비활성화
+ *   선택한 촬영 목적을 지원하는 사진관이 2개 미만이면 비활성화
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -50,55 +52,30 @@ import { IcBack } from '@/components/icons'
 import {
   getComparePurposes,
   type CompareShootingPurpose,
+  type PurposeType,
   type ShootingCategory,
 } from '@/services/studio'
+import ComparePurposeSkeleton from '@/pages/compare/components/ComparePurposeSkeleton'
 import { useCompareStore } from '@/stores/useCompareStore'
+import { getShootingCategoryLabel, SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
 
-type PurposeType =
-  | '증명'
-  | '프로필'
-  | '개인화보'
-  | '취업'
-  | '가족'
-  | '우정'
 
 type AlertType = 'exclude' | 'reselect' | null
 
 interface Studio {
   id: string
   name: string
-  availablePurposes: PurposeType[]
 }
 
 interface CompareNavigationState {
   studioIds?: Array<string | number>
-  purpose?: PurposeType
+  shootingCategory?: ShootingCategory
   studioSearch?: string
 }
 
-const PURPOSES: PurposeType[] = [
-  '증명',
-  '프로필',
-  '개인화보',
-  '취업',
-  '가족',
-  '우정',
-]
-
-const PURPOSE_CATEGORY_MAP: Record<PurposeType, ShootingCategory> = {
-  증명: 'ID_PHOTO',
-  프로필: 'PROFILE',
-  개인화보: 'PERSONAL_PORTRAIT',
-  취업: 'JOB_PHOTO',
-  가족: 'FAMILY',
-  우정: 'FRIENDSHIP',
-}
+const SHOOTING_CATEGORIES = Object.keys(SHOOTING_CATEGORY_LABEL) as ShootingCategory[]
 
 const STUDIO_LIST_PATH = '/studios'
-
-const isPurposeType = (value: unknown): value is PurposeType =>
-  typeof value === 'string' &&
-  PURPOSES.includes(value as PurposeType)
 
 const ComparePurposePage = () => {
   const navigate = useNavigate()
@@ -108,7 +85,6 @@ const ComparePurposePage = () => {
 
   const navigationState = location.state as CompareNavigationState | null
   const rawStudioIds = navigationState?.studioIds
-  const navigationPurpose = navigationState?.purpose
   const studioSearch = navigationState?.studioSearch ?? ''
 
   // 이전 화면에서 number로 전달되는 경우에도 API 요청 전 string으로 통일
@@ -117,9 +93,10 @@ const ComparePurposePage = () => {
     [rawStudioIds],
   )
 
-  const [selectedPurpose, setSelectedPurpose] = useState<PurposeType>(
-    isPurposeType(navigationPurpose) ? navigationPurpose : '프로필',
-  )
+  const [selectedShootingCategory, setSelectedShootingCategory] =
+    useState<ShootingCategory>(
+      navigationState?.shootingCategory ?? 'PROFILE',
+    )
 
   const [selectedStudios, setSelectedStudios] = useState<Studio[]>([])
   const [shootingPurposes, setShootingPurposes] = useState<
@@ -133,15 +110,6 @@ const ComparePurposePage = () => {
   const [unavailableStudios, setUnavailableStudios] = useState<Studio[]>([])
 
   const selectedStudioCount = selectedStudios.length
-
-  const isCompareDisabled =
-    isLoading || errorMessage !== null || selectedStudioCount <= 1
-
-  useEffect(() => {
-    if (isPurposeType(navigationPurpose)) {
-      setSelectedPurpose(navigationPurpose)
-    }
-  }, [navigationPurpose])
 
   useEffect(() => {
     if (!studioIds || studioIds.length < 2 || studioIds.length > 3) {
@@ -182,22 +150,10 @@ const ComparePurposePage = () => {
 
         const data = await getComparePurposes(studioIds)
 
-        const studios: Studio[] = data.studios.map((studio) => {
-          const availablePurposes = data.shootingPurposes
-            .filter((shootingPurpose) =>
-              shootingPurpose.supportedStudioIds.includes(
-                studio.studioId,
-              ),
-            )
-            .map((shootingPurpose) => shootingPurpose.displayName)
-            .filter(isPurposeType)
-
-          return {
-            id: studio.studioId,
-            name: studio.studioName,
-            availablePurposes,
-          }
-        })
+        const studios: Studio[] = data.studios.map((studio) => ({
+          id: studio.studioId,
+          name: studio.studioName,
+        }))
 
         setSelectedStudios(studios)
         setShootingPurposes(data.shootingPurposes)
@@ -213,15 +169,12 @@ const ComparePurposePage = () => {
     void fetchComparePurposes()
   }, [studioIds])
 
-  const getSelectedShootingPurpose = () => {
-    const selectedCategory =
-      PURPOSE_CATEGORY_MAP[selectedPurpose]
-
-    return shootingPurposes.find(
-      (shootingPurpose) =>
-        shootingPurpose.shootingCategory === selectedCategory,
+  const getSelectedShootingPurpose = () =>
+    shootingPurposes.find(
+      (shootingPurposes) =>
+        shootingPurposes.shootingCategory ===
+      selectedShootingCategory,
     )
-  }
 
   const getAvailableStudios = () => {
     const selectedShootingPurpose =
@@ -238,18 +191,59 @@ const ComparePurposePage = () => {
     )
   }
 
+  const isShootingCategoryDisabled = (
+    shootingCategory: ShootingCategory,
+  ) => {
+    const shootingPurpose = shootingPurposes.find(
+      (item) =>
+        item.shootingCategory === shootingCategory,
+    )
+
+    if (!shootingPurpose) {
+      return true
+    }
+
+    const supportedStudioCount = selectedStudios.filter((studio) =>
+      shootingPurpose.supportedStudioIds.includes(studio.id),
+    ).length
+
+    return supportedStudioCount < 2
+  }
+
+  const areAllPurposesDisabled =
+    !isLoading &&
+    errorMessage === null &&
+    shootingPurposes.length > 0 &&
+    SHOOTING_CATEGORIES.every(
+      (shootingCategory) =>
+        isShootingCategoryDisabled(shootingCategory),
+    )
+
+  useEffect(() => {
+    if (areAllPurposesDisabled) {
+      setAlertType('reselect')
+    }
+  }, [areAllPurposesDisabled])
+
+
+  const isCompareDisabled =
+    isLoading || 
+    errorMessage !== null || 
+    selectedStudioCount <= 1 ||
+    isShootingCategoryDisabled(selectedShootingCategory)
+  
+
   const navigateToComparePage = (studios: Studio[]) => {
     const compareNavigationState = {
       studioIds: studios.map((studio) => studio.id),
-      shootingCategory:
-        PURPOSE_CATEGORY_MAP[selectedPurpose],
-      purpose: selectedPurpose,
+      shootingCategory: selectedShootingCategory,
       studios,
       studioSearch,
     }
 
     if (studios.length === 2) {
       navigate('/compare/two', {
+        replace: true,
         state: compareNavigationState,
       })
       return
@@ -257,6 +251,7 @@ const ComparePurposePage = () => {
 
     if (studios.length === 3) {
       navigate('/compare/three', {
+        replace: true,
         state: compareNavigationState,
       })
     }
@@ -283,15 +278,15 @@ const ComparePurposePage = () => {
           studioIds: selectedStudios.map(
             (studio) => studio.id,
           ),
-          purpose: selectedPurpose,
-          shootingCategory:
-            PURPOSE_CATEGORY_MAP[selectedPurpose],
+          shootingCategory: selectedShootingCategory,
+          studioSearch,
         },
       },
     )
   }
 
-  const handleSelectStudiosAgain = () => {
+  //뒤로가기 버튼+사진관 재선택
+  const navigateToStudioList = () => {
     navigate(
       {
         pathname: STUDIO_LIST_PATH,
@@ -300,7 +295,7 @@ const ComparePurposePage = () => {
       {
         replace: true,
         state: {
-          purpose: selectedPurpose,
+          shootingCategory: selectedShootingCategory,
           snap: 'expanded',
         },
       },
@@ -316,8 +311,6 @@ const ComparePurposePage = () => {
       getSelectedShootingPurpose()
 
     if (!selectedShootingPurpose) {
-      setUnavailableStudios(selectedStudios)
-      setAlertType('reselect')
       return
     }
 
@@ -335,9 +328,8 @@ const ComparePurposePage = () => {
 
     setUnavailableStudios(unavailableStudioList)
 
-    // 선택 목적을 지원하는 사진관이 0개 또는 1개인 경우
+    // 비교 가능한 사진관이 2개 미만이면 진행하지 않음
     if (availableStudioCount < 2) {
-      setAlertType('reselect')
       return
     }
 
@@ -370,9 +362,8 @@ const ComparePurposePage = () => {
     '제외하고 비교할까요?'
 
   const reselectAlertDescription =
-    `${unavailableStudioNames}엔\n` +
-    '선택하신 컨셉이 없어요.\n' +
-    '다른 컨셉을 선택해 주세요.'
+    '선택하신 사진관끼리 비교 가능한 촬영 목적이 없어요.\n' +
+    '다른 사진관을 선택해 주세요.'
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-white text-black">
@@ -381,7 +372,7 @@ const ComparePurposePage = () => {
           type="button"
           aria-label="뒤로가기"
           className="flex size-9 items-center justify-center border-none bg-transparent p-0"
-          onClick={() => navigate(-1)}
+          onClick={navigateToStudioList}
         >
           <IcBack width={24} height={24} />
         </button>
@@ -407,14 +398,7 @@ const ComparePurposePage = () => {
         </section>
 
         {isLoading ? (
-          <div
-            className="flex min-h-[200px] items-center justify-center"
-            role="status"
-          >
-            <p className="font-b6 text-gray-40">
-              비교 정보를 불러오는 중이에요.
-            </p>
-          </div>
+          <ComparePurposeSkeleton />
         ) : errorMessage ? (
           <div
             className="flex min-h-[240px] flex-col items-center justify-center gap-4"
@@ -427,7 +411,7 @@ const ComparePurposePage = () => {
             <div className="w-full max-w-[240px]">
               <Button
                 variant="primary"
-                onClick={handleSelectStudiosAgain}
+                onClick={navigateToStudioList}
               >
                 사진관 다시 선택하기
               </Button>
@@ -438,16 +422,26 @@ const ComparePurposePage = () => {
             className="grid grid-cols-2 gap-4 py-[10px]"
             aria-label="촬영 목적 선택"
           >
-            {PURPOSES.map((purpose) => (
-              <CategoryButton
-                key={purpose}
-                type={purpose}
-                active={selectedPurpose === purpose}
-                onClick={() =>
-                  setSelectedPurpose(purpose)
+            {SHOOTING_CATEGORIES.map((shootingCategory) => {
+              const disabled = isShootingCategoryDisabled(shootingCategory)
+
+              const label = getShootingCategoryLabel(shootingCategory) as PurposeType
+
+              return (
+                <CategoryButton
+                  key={shootingCategory}
+                  type={label}
+                  active={selectedShootingCategory === shootingCategory && !disabled}
+                  disabled={disabled}
+                  onClick={() => {
+                    if (!disabled) {
+                      setSelectedShootingCategory(shootingCategory)
+                    }
+                  }
                 }
               />
-            ))}
+              )
+            })}
           </section>
         )}
       </main>
@@ -510,15 +504,13 @@ const ComparePurposePage = () => {
               variant="alert"
               description={excludeAlertDescription}
               onCancel={handleCloseAlert}
-              onConfirm={
-                handleCompareWithoutUnavailableStudios
-              }
+              onConfirm={handleCompareWithoutUnavailableStudios}
             />
           ) : (
             <Alert2
               variant="alert2"
               description={reselectAlertDescription}
-              onConfirm={handleCloseAlert}
+              onConfirm={navigateToStudioList}
             />
           )}
         </div>

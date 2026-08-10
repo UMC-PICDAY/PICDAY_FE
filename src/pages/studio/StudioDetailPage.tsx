@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import CardPortfolioGrid from '@/components/cards/CardPortfolioGrid'
 import ReviewZero from '@/components/common/ReviewZero'
@@ -23,6 +23,7 @@ import BottomSheet from '@/pages/studio/components/BottomSheet'
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import HairMakeupSheet from '@/pages/studio/components/HairMakeupSheet'
 import ReviewCard from '@/pages/studio/components/ReviewCard'
+import StudioDetailSkeleton from '@/pages/studio/components/StudioDetailSkeleton'
 import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { STUDIO_SERVICE_LABEL } from '@/constants/studioService'
@@ -62,11 +63,15 @@ const Divider = () => <div className="h-1.5 w-full bg-gray-10" />
 const StudioDetailPage = () => {
   const navigate = useNavigate()
   const { studioId } = useParams()
+  const [searchParams] = useSearchParams()
+  // 검색에서 고른 날짜. 상세는 쓰지 않고 컨셉 목록(C-7)까지 넘겨주기만 한다.
+  const searchDate = searchParams.get('date')
   const { data: detail, isError, refetch } = useStudioDetail(studioId)
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
+  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
   const [introExpanded, setIntroExpanded] = useState(false)
   const [introOverflow, setIntroOverflow] = useState(false)
   const introRef = useRef<HTMLParagraphElement>(null)
@@ -107,7 +112,12 @@ const StudioDetailPage = () => {
 
   const closeSheet = () => setOpenSheet(null)
   const goToReviews = () => navigate(`/studios/${studioId}/reviews`)
-  const goToConcepts = () => navigate(`/studios/${studioId}/concepts`)
+  const goToConcepts = () =>
+    navigate(
+      searchDate
+        ? `/studios/${studioId}/concepts?date=${searchDate}`
+        : `/studios/${studioId}/concepts`,
+    )
 
   const fullAddress = detail?.location.address ?? ''
 
@@ -124,6 +134,8 @@ const StudioDetailPage = () => {
       }
     } catch {
       setFavorited(!next)
+      setFavoriteErrorMessage('찜 처리에 실패했어요. 다시 시도해 주세요')
+      setTimeout(() => setFavoriteErrorMessage(null), 2000)
     }
   }
 
@@ -156,8 +168,9 @@ const StudioDetailPage = () => {
 
   if (!detail) {
     return (
-      <div className="flex min-h-dvh flex-col bg-white">
-        <NavigationBar variant="default" showRight={false} onBack={() => navigate(-1)} />
+      // 로드 후 레이아웃과 같은 컨테이너를 써야 데이터 도착 시 흔들리지 않는다.
+      <div className="relative flex min-h-dvh flex-col bg-white pb-24">
+        <StudioDetailSkeleton onBack={() => navigate(-1)} />
       </div>
     )
   }
@@ -248,12 +261,13 @@ const StudioDetailPage = () => {
       <section className="px-5 pb-5">
         <h2 className="pb-3 pt-5 font-b3 text-black">촬영 컨셉</h2>
         <CardPortfolioGrid
-          className="flex w-full items-center justify-center gap-2"
+          className="grid w-full grid-cols-2 gap-2"
           items={detail.representativeProducts.map((product) => ({
             imageSrc: product.thumbnailUrl,
             title: product.productName,
             price: `₩${product.price.toLocaleString()}~`,
           }))}
+          onPortfolioClick={goToConcepts}
         />
         <button
           type="button"
@@ -456,6 +470,12 @@ const StudioDetailPage = () => {
       {addressCopied && (
         <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
           <Toast message="주소가 복사되었어요" />
+        </div>
+      )}
+
+      {favoriteErrorMessage && (
+        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
+          <Toast message={favoriteErrorMessage} />
         </div>
       )}
 

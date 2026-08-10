@@ -11,6 +11,7 @@ import TimeChip from '@/components/common/TimeChip'
 import Toast from '@/components/common/Toast'
 import { IcStar, IcStar2 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
+import { ReviewDetailSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { deleteReview, getReview, updateReview, uploadImage,} from '@/services/review'
 import { ApiError } from '@/types/common'
 import type { ReviewDetailData, ReviewKeyword,} from '@/types/review'
@@ -432,11 +433,7 @@ const MyReviewPage = () => {
           onBack={() => navigate(-1)}
         />
 
-        <div className="flex flex-1 items-center justify-center">
-          <p className="font-b8 text-gray-60">
-            리뷰를 불러오는 중입니다.
-          </p>
-        </div>
+        <ReviewDetailSkeleton />
       </main>
     )
   }

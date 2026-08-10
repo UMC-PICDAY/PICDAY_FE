@@ -7,6 +7,7 @@ import CompareActionBar from '@/components/common/CompareActionBar'
 import FilterBar2 from '@/components/common/FilterBar2'
 import MapButton from '@/components/common/MapButton'
 import Notice2 from '@/components/common/Notice2'
+import Toast from '@/components/common/Toast'
 import { IcError, IcFilter, IcPin } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
@@ -15,82 +16,119 @@ import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import StudioMapCanvas from '@/pages/studio/components/StudioMapCanvas'
 import StudioResultsBottomSheet from '@/pages/studio/components/StudioResultsBottomSheet'
 import StudioResultsList from '@/pages/studio/components/StudioResultsList'
+import StudioSearchSkeleton from '@/pages/studio/components/StudioSearchSkeleton'
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import { getLocationLabel } from '@/constants/locationCategory'
-import { getShootingCategoryLabel } from '@/constants/shootingCategory'
-import { studioSearchQueryKey, useStudioSearch } from '@/hooks/useStudio'
+import {
+  getShootingCategoryLabel,
+  SHOOTING_CATEGORY_LABEL,
+} from '@/constants/shootingCategory'
+import {
+  hasBaseSearchCondition,
+  studioSearchQueryKey,
+  useStudioSearch,
+} from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
-import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
+import type {
+  StudioSearchFilters,
+  StudioSearchItem,
+  StudioSearchResult,
+} from '@/types/studio'
+import type { ShootingCategory } from '@/services/studio'
 import {
-  buildStudioSearchChipLabel,
-  hasBaseSearchCondition,
+  getStudioServiceShortLabel,
   isStudioServiceTag,
-  isStudioSort,
+  STUDIO_SERVICE_FILTER_CODES,
+} from '@/constants/studioService'
+import { isStudioSort, STUDIO_SORT_OPTIONS } from '@/constants/studioSort'
+import {
   parseStudioSearchParams,
-  resetStudioSearchFilters,
   serializeStudioSearchParams,
-  STUDIO_SERVICE_OPTIONS,
-  STUDIO_SORT_OPTIONS,
-  toggleStudioService,
 } from '@/utils/studioSearchParams'
 
-type ComparePurpose =
-  | '증명'
-  | '프로필'
-  | '개인화보'
-  | '취업'
-  | '가족'
-  | '우정'
-
-const SHOOTING_CATEGORY_TO_PURPOSE: Record<
-  string,
-  ComparePurpose
-> = {
-  ID_PHOTO: '증명',
-  PROFILE: '프로필',
-  PERSONAL_PORTRAIT: '개인화보',
-  JOB_PHOTO: '취업',
-  FAMILY: '가족',
-  FRIENDSHIP: '우정',
-}
-  
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
-  ...STUDIO_SERVICE_OPTIONS
-    .filter(({ value }) => value !== 'COSTUME')
-    .map(({ value, quickLabel }) => ({ value, label: quickLabel })),
+  ...STUDIO_SERVICE_FILTER_CODES
+    .filter((code) => code !== 'COSTUME')
+    .map((code) => ({ value: code, label: getStudioServiceShortLabel(code) })),
 ]
+
+const toggle = <T extends string>(list: T[], value: T) =>
+  list.includes(value)
+    ? list.filter((item) => item !== value)
+    : [...list, value]
+
+/** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
+const resetStudioSearchFilters = (
+  filters: StudioSearchFilters,
+): StudioSearchFilters => ({
+  ...filters,
+  sort: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
+  services: [],
+  minRating: undefined,
+})
+
+const formatUrlDateForChip = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return value
+  return `${Number(match[2])}월${Number(match[3])}일`
+}
+
+const buildStudioSearchChipLabel = (filters: StudioSearchFilters) => {
+  // 필터에는 코드가 들어 있으므로 칩에는 한글 라벨로 바꿔 보여준다.
+  const labels = [
+    filters.concepts.map(getShootingCategoryLabel).join(','),
+    filters.studioName ??
+      (filters.location ? getLocationLabel(filters.location) : undefined),
+    filters.date ? formatUrlDateForChip(filters.date) : undefined,
+  ].filter((label): label is string => Boolean(label))
+
+  return labels.length > 0 ? labels.join('·') : '사진관 검색'
+}
 
 const StudioSearchPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
+  // shootingCategory는 촬영 컨셉 enum 코드('PROFILE' 등). 받는 쪽
+  // (ComparePurposePage/CompareTwoPage/CompareThreePage)이 렌더링 시점에만
+  // getShootingCategoryLabel로 한글 라벨로 바꿔서 보여준다.
   const navigationState = location.state as {
-    purpose?: ComparePurpose
+    shootingCategory?: ShootingCategory
     snap?: SheetSnap
     } | null
 
-  const navigationPurpose = navigationState?.purpose
+  const navigationShootingCategory = navigationState?.shootingCategory
   const navigationSnap = navigationState?.snap
-  
+
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
 
-  const searchPurpose =
-    SHOOTING_CATEGORY_TO_PURPOSE[
-      filters.concepts[0] ?? ''
-    ]
+  const searchShootingCategory =
+    filters.concepts[0] && filters.concepts[0] in SHOOTING_CATEGORY_LABEL
+      ? (filters.concepts[0] as ShootingCategory)
+      : undefined
 
-  const comparePurpose =
-    navigationPurpose ?? searchPurpose
+  const compareShootingCategory =
+    navigationShootingCategory ?? searchShootingCategory
 
   const [mapError, setMapError] = useState(false)
+  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
-  const { data, isLoading, isError: searchError, refetch } = useStudioSearch(filters)
+  // 필터를 바꿔도 이전 결과를 유지해, 조작할 때마다 목록이 비지 않게 한다.
+  const {
+    data,
+    isLoading,
+    isPlaceholderData,
+    isError: searchError,
+    refetch,
+  } = useStudioSearch(filters, { keepPrevious: true })
   const result = data ?? null
   const loading = isLoading
 
@@ -138,7 +176,19 @@ const StudioSearchPage = () => {
       }
     } catch {
       queryClient.invalidateQueries({ queryKey })
+      setFavoriteErrorMessage('찜 처리에 실패했어요. 다시 시도해 주세요')
+      setTimeout(() => setFavoriteErrorMessage(null), 2000)
     }
+  }
+
+  // 검색에서 고른 날짜를 상세로 넘긴다. 상세가 컨셉 목록(C-7)까지 이어주면
+  // 예약 단계에서 날짜를 다시 고르지 않고 시간만 정하면 된다.
+  const goToStudio = (studioId: number) => {
+    navigate(
+      filters.date
+        ? `/studios/${studioId}?date=${filters.date}`
+        : `/studios/${studioId}`,
+    )
   }
 
   const handleCompare = () => {
@@ -146,7 +196,7 @@ const StudioSearchPage = () => {
     navigate('/compare', {
       state: {
         studioIds: compareItems.map((item) => item.studioId),
-        purpose: comparePurpose,
+        shootingCategory: compareShootingCategory,
         studioSearch: location.search,
       },
     })
@@ -198,28 +248,53 @@ const StudioSearchPage = () => {
     setSnap('half')
   }
 
-  const focusedStudio =
-    studios.find((studio) => studio.studioId === focusedStudioId) ?? null
-  // half에서는 목록이 스크롤되지 않아 상단 카드만 보인다. 핀으로 고른 사진관을
-  // 확인할 수 있도록 그 카드만 단독으로 띄우고, 펼치면 원래 정렬의 전체 목록을 둔다.
-  const sheetStudios =
-    focusedStudio && snap !== 'expanded' ? [focusedStudio] : studios
+  // 핀으로 고른 사진관을 목록에서 찾아 맨 위로 스크롤한다. 목록을 그 사진관
+  // 하나로 갈아끼우면 시트를 펼치는 순간 원래 정렬로 되돌아가 선택이 사라진다.
+  // 정렬은 그대로 두고 보이는 위치만 옮기면, half에서는 카드 한 장 높이라
+  // 그 카드만 보이고 펼쳐도 스크롤 위치가 남아 이어서 보인다.
+  useEffect(() => {
+    const list = listRef.current
+    if (!list) return
+
+    if (focusedStudioId === null) {
+      list.scrollTop = 0
+      return
+    }
+
+    const card = list.querySelector<HTMLElement>(
+      `[data-studio-id="${focusedStudioId}"]`,
+    )
+    if (!card) return
+
+    // half에서는 목록이 overflow-hidden이라 scrollIntoView가 바깥 컨테이너까지
+    // 건드린다. 목록 기준 상대 위치만 더해 스크롤 위치를 직접 잡는다.
+    list.scrollTop +=
+      card.getBoundingClientRect().top - list.getBoundingClientRect().top
+    // studios는 매 렌더 새 배열이라 의존성에 넣으면 렌더마다 스크롤을 다시 잡아
+    // 펼침에서 사용자가 스크롤한 위치가 튕긴다. 검색이 바뀌면 위 effect가
+    // focusedStudioId를 풀어주므로 그때 다시 실행된다.
+  }, [focusedStudioId, listRef])
 
   const handleQuickFilterChange = (value: string) => {
     if (!canQuickFilter) return
 
     const nextFilters = isStudioServiceTag(value)
-      ? { ...filters, services: toggleStudioService(filters.services, value) }
+      ? { ...filters, services: toggle(filters.services, value) }
       : isStudioSort(value)
         ? // 서비스 칩과 동일하게 같은 정렬을 다시 누르면 해제한다.
           { ...filters, sort: filters.sort === value ? undefined : value }
         : filters
-    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
+    // 칩 조작은 화면 이동이 아니라 같은 화면의 조건 변경이므로 히스토리를 쌓지
+    // 않는다. 쌓으면 칩을 누른 횟수만큼 뒤로가기를 눌러야 화면을 빠져나간다.
+    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams), {
+      replace: true,
+    })
   }
 
   const handleResetFilters = () => {
     setSearchParams(
       serializeStudioSearchParams(resetStudioSearchFilters(filters), searchParams),
+      { replace: true },
     )
   }
 
@@ -259,15 +334,23 @@ const StudioSearchPage = () => {
           onStudioSelect={handleMapPinSelect}
         />
 
-        {mapError ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-10">
+        {/* 지도 실패는 지도 영역에만 표시한다. 시트를 덮어버리면 지도와 무관한
+            결과 목록·비교까지 못 쓰게 되므로, 시트 위치(translateY)만큼만
+            높이를 잡아 노출 중인 지도 영역 안에서 안내한다. */}
+        {mapError && (
+          <div
+            className="absolute inset-x-0 top-0 flex items-center justify-center overflow-hidden bg-gray-10"
+            style={{ height: translateY }}
+          >
             <ErrorNotice
               icon={<IcPin width={48} height={48} className="text-brand-80" />}
               title="지도를 불러오지 못했어요"
               onRetry={handleMapRetry}
             />
           </div>
-        ) : searchError ? (
+        )}
+
+        {searchError ? (
           // 조회 실패는 '결과 0곳'과 구분해서 재시도 가능한 에러로 보여준다.
           <StudioResultsBottomSheet
             {...sheetShellProps}
@@ -311,7 +394,7 @@ const StudioSearchPage = () => {
                         }
                         price={`₩${studio.minPrice.toLocaleString()}~`}
                         rating={`★${studio.rating}`}
-                        onClick={() => navigate(`/studios/${studio.studioId}`)}
+                        onClick={() => goToStudio(studio.studioId)}
                       />
                     ))}
                   </div>
@@ -330,35 +413,58 @@ const StudioSearchPage = () => {
               </p>
             }
             footer={
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-x-0 -top-14 flex justify-center">
-                  <div className="pointer-events-auto">
-                    <MapButton onClick={() => setSnap('collapsed')} />
+              // 반펼침에서는 탭바만 둔다. 비교는 목록을 다 펼쳐 고르는 동작이라
+              // 카드 한 장만 보이는 반펼침에 비교바를 띄울 이유가 없다.
+              snap === 'expanded' ? (
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-x-0 -top-14 flex justify-center">
+                    <div className="pointer-events-auto">
+                      <MapButton onClick={() => setSnap('collapsed')} />
+                    </div>
                   </div>
+                  <CompareActionBar
+                    selected={compareItems}
+                    maxSlots={MAX_COMPARE}
+                    disabled={compareItems.length < 2}
+                    onCompare={handleCompare}
+                    onRemove={removeCompare}
+                    className="flex w-full flex-col items-start"
+                  />
+                  <AppTabBar activeTab="search" />
                 </div>
-                <CompareActionBar
-                  selected={compareItems}
-                  maxSlots={MAX_COMPARE}
-                  disabled={compareItems.length < 2}
-                  onCompare={handleCompare}
-                  onRemove={removeCompare}
-                  className="flex w-full flex-col items-start"
-                />
+              ) : (
                 <AppTabBar activeTab="search" />
-              </div>
+              )
             }
           >
-            <StudioResultsList
-              studios={sheetStudios}
-              showCompareButton={snap === 'expanded'}
-              selectedIds={selectedIds}
-              onSelect={(id) => navigate(`/studios/${id}`)}
-              onCompareToggle={handleCompareToggle}
-              onFavoriteToggle={handleFavoriteToggle}
-            />
+            {loading ? (
+              <StudioSearchSkeleton />
+            ) : (
+              // 필터 전환 중에는 이전 결과를 유지하되 갱신 중임을 흐리게 알린다.
+              <div
+                className={
+                  isPlaceholderData ? 'opacity-50 transition-opacity' : ''
+                }
+              >
+                <StudioResultsList
+                  studios={studios}
+                  showCompareButton={snap === 'expanded'}
+                  selectedIds={selectedIds}
+                  onSelect={goToStudio}
+                  onCompareToggle={handleCompareToggle}
+                  onFavoriteToggle={handleFavoriteToggle}
+                />
+              </div>
+            )}
           </StudioResultsBottomSheet>
         )}
       </div>
+
+      {favoriteErrorMessage && (
+        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
+          <Toast message={favoriteErrorMessage} />
+        </div>
+      )}
     </div>
   )
 }

@@ -4,15 +4,17 @@ import { useNavigate, useSearchParams } from 'react-router'
 import FilterChip from '@/components/common/FilterChip'
 import RangeSlider from '@/components/common/RangeSlider'
 import NavigationBar from '@/components/layout/NavigationBar'
-import { useStudioSearch } from '@/hooks/useStudio'
+import { hasBaseSearchCondition, useStudioSearch } from '@/hooks/useStudio'
 import { SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
 import {
-  hasBaseSearchCondition,
+  getStudioServiceLabel,
+  STUDIO_SERVICE_FILTER_CODES,
+} from '@/constants/studioService'
+import {
   parseStudioSearchParams,
   serializeStudioSearchParams,
-  STUDIO_SERVICE_OPTIONS,
-  type StudioServiceTag,
 } from '@/utils/studioSearchParams'
+import type { StudioServiceTag } from '@/types/studio'
 
 const RATINGS = [
   { value: undefined, label: '전체' },
@@ -21,10 +23,14 @@ const RATINGS = [
   { value: 4.8, label: '★4.8이상' },
 ] as const
 
-const PRICE_MIN = 30000
+const PRICE_MIN = 0
 const PRICE_MAX = 150000
 
 const formatKRW = (value: number) => `₩${value.toLocaleString('ko-KR')}`
+
+// 상한이 최대치면 maxPrice를 보내지 않아 실제로는 상한이 없다. 슬라이더 눈금과 같게 +를 붙인다.
+const formatUpperKRW = (value: number) =>
+  value === PRICE_MAX ? `${formatKRW(value)}+` : formatKRW(value)
 
 const toggle = <T extends string>(list: T[], value: T) =>
   list.includes(value)
@@ -74,7 +80,12 @@ const FilterPage = () => {
     if (!canApply) return
 
     const params = serializeStudioSearchParams(draftFilters, searchParams)
-    navigate({ pathname: '/studios', search: `?${params.toString()}` })
+    // 적용을 끝낸 필터 화면은 히스토리에서 걷어낸다. 그대로 쌓으면 결과 화면에서
+    // 뒤로가기를 눌렀을 때 방금 닫은 필터 화면이 다시 열린다.
+    navigate(
+      { pathname: '/studios', search: `?${params.toString()}` },
+      { replace: true },
+    )
   }
 
   return (
@@ -110,7 +121,7 @@ const FilterPage = () => {
           <p className="pb-3 font-b8 text-gray-40">모든 추가금 포함</p>
           <div className="mb-3 flex items-center justify-center rounded-lg bg-brand-20 px-3 py-2">
             <span className="font-b7 text-black">
-              {formatKRW(price[0])} ~ {formatKRW(price[1])}
+              {formatKRW(price[0])} ~ {formatUpperKRW(price[1])}
             </span>
           </div>
           <RangeSlider
@@ -126,13 +137,13 @@ const FilterPage = () => {
         <section className="pb-5">
           <h2 className="pb-3 font-b5 text-black">연계 서비스</h2>
           <div className="flex flex-wrap gap-2">
-            {STUDIO_SERVICE_OPTIONS.map((service) => (
+            {STUDIO_SERVICE_FILTER_CODES.map((code) => (
               <FilterChip
-                key={service.value}
-                label={service.label}
+                key={code}
+                label={getStudioServiceLabel(code)}
                 size="large"
-                selected={services.includes(service.value)}
-                onClick={() => setServices((prev) => toggle(prev, service.value))}
+                selected={services.includes(code)}
+                onClick={() => setServices((prev) => toggle(prev, code))}
               />
             ))}
           </div>

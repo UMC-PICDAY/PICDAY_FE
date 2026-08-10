@@ -189,6 +189,10 @@ const ReviewWritePage = () => {
 
           navigate('/mypage', {
             replace: true,
+            state: {
+              toastMessage:
+                '예약 정보를 불러오지 못했습니다.',
+            },
           })
         }
       }

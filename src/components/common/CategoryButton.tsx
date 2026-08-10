@@ -25,6 +25,7 @@ type PurposeType = '증명' | '프로필' | '개인화보' | '취업' | '가족'
 interface Props {
   type?: PurposeType
   active?: boolean
+  disabled?: boolean
   onClick?: () => void
   className?: string
 }
@@ -32,14 +33,19 @@ interface Props {
 const CategoryButton = ({
   type = '증명',
   active = false,
+  disabled = false,
   onClick,
   className,
 }: Props) => (
   <button
     type="button"
     aria-pressed={active}
+    aria-disabled={disabled}
+    disabled={disabled}
     className={`flex w-[173px] flex-col items-center justify-center rounded-[16px] border border-brand-40 px-[10px] py-[15px] ${
-      active
+      disabled
+        ? 'cursor-not-allowed bg-[rgba(252,252,252,0.75)] opacity-40'
+      : active
         ? 'bg-brand-20 shadow-[0_0_4px_0_#FEE4EB]'
         : 'bg-[rgba(252,252,252,0.75)]'
     } ${className ?? ''}`}
