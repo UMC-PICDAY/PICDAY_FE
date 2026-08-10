@@ -41,8 +41,6 @@ import ReviewCompletePage from '@/pages/mypage/ReviewCompletePage'
 import MyReviewPage from '@/pages/mypage/MyReviewPage'
 
 import WishlistPage from '@/pages/wishlist/WishlistPage'
-import ChatListPage from '@/pages/chat/ChatListPage'
-import ChatRoomPage from '@/pages/chat/ChatRoomPage'
 
 import TermsDetailPage from '@/pages/common/TermsDetailPage'
 
@@ -105,10 +103,6 @@ function App() {
 
       {/* 위시리스트 */}
       <Route path="/wishlist" element={<WishlistPage />} />
-
-      {/* 채팅 */}
-      <Route path="/chat" element={<ChatListPage />} />
-      <Route path="/chat/:chatId" element={<ChatRoomPage />} />
 
       {/* 공용 */}
       <Route path="/terms/:termType" element={<TermsDetailPage />} />

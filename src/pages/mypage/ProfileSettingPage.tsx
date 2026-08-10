@@ -111,6 +111,7 @@ const ProfileSettingPage = () => {
         )
       } catch (error) {
         console.error('내 정보 조회 실패:', error)
+        showToast('내 정보를 불러오지 못했습니다.')
       } finally {
         setIsLoading(false)
       }

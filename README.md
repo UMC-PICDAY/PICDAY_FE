@@ -14,7 +14,7 @@ PICDAY는 사용자가 촬영 목적, 날짜, 지역 등의 조건으로 사진�
 
 | 이름 | 역할 | 담당 페이지 |
 |------|------|------------|
-| 김이준 (팀장) | FE | A. 로그인/회원가입, B. 검색, G. 위시리스트·채팅 |
+| 김이준 (팀장) | FE | A. 로그인/회원가입, B. 검색, G. 위시리스트 |
 | 남현준 | FE | C. 사진관 탐색/상세 |
 | 전지혜 | FE | D. 비교, E. 예약 |
 | 신승연 | FE | F. 마이페이지, 리뷰 |
@@ -50,7 +50,6 @@ src/
 │   ├── reservation/  # E - 예약
 │   ├── mypage/       # F - 마이페이지
 │   ├── wishlist/     # G-1 위시리스트
-│   ├── chat/         # G-2 채팅
 │   └── common/       # 약관 상세 등 공용 화면
 ├── hooks/            # 커스텀 훅
 ├── stores/           # Zustand 전역 상태
@@ -62,6 +61,13 @@ src/
 ├── App.tsx           # 라우트 설정
 └── main.tsx          # 앱 진입점
 ```
+
+<br>
+
+## ✍️ 코드 스타일
+
+- **따옴표·세미콜론**: 새로 작성하는 코드는 작은따옴표(`'`) + 세미콜론 없음을 기본으로 합니다. `components/common/` 초반에 만들어진 일부 컴포넌트(예: `InputField.tsx`, `SearchField.tsx`, `Calendar.tsx` 등)는 큰따옴표+세미콜론 스타일로 남아있는데, 팀 합의로 기존 파일은 굳이 통일하지 않고 그대로 둔 것입니다 — 파일마다 스타일이 섞인 게 아니라 "이전에 만든 파일 vs 이후에 만든 파일" 기준으로 나뉩니다.
+- 이 저장소엔 별도의 ESLint 설정이 없고 `oxlint`(`npm run lint`)만 사용합니다.
 
 <br>
 
@@ -205,7 +211,7 @@ npm run dev -- --port 3000
 | `VITE_API_BASE_URL` | 백엔드 API Base URL (오리진만, 예: `http://localhost:8080`) |
 | `VITE_KAKAO_MAP_KEY` | 카카오맵 JavaScript 키. [Kakao Developers](https://developers.kakao.com)에서 발급, 플랫폼에 `http://localhost:3000` 등록 필요 |
 
-> ⚠️ **CORS 주의**: 배포된 백엔드(Railway)는 `localhost:3000`만 CORS 허용 목록에 등록되어 있습니다. Vite 기본 포트(5173)로 실행하면 `VITE_API_BASE_URL`을 배포 백엔드로 설정했을 때 CORS 에러가 납니다. 반드시 `npm run dev -- --port 3000`으로 실행하세요. (로컬 백엔드를 직접 띄워서 붙이는 경우는 해당 없음)
+> ⚠️ **CORS 주의**: 배포된 백엔드는 `localhost:3000`만 CORS 허용 목록에 등록되어 있습니다. Vite 기본 포트(5173)로 실행하면 `VITE_API_BASE_URL`을 배포 백엔드로 설정했을 때 CORS 에러가 납니다. 반드시 `npm run dev -- --port 3000`으로 실행하세요. (로컬 백엔드를 직접 띄워서 붙이는 경우는 해당 없음)
 
 > 모바일 UI 확인은 Chrome DevTools에서 `Cmd + Shift + M` (디바이스 모드) 사용을 권장합니다.
 
@@ -291,4 +297,3 @@ npm run dev -- --port 3000
 | 화면 | 설명 |
 |------|------|
 | G-1 위시리스트 | 찜한 사진관 목록 |
-| G-2 채팅 목록 | 사진관과의 채팅 |

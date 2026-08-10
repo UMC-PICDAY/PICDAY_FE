@@ -15,6 +15,7 @@ import {
 import ReservationDetail from '@/components/cards/ReservationDetail'
 import Alert2 from '@/components/common/Alert2'
 import Button from '@/components/common/Button'
+import Toast from '@/components/common/Toast'
 import NavigationBar from '@/components/layout/NavigationBar'
 import {
   cancelReservation,
@@ -22,36 +23,13 @@ import {
   type ReservationDetailData,
 } from '@/services/reservation'
 import { ApiError } from '@/types/common'
+import { formatReservationDateTimeDotted } from '@/utils/formatReservationDateTime'
 
 const refundNoticeItems = [
   '환불 정책은 사진관마다 다를 수 있습니다.',
   '촬영 당일 취소는 불가합니다.',
   '예약 취소 시 해당 시간대 슬롯이 자동으로 해제됩니다.',
 ]
-
-const formatReservationDateTime = (
-  reservationDate: string,
-  reservationTime: string,
-) => {
-  const [year, month, day] = reservationDate
-    .split('-')
-    .map(Number)
-
-  const date = new Date(
-    year,
-    month - 1,
-    day,
-  )
-
-  const weekday = new Intl.DateTimeFormat(
-    'ko-KR',
-    {
-      weekday: 'short',
-    },
-  ).format(date)
-
-  return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')} (${weekday}) ${reservationTime}`
-}
 
 const ReservationCancelPage = () => {
   const navigate = useNavigate()
@@ -76,6 +54,13 @@ const ReservationCancelPage = () => {
     isSubmitting,
     setIsSubmitting,
   ] = useState(false)
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const showToast = (message: string) => {
+    setToastMessage(message)
+    window.setTimeout(() => setToastMessage(null), 3000)
+  }
 
   useEffect(() => {
     if (!reservationId) {
@@ -103,6 +88,10 @@ const ReservationCancelPage = () => {
 
           navigate('/mypage', {
             replace: true,
+            state: {
+              toastMessage:
+                '예약 정보를 불러오지 못했습니다.',
+            },
           })
         }
       }
@@ -158,37 +147,37 @@ const ReservationCancelPage = () => {
         if (error instanceof ApiError) {
           switch (error.code) {
             case 'RESERVATION_4002':
-              alert(
+              showToast(
                 '촬영 당일은 예약 취소가 불가합니다.',
               )
               break
 
             case 'RESERVATION_4092':
-              alert(
+              showToast(
                 '이미 취소된 예약입니다.',
               )
               break
 
             case 'RESERVATION_4093':
-              alert(
+              showToast(
                 '취소할 수 없는 예약 상태입니다.',
               )
               break
 
             case 'RESERVATION_4041':
-              alert(
+              showToast(
                 '예약 정보를 찾을 수 없습니다.',
               )
               break
 
             default:
-              alert(
+              showToast(
                 '예약 취소에 실패했습니다. 다시 시도해 주세요.',
               )
               break
           }
         } else {
-          alert(
+          showToast(
             '예약 취소에 실패했습니다. 다시 시도해 주세요.',
           )
         }
@@ -217,7 +206,7 @@ const ReservationCancelPage = () => {
     )
 
   const formattedReservationDate =
-    formatReservationDateTime(
+    formatReservationDateTimeDotted(
       reservation.timeSlot.date,
       reservation.timeSlot.startTime,
     )
@@ -313,6 +302,12 @@ const ReservationCancelPage = () => {
               void handleCancelReservation()
             }}
           />
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2">
+          <Toast message={toastMessage} />
         </div>
       )}
     </main>
