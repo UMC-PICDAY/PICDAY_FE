@@ -84,7 +84,7 @@ function App() {
 
       {/* 예약 */}
       <Route path="/reservation" element={<ReservationPage />} />
-      <Route path="/reservation/complete" element={<ReservationCompletePage />} />
+      <Route path="/reservation/complete/:reservationId" element={<ReservationCompletePage />} />
       <Route path="/reservation/terms/:key" element={<AgreementDetailPage />}
 />
 

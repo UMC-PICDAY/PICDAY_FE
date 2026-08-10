@@ -3,57 +3,74 @@
  *
  * 예약과 결제가 완료된 뒤 결과를 보여주는 페이지
  *
- * 진입 시 location state로 예약 정보를 전달
- *
- * 전달 데이터
- *   {
- *     reservation: {
- *       studioName,
- *       reservationDateTime,
- *       conceptName,
- *       totalAmount,
- *     },
- *   }
+ * URL의 reservationId를 이용해
+ * 예약 상세 정보를 조회한다.
  *
  * 주요 기능
  *   - 예약 사진관, 날짜·시간, 컨셉 표시
  *   - 결제 금액 표시
+ *   - 새로고침 및 직접 접근 시 예약 정보 재조회
  *   - 마이페이지 이동
  *   - 홈 이동
  *
- * 예약 정보가 없으면 안내 화면과
+ * 예약 정보를 불러오지 못하면 안내 화면과
  * 마이페이지 이동 버튼을 표시
- *
- * TODO
- *   - API 연결 후 예약 ID로 상세 정보 조회
- *   - 새로고침 및 직접 접근 처리
  */
 
-import { useLocation, useNavigate } from 'react-router'
+import {
+  useEffect,
+  useState,
+} from 'react'
+import {
+  useNavigate,
+  useParams,
+} from 'react-router'
 
 import ReservationDetail from '@/components/cards/ReservationDetail'
 import Button from '@/components/common/Button'
 import NoticeBanner from '@/components/common/NoticeBanner'
 import { IcCheck } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
-
-interface ReservationCompleteData {
-  studioName: string
-  reservationDateTime: string
-  conceptName: string
-  totalAmount: number
-}
-
-interface LocationState {
-  reservation?: ReservationCompleteData
-}
+import {
+  getReservationDetail,
+  type ReservationDetailData,
+} from '@/services/reservation'
 
 const ReservationCompletePage = () => {
   const navigate = useNavigate()
-  const location = useLocation()
+  const { reservationId } = useParams()
 
-  const locationState = location.state as LocationState | null
-  const reservation = locationState?.reservation
+  const [reservation, setReservation] =
+    useState<ReservationDetailData | null>(null)
+
+  const [isLoading, setIsLoading] =
+    useState(true)
+
+  const [isError, setIsError] =
+    useState(false)
+
+  useEffect(() => {
+    const fetchReservation = async () => {
+      if (!reservationId) {
+        setIsError(true)
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const result =
+          await getReservationDetail(reservationId)
+
+        setReservation(result)
+      } catch {
+        setIsError(true)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void fetchReservation()
+  }, [reservationId])
 
   const handleMyPageClick = () => {
     navigate('/mypage')
@@ -63,11 +80,30 @@ const ReservationCompletePage = () => {
     navigate('/home')
   }
 
-  if (!reservation) {
+  if (isLoading) {
     return (
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
         <div className="sticky top-0 z-20 shrink-0 bg-white">
+          <NavigationBar
+            title="PICDAY"
+            showLeft={false}
+            showRight={false}
+          />
+        </div>
 
+        <main className="flex flex-1 items-center justify-center">
+          <p className="font-b6 text-gray-60">
+            예약 정보를 불러오는 중이에요
+          </p>
+        </main>
+      </div>
+    )
+  }
+
+  if (isError || !reservation) {
+    return (
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
+        <div className="sticky top-0 z-20 shrink-0 bg-white">
           <NavigationBar
             title="PICDAY"
             showLeft={false}
@@ -93,33 +129,34 @@ const ReservationCompletePage = () => {
             마이페이지로 이동
           </Button>
         </footer>
-
       </div>
     )
   }
 
   const formattedTotalAmount =
-    reservation.totalAmount.toLocaleString('ko-KR')
+    reservation.totalPrice.toLocaleString('ko-KR')
+
+  const reservationDateTime =
+    `${reservation.timeSlot.date} ${reservation.timeSlot.startTime}`
 
   const receiptItems = [
     {
       label: '사진관',
-      value: reservation.studioName,
+      value: reservation.studio.name,
     },
     {
       label: '날짜·시간',
-      value: reservation.reservationDateTime,
+      value: reservationDateTime,
     },
     {
       label: '컨셉',
-      value: reservation.conceptName,
+      value: reservation.studioProduct.name,
     },
   ]
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white text-black">
       <div className="sticky top-0 z-20 shrink-0 bg-white">
-
         <NavigationBar
           title="PICDAY"
           showLeft={false}
@@ -131,7 +168,10 @@ const ReservationCompletePage = () => {
         <section className="flex h-[256px] w-full shrink-0 flex-col items-center px-5 py-[50px] text-center">
           <div className="flex pb-5">
             <div className="flex size-[70px] items-center justify-center rounded-full bg-brand-100 text-white">
-              <IcCheck width={50} height={50} />
+              <IcCheck
+                width={50}
+                height={50}
+              />
             </div>
           </div>
 
@@ -140,8 +180,8 @@ const ReservationCompletePage = () => {
           </h1>
 
           <p className="font-b6 w-full pb-2 text-gray-60">
-            {reservation.studioName} ·{' '}
-            {reservation.reservationDateTime}
+            {reservation.studio.name} ·{' '}
+            {reservationDateTime}
           </p>
         </section>
 
@@ -172,7 +212,6 @@ const ReservationCompletePage = () => {
           홈으로 돌아가기
         </Button>
       </footer>
-
     </div>
   )
 }
