@@ -20,7 +20,10 @@ import StudioSearchSkeleton from '@/pages/studio/components/StudioSearchSkeleton
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import { getLocationLabel } from '@/constants/locationCategory'
-import { getShootingCategoryLabel } from '@/constants/shootingCategory'
+import {
+  getShootingCategoryLabel,
+  SHOOTING_CATEGORY_LABEL,
+} from '@/constants/shootingCategory'
 import {
   hasBaseSearchCondition,
   studioSearchQueryKey,
@@ -33,6 +36,7 @@ import type {
   StudioSearchItem,
   StudioSearchResult,
 } from '@/types/studio'
+import type { ShootingCategory } from '@/services/studio'
 import {
   getStudioServiceShortLabel,
   isStudioServiceTag,
@@ -90,25 +94,27 @@ const StudioSearchPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // purpose는 촬영 컨셉의 한글 라벨('증명' 등). 받는 쪽(ComparePurposePage)이
-  // isPurposeType으로 검증하고 실패하면 기본값으로 떨어뜨린다.
+  // shootingCategory는 촬영 컨셉 enum 코드('PROFILE' 등). 받는 쪽
+  // (ComparePurposePage/CompareTwoPage/CompareThreePage)이 렌더링 시점에만
+  // getShootingCategoryLabel로 한글 라벨로 바꿔서 보여준다.
   const navigationState = location.state as {
-    purpose?: string
+    shootingCategory?: ShootingCategory
     snap?: SheetSnap
     } | null
 
-  const navigationPurpose = navigationState?.purpose
+  const navigationShootingCategory = navigationState?.shootingCategory
   const navigationSnap = navigationState?.snap
-  
+
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
 
-  const searchPurpose = filters.concepts[0]
-    ? getShootingCategoryLabel(filters.concepts[0])
-    : undefined
+  const searchShootingCategory =
+    filters.concepts[0] && filters.concepts[0] in SHOOTING_CATEGORY_LABEL
+      ? (filters.concepts[0] as ShootingCategory)
+      : undefined
 
-  const comparePurpose =
-    navigationPurpose ?? searchPurpose
+  const compareShootingCategory =
+    navigationShootingCategory ?? searchShootingCategory
 
   const [mapError, setMapError] = useState(false)
   const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
@@ -190,7 +196,7 @@ const StudioSearchPage = () => {
     navigate('/compare', {
       state: {
         studioIds: compareItems.map((item) => item.studioId),
-        purpose: comparePurpose,
+        shootingCategory: compareShootingCategory,
         studioSearch: location.search,
       },
     })

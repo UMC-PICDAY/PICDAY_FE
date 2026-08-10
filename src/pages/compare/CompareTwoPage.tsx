@@ -7,7 +7,6 @@
  *   {
  *     studioIds: string[]
  *     shootingCategory: ShootingCategory
- *     purpose: string
  *     studios: NavigationStudio[]
  *   }
  *
@@ -31,6 +30,9 @@ import {
   type ShootingCategory,
 } from '@/services/studio'
 import { useCompareStore } from '@/stores/useCompareStore'
+import { getLocationLabel } from '@/constants/locationCategory'
+import { getStudioServiceShortLabel } from '@/constants/studioService'
+import { getShootingCategoryLabel } from '@/constants/shootingCategory'
 
 interface CompareData {
   price: string
@@ -62,7 +64,6 @@ interface NavigationStudio {
 interface NavigationState {
   studioIds?: string[]
   shootingCategory?: ShootingCategory
-  purpose?: string
   studios?: NavigationStudio[]
   studioSearch?: string
 }
@@ -72,24 +73,10 @@ interface CompareRowProps {
   children: ReactNode
 }
 
-const SERVICE_TAG_LABEL_MAP: Record<string, string> = {
-  HAIR_MAKEUP: '헤어·메이크업',
-  PARKING: '주차',
-  COSTUME: '의상 비치',
-}
-
-const LOCATION_CATEGORY_LABEL_MAP: Record<string, string> = {
-  HONGDAE: '홍대',
-  GANGNAM: '강남',
-  SINCHON: '신촌',
-  JAMSIL: '잠실',
-}
 
 const isValidStudioId = (studioId: string) =>
   /^[1-9]\d*$/.test(studioId)
 
-const formatServiceTag = (serviceTag: string) =>
-  SERVICE_TAG_LABEL_MAP[serviceTag] ?? serviceTag
 
 const formatLocation = (
   location: CompareResultStudio['location'],
@@ -104,10 +91,7 @@ const formatLocation = (
     walkingMinutes,
   } = location
 
-  const locationName =
-    LOCATION_CATEGORY_LABEL_MAP[locationCategory] ??
-    nearestStation ??
-    locationCategory
+  const locationName = getLocationLabel(locationCategory)
 
   if (
     nearestStation &&
@@ -174,7 +158,7 @@ const convertStudio = (
       .hasAdditionalPrice
       ? undefined
       : '추가금 없음',
-    services: studio.serviceTags.map(formatServiceTag),
+    services: studio.serviceTags.map(getStudioServiceShortLabel),
     location: formatLocation(studio.location),
     reservationDate: formatReservationDate(
       studio.earliestReservationDate,
@@ -197,7 +181,6 @@ const CompareTwoPage = () => {
   const initialStudioIds = navigationState?.studioIds
   const shootingCategory =
     navigationState?.shootingCategory
-  const purpose = navigationState?.purpose
   const studioSearch = navigationState?.studioSearch ?? ''
 
   const [selectedStudios, setSelectedStudios] = useState<
@@ -207,11 +190,6 @@ const CompareTwoPage = () => {
   const [selectedStudioId, setSelectedStudioId] = useState<
     string | null
   >(null)
-
-  const [
-    shootingCategoryName,
-    setShootingCategoryName,
-  ] = useState(purpose ?? '')
 
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<
@@ -294,7 +272,6 @@ const CompareTwoPage = () => {
 
         setSelectedStudios(studios)
         setSelectedStudioId(studios[0]?.id ?? null)
-        setShootingCategoryName(data.displayName)
       } catch {
         setSelectedStudios([])
         setSelectedStudioId(null)
@@ -317,7 +294,7 @@ const CompareTwoPage = () => {
           currentStudioIds.length > 0
             ? currentStudioIds
             : initialStudioIds,
-        purpose: shootingCategoryName || purpose,
+        shootingCategory,
         studioSearch,
       },
     })
@@ -389,8 +366,8 @@ const CompareTwoPage = () => {
       state: {
         studioIds: currentStudioIds,
         selectedStudios,
-        purpose: shootingCategoryName || purpose,
         shootingCategory,
+        studioSearch,
       },
     },)
   }
@@ -464,9 +441,9 @@ const CompareTwoPage = () => {
                   </p>
 
                   <p className="font-cap3 text-gray-40">
-                    {shootingCategoryName ||
-                      purpose ||
-                      '프로필'}
+                    {shootingCategory
+                      ? getShootingCategoryLabel(shootingCategory)
+                      : '프로필'}
                   </p>
                 </div>
 
