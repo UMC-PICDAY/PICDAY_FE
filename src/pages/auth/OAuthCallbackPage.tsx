@@ -15,6 +15,8 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import type { SocialProvider } from '@/types/auth'
 import { clearSocialLoginReturnTo, getSocialLoginReturnTo } from '@/utils/authRedirect'
 
+const SOCIAL_LOGIN_ERROR_MESSAGE = '소셜 로그인에 실패했어요. 다시 시도해 주세요'
+
 const OAuthCallbackPage = () => {
   const navigate = useNavigate()
   const { provider } = useParams<{ provider: string }>()
@@ -31,7 +33,10 @@ const OAuthCallbackPage = () => {
     if (!provider || !code) {
       navigate('/login', {
         replace: true,
-        state: { returnTo },
+        state: {
+          returnTo,
+          toastMessage: SOCIAL_LOGIN_ERROR_MESSAGE,
+        },
       })
       return
     }
@@ -54,7 +59,10 @@ const OAuthCallbackPage = () => {
       .catch(() => {
         navigate('/login', {
           replace: true,
-          state: { returnTo },
+          state: {
+            returnTo,
+            toastMessage: SOCIAL_LOGIN_ERROR_MESSAGE,
+          },
         })
       })
   }, [provider, searchParams, navigate, authLogin, returnTo])

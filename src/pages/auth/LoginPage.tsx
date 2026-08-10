@@ -1,5 +1,5 @@
 /** Figma A-2 로그인 화면 (라우트: /login) */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
 import NavigationBar from '@/components/layout/NavigationBar'
@@ -16,6 +16,7 @@ import { clearSocialLoginReturnTo, getSafeReturnTo, saveSocialLoginReturnTo } fr
 
 interface LoginLocationState {
   returnTo?: string
+  toastMessage?: string
 }
 
 const NETWORK_ERROR_MESSAGE = '연결 상태를 확인해 주세요'
@@ -33,6 +34,22 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const { toast, showToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // 다른 화면(소셜 로그인 콜백 실패 등)에서 안내 메시지를 담아 이 화면으로
+  // 돌아올 때 한 번만 보여주고, history state에서 지워 새로고침해도 다시
+  // 안 뜨게 한다.
+  useEffect(() => {
+    const incomingToast = (
+      location.state as LoginLocationState | null
+    )?.toastMessage
+    if (!incomingToast) return
+
+    showToast(incomingToast)
+    navigate(location.pathname, {
+      replace: true,
+      state: { returnTo },
+    })
+  }, [location, navigate, returnTo, showToast])
 
   const canSubmit = loginId !== '' && password !== '' && !isSubmitting
 
