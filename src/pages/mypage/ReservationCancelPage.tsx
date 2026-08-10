@@ -18,11 +18,8 @@ import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import NavigationBar from '@/components/layout/NavigationBar'
 import { useToast } from '@/hooks/useToast'
-import {
-  cancelReservation,
-  getReservationDetail,
-  type ReservationDetailData,
-} from '@/services/reservation'
+import { useReservationDetail } from '@/hooks/useReservation'
+import { cancelReservation } from '@/services/reservation'
 import { ApiError } from '@/types/common'
 import { formatReservationDateTimeDotted } from '@/utils/formatReservationDateTime'
 
@@ -39,12 +36,10 @@ const ReservationCancelPage = () => {
     reservationId: string
   }>()
 
-  const [
-    reservation,
-    setReservation,
-  ] = useState<ReservationDetailData | null>(
-    null,
-  )
+  const {
+    data: reservation,
+    isError: hasReservationError,
+  } = useReservationDetail(reservationId)
 
   const [
     isCancelModalOpen,
@@ -63,37 +58,24 @@ const ReservationCancelPage = () => {
       navigate('/mypage', {
         replace: true,
       })
-
-      return
     }
-
-    const fetchReservationDetail =
-      async () => {
-        try {
-          const result =
-            await getReservationDetail(
-              reservationId,
-            )
-
-          setReservation(result)
-        } catch (error) {
-          console.error(
-            '예약 상세 조회에 실패했습니다.',
-            error,
-          )
-
-          navigate('/mypage', {
-            replace: true,
-            state: {
-              toastMessage:
-                '예약 정보를 불러오지 못했습니다.',
-            },
-          })
-        }
-      }
-
-    void fetchReservationDetail()
   }, [navigate, reservationId])
+
+  useEffect(() => {
+    if (hasReservationError) {
+      console.error(
+        '예약 상세 조회에 실패했습니다.',
+      )
+
+      navigate('/mypage', {
+        replace: true,
+        state: {
+          toastMessage:
+            '예약 정보를 불러오지 못했습니다.',
+        },
+      })
+    }
+  }, [hasReservationError, navigate])
 
   const handleCancelReservation =
     async () => {

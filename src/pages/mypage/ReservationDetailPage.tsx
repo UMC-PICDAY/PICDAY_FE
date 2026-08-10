@@ -21,10 +21,8 @@ import {
   IcCheckBoxFill,
 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
-import {
-  getReservationDetail,
-  type ReservationDetailData,
-} from '@/services/reservation'
+import { useReservationDetail } from '@/hooks/useReservation'
+import { ReservationDetailSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { formatReservationDateTimeLong } from '@/utils/formatReservationDateTime'
 
 interface ChecklistItem {
@@ -222,12 +220,11 @@ const ReservationDetailPage = () => {
     reservationId: string
   }>()
 
-  const [
-    reservation,
-    setReservation,
-  ] = useState<ReservationDetailData | null>(
-    null,
-  )
+  const {
+    data: reservation,
+    isLoading,
+    isError,
+  } = useReservationDetail(reservationId)
 
   const [
     checklistItems,
@@ -239,54 +236,47 @@ const ReservationDetailPage = () => {
       navigate('/mypage', {
         replace: true,
       })
-
-      return
     }
-
-    const fetchReservationDetail =
-      async () => {
-        try {
-          const result =
-            await getReservationDetail(
-              reservationId,
-            )
-
-          setReservation(result)
-
-          const storedCheckedIds =
-            getStoredCheckedIds(reservationId)
-
-          setChecklistItems(
-            (result.checklist ?? []).map(
-              (label, index) => {
-                const id = `checklist-${index}`
-
-                return {
-                  id,
-                  label,
-                  checked: storedCheckedIds.has(id),
-                }
-              },
-            ),
-          )
-        } catch (error) {
-          console.error(
-            '예약 상세 조회에 실패했습니다.',
-            error,
-          )
-
-          navigate('/mypage', {
-            replace: true,
-            state: {
-              toastMessage:
-                '예약 정보를 불러오지 못했습니다.',
-            },
-          })
-        }
-      }
-
-    void fetchReservationDetail()
   }, [navigate, reservationId])
+
+  useEffect(() => {
+    if (isError) {
+      console.error(
+        '예약 상세 조회에 실패했습니다.',
+      )
+
+      navigate('/mypage', {
+        replace: true,
+        state: {
+          toastMessage:
+            '예약 정보를 불러오지 못했습니다.',
+        },
+      })
+    }
+  }, [isError, navigate])
+
+  // 체크리스트는 조회 결과가 도착했을 때 한 번만 localStorage에서
+  // 저장된 체크 상태를 복원해 로컬 편집 상태로 채운다.
+  useEffect(() => {
+    if (!reservation || !reservationId) return
+
+    const storedCheckedIds =
+      getStoredCheckedIds(reservationId)
+
+    setChecklistItems(
+      (reservation.checklist ?? []).map(
+        (label, index) => {
+          const id = `checklist-${index}`
+
+          return {
+            id,
+            label,
+            checked: storedCheckedIds.has(id),
+          }
+        },
+      ),
+    )
+  }, [reservation, reservationId])
 
   const handleChecklistItemClick = (
     id: string,
@@ -320,6 +310,8 @@ const ReservationDetailPage = () => {
           showRight={false}
           onBack={() => navigate(-1)}
         />
+
+        {isLoading && <ReservationDetailSkeleton />}
       </div>
     )
   }

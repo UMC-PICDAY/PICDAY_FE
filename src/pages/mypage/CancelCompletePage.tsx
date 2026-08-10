@@ -3,10 +3,7 @@
  * 예약 취소 완료 안내와 마이페이지/홈 이동 버튼을 제공함
  */
 
-import {
-  useEffect,
-  useState,
-} from 'react'
+import { useEffect } from 'react'
 import {
   useLocation,
   useNavigate,
@@ -14,11 +11,10 @@ import {
 } from 'react-router'
 
 import Button from '@/components/common/Button'
+import Toast from '@/components/common/Toast'
 import { IcCheck } from '@/components/icons'
-import {
-  getReservationDetail,
-  type ReservationDetailData,
-} from '@/services/reservation'
+import { useToast } from '@/hooks/useToast'
+import { useReservationDetail } from '@/hooks/useReservation'
 import { formatReservationDateTimeShort } from '@/utils/formatReservationDateTime'
 
 interface CancelCompleteReservation {
@@ -46,37 +42,37 @@ const CancelCompletePage = () => {
   const locationState =
     location.state as CancelCompleteLocationState | null
 
-  const [
-    reservation,
-    setReservation,
-  ] = useState<
-    CancelCompleteReservation | ReservationDetailData | null
-  >(locationState?.reservation ?? null)
+  const { toast, showToast } = useToast()
+
+  // 취소 페이지에서 location.state로 넘겨준 요약 정보가 있으면 그걸 쓰고,
+  // 새로고침 등으로 없을 때만 API로 다시 조회한다.
+  const hasStateReservation = Boolean(
+    locationState?.reservation,
+  )
+
+  const {
+    data: fetchedReservation,
+    isError: hasFetchError,
+  } = useReservationDetail(reservationId, {
+    enabled: !hasStateReservation,
+  })
+
+  const reservation =
+    locationState?.reservation ??
+    fetchedReservation ??
+    null
 
   useEffect(() => {
-    if (reservation || !reservationId) {
-      return
+    if (hasFetchError) {
+      console.error(
+        '취소된 예약 정보 조회에 실패했습니다.',
+      )
+
+      showToast(
+        '예약 정보를 불러오지 못했습니다.',
+      )
     }
-
-    const fetchReservationDetail =
-      async () => {
-        try {
-          const result =
-            await getReservationDetail(
-              reservationId,
-            )
-
-          setReservation(result)
-        } catch (error) {
-          console.error(
-            '취소된 예약 정보 조회에 실패했습니다.',
-            error,
-          )
-        }
-      }
-
-    void fetchReservationDetail()
-  }, [reservation, reservationId])
+  }, [hasFetchError, showToast])
 
 
   const reservationSummary = (() => {
@@ -146,6 +142,12 @@ const CancelCompletePage = () => {
           홈으로 돌아가기
         </Button>
       </div>
+
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2">
+          <Toast key={toast.id} message={toast.message} />
+        </div>
+      )}
     </main>
   )
 }
