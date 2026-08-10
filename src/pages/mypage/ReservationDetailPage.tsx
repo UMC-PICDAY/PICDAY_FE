@@ -160,7 +160,7 @@ const ChecklistCard = ({
   onToggleItem,
 }: ChecklistCardProps) => {
   return (
-    <section className="flex h-[267px] w-full flex-col items-start gap-5 px-5 py-[10px]">
+    <section className="flex w-full flex-col items-start gap-5 px-5 py-[10px]">
       <div className="flex w-full flex-col items-start justify-center gap-5 rounded-[8px] border border-gray-10 bg-white p-5">
         <div className="flex items-center justify-center gap-[5px]">
           <IcCheck
@@ -335,6 +335,11 @@ const ReservationDetailPage = () => {
   const isCanceled =
     reservation.status === 'CANCELLED'
 
+  // 예약 완료(RESERVED) 상태엔 하단 액션이 없어서, 바를 그릴지 말지와
+  // 본문 하단 여백을 함께 이 값으로 판단한다 (빈 흰 바가 남지 않도록)
+  const hasBottomAction =
+    isShooting || isCanceled
+
   const statusLabel = isReserved
     ? '예약 완료'
     : isShooting
@@ -353,7 +358,11 @@ const ReservationDetailPage = () => {
     )
 
   return (
-    <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white">
+    <div
+      className={`relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white ${
+        hasBottomAction ? 'pb-[120px]' : ''
+      }`}
+    >
       <NavigationBar
         title="예약 상세"
         showRight={false}
@@ -403,50 +412,52 @@ const ReservationDetailPage = () => {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-1/2 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10">
-        {isShooting && (
-          <Button
-            variant="primary"
-            onClick={() => {
-              if (
-                reservation.reviewId !==
-                null
-              ) {
+      {hasBottomAction && (
+        <div className="fixed bottom-0 left-1/2 w-full max-w-[402px] -translate-x-1/2 bg-white px-5 pb-10">
+          {isShooting && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (
+                  reservation.reviewId !==
+                  null
+                ) {
+                  navigate(
+                    `/mypage/reviews/${reservation.reviewId}`,
+                  )
+                  return
+                }
+
                 navigate(
-                  `/mypage/reviews/${reservation.reviewId}`,
+                  `/mypage/reservations/${reservationId}/review`,
                 )
-                return
-              }
+              }}
+            >
+              {reservation.reviewId !== null
+                ? '내 리뷰 보기'
+                : '리뷰 작성'}
+            </Button>
+          )}
 
-              navigate(
-                `/mypage/reservations/${reservationId}/review`,
-              )
-            }}
-          >
-            {reservation.reviewId !== null
-              ? '내 리뷰 보기'
-              : '리뷰 작성'}
-          </Button>
-        )}
-
-        {isCanceled && (
-          <Button
-            variant="primary"
-            onClick={() =>
-              navigate(
-                `/studios/${reservation.studio.id}/concepts`,
-                {
-                  state: {
-                    openTimeSelectModal: true,
+          {isCanceled && (
+            <Button
+              variant="primary"
+              onClick={() =>
+                navigate(
+                  `/studios/${reservation.studio.id}/concepts`,
+                  {
+                    state: {
+                      openTimeSelectModal: true,
+                    },
                   },
-                },
-              )
-            }
-          >
-            재예약
-          </Button>
-        )}
-      </div>
+                )
+              }
+            >
+              재예약
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
