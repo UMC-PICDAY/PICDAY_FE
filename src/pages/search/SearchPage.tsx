@@ -12,7 +12,7 @@ import ResetChip from '@/components/common/ResetChip'
 import Button from '@/components/common/Button'
 import { useSearchDraftStore, formatSearchDate } from '@/stores/useSearchDraftStore'
 import { formatCalendarDateForUrl, serializeStudioSearchParams } from '@/utils/studioSearchParams'
-import type { StudioSearchFilters } from '@/utils/studioSearchParams'
+import type { StudioSearchFilters } from '@/types/studio'
 import { useCompareStore } from '@/stores/useCompareStore'
 
 const SearchPage = () => {

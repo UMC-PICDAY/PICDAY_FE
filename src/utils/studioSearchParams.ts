@@ -1,46 +1,9 @@
 import type { CalendarDate } from '@/components/common/Calendar'
-import {
-  getShootingCategoryLabel,
-  SHOOTING_CATEGORY_LABEL,
-} from '@/constants/shootingCategory'
-import {
-  getLocationLabel,
-  LOCATION_CATEGORY_LABEL,
-} from '@/constants/locationCategory'
-import type { StudioSort } from '@/types/studio'
-
-/** 백엔드 StudioSort enum 값과 표시 라벨을 한곳에서 관리합니다. */
-export const STUDIO_SORT_OPTIONS = [
-  { value: 'RECOMMENDED', label: '추천순' },
-  { value: 'PRICE_LOW', label: '가격낮은순' },
-  { value: 'RATING_HIGH', label: '별점순' },
-  { value: 'REVIEW_COUNT', label: '리뷰많은순' },
-] as const satisfies readonly { value: StudioSort; label: string }[]
-
-export const STUDIO_SERVICE_OPTIONS = [
-  { value: 'HAIR_MAKEUP', label: '헤어·메이크업 연계', quickLabel: '헤어·메이크업' },
-  { value: 'COSTUME', label: '의상비치', quickLabel: '의상' },
-  { value: 'PARKING', label: '주차가능', quickLabel: '주차' },
-] as const
-
-export type StudioServiceTag = (typeof STUDIO_SERVICE_OPTIONS)[number]['value']
-
-// URL 쿼리와 API 파라미터 이름·값을 동일하게 맞춘다.
-// location/concepts/services에는 한글 라벨이 아니라 백엔드 enum 코드가 들어간다.
-export interface StudioSearchFilters {
-  location?: string
-  date?: string
-  concepts: string[]
-  /** 이름 검색(2-3-2) 대상. 있으면 통합 검색 대신 이름 검색 API를 호출한다. */
-  studioId?: number
-  /** 표시 전용. API는 studioId만 쓰지만 검색 칩에 사진관 이름을 보여주려면 필요하다. */
-  studioName?: string
-  sort?: StudioSort
-  minPrice?: number
-  maxPrice?: number
-  services: StudioServiceTag[]
-  minRating?: number
-}
+import { SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
+import { LOCATION_CATEGORY_LABEL } from '@/constants/locationCategory'
+import { isStudioServiceTag } from '@/constants/studioService'
+import { isStudioSort } from '@/constants/studioSort'
+import type { StudioSearchFilters, StudioSort } from '@/types/studio'
 
 const OWNED_PARAM_KEYS = [
   'locationCategory',
@@ -54,9 +17,6 @@ const OWNED_PARAM_KEYS = [
   'serviceCode',
   'minRating',
 ] as const
-
-const SERVICE_VALUES = new Set<string>(STUDIO_SERVICE_OPTIONS.map(({ value }) => value))
-const SORT_VALUES = new Set<string>(STUDIO_SORT_OPTIONS.map(({ value }) => value))
 
 /**
  * 검색 위저드(B-2~B-5)는 한글 라벨('홍대')을 넘기고 API는 코드('HONGDAE')를 받는다.
@@ -78,7 +38,7 @@ const parseOptionalNumber = (value: string | null) => {
 
 const parseSort = (value: string | null): StudioSort | undefined => {
   const trimmed = value?.trim()
-  return trimmed && SORT_VALUES.has(trimmed) ? (trimmed as StudioSort) : undefined
+  return trimmed && isStudioSort(trimmed) ? trimmed : undefined
 }
 
 export const parseStudioSearchParams = (params: URLSearchParams): StudioSearchFilters => ({
@@ -92,9 +52,7 @@ export const parseStudioSearchParams = (params: URLSearchParams): StudioSearchFi
   sort: parseSort(params.get('sort')),
   minPrice: parseOptionalNumber(params.get('minPrice')),
   maxPrice: parseOptionalNumber(params.get('maxPrice')),
-  services: uniqueNonEmpty(params.getAll('serviceCode')).filter(
-    (value): value is StudioServiceTag => SERVICE_VALUES.has(value),
-  ),
+  services: uniqueNonEmpty(params.getAll('serviceCode')).filter(isStudioServiceTag),
   minRating: parseOptionalNumber(params.get('minRating')),
 })
 
@@ -127,70 +85,6 @@ export const serializeStudioSearchParams = (
   return params
 }
 
-/**
- * 이름 검색은 studioId 하나로 조회 가능하고,
- * 통합 검색은 위치·날짜·컨셉 중 최소 1개가 필요하다(없으면 STUDIO_40012).
- */
-export const isStudioNameSearch = (filters: StudioSearchFilters) =>
-  filters.studioId !== undefined
-
-export const hasBaseSearchCondition = (filters: StudioSearchFilters) =>
-  isStudioNameSearch(filters) ||
-  Boolean(filters.location || filters.date || filters.concepts.length > 0)
-
-/** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
-export const resetStudioSearchFilters = (
-  filters: StudioSearchFilters,
-): StudioSearchFilters => ({
-  location: filters.location,
-  date: filters.date,
-  concepts: filters.concepts,
-  studioId: filters.studioId,
-  studioName: filters.studioName,
-  sort: undefined,
-  minPrice: undefined,
-  maxPrice: undefined,
-  services: [],
-  minRating: undefined,
-})
-
-export const isStudioServiceTag = (value: string): value is StudioServiceTag =>
-  SERVICE_VALUES.has(value)
-
-export const isStudioSort = (value: string): value is StudioSort =>
-  SORT_VALUES.has(value)
-
-export const toggleStudioService = (
-  services: StudioServiceTag[],
-  service: StudioServiceTag,
-) => services.includes(service)
-  ? services.filter((value) => value !== service)
-  : [...services, service]
-
+/** URL·API가 쓰는 YYYY-MM-DD 포맷의 정의부. parse가 이 포맷을 전제한다. */
 export const formatCalendarDateForUrl = ({ year, month, day }: CalendarDate) =>
   `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-
-export const formatCalendarDateForDisplay = ({ year, month, day }: CalendarDate) => {
-  const yy = String(year).slice(2)
-  const mm = String(month).padStart(2, '0')
-  const dd = String(day).padStart(2, '0')
-  return `${yy}.${mm}.${dd}`
-}
-
-const formatUrlDateForChip = (value: string) => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-  if (!match) return value
-  return `${Number(match[2])}월${Number(match[3])}일`
-}
-
-export const buildStudioSearchChipLabel = (filters: StudioSearchFilters) => {
-  // 필터에는 코드가 들어 있으므로 칩에는 한글 라벨로 바꿔 보여준다.
-  const labels = [
-    filters.concepts.map(getShootingCategoryLabel).join(','),
-    filters.studioName ??
-      (filters.location ? getLocationLabel(filters.location) : undefined),
-    filters.date ? formatUrlDateForChip(filters.date) : undefined,
-  ].filter((label): label is string => Boolean(label))
-
-  return labels.length > 0 ? labels.join('·') : '사진관 검색'
-}
