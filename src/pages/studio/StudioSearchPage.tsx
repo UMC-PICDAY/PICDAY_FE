@@ -24,6 +24,7 @@ import { studioSearchQueryKey, useStudioSearch } from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
 import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
+import type { ShootingCategory } from '@/services/studio'
 import {
   buildStudioSearchChipLabel,
   hasBaseSearchCondition,
@@ -37,25 +38,6 @@ import {
   toggleStudioService,
 } from '@/utils/studioSearchParams'
 
-type ComparePurpose =
-  | '증명'
-  | '프로필'
-  | '개인화보'
-  | '취업'
-  | '가족'
-  | '우정'
-
-const SHOOTING_CATEGORY_TO_PURPOSE: Record<
-  string,
-  ComparePurpose
-> = {
-  ID_PHOTO: '증명',
-  PROFILE: '프로필',
-  PERSONAL_PORTRAIT: '개인화보',
-  JOB_PHOTO: '취업',
-  FAMILY: '가족',
-  FRIENDSHIP: '우정',
-}
   
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
@@ -69,23 +51,21 @@ const StudioSearchPage = () => {
   const location = useLocation()
 
   const navigationState = location.state as {
-    purpose?: ComparePurpose
+    shootingCategory?: ShootingCategory
     snap?: SheetSnap
     } | null
 
-  const navigationPurpose = navigationState?.purpose
+  const navigationShootingCategory = navigationState?.shootingCategory
   const navigationSnap = navigationState?.snap
   
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
 
-  const searchPurpose =
-    SHOOTING_CATEGORY_TO_PURPOSE[
-      filters.concepts[0] ?? ''
-    ]
+  const searchShootingCategory = 
+    (filters.concepts[0] as ShootingCategory || undefined)
 
-  const comparePurpose =
-    navigationPurpose ?? searchPurpose
+  const compareShootingCategory =
+    navigationShootingCategory ?? searchShootingCategory
 
   const [mapError, setMapError] = useState(false)
   const queryClient = useQueryClient()
@@ -164,7 +144,7 @@ const StudioSearchPage = () => {
     navigate('/compare', {
       state: {
         studioIds: compareItems.map((item) => item.studioId),
-        purpose: comparePurpose,
+        shootingCategory: compareShootingCategory,
         studioSearch: location.search,
       },
     })
