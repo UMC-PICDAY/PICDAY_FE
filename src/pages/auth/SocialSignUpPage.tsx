@@ -17,6 +17,7 @@ import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import { useToast } from '@/hooks/useToast'
 import { completeSocialSignup } from '@/services/auth'
+import { queryClient } from '@/services/queryClient'
 import { ApiError } from '@/types/common'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { REQUIRED_TERMS, TERM_ITEMS } from '@/constants/terms'
@@ -75,6 +76,7 @@ const SocialSignUpPage = () => {
         signupToken,
         TERM_ITEMS.filter(({ key }) => terms[key]).map(({ id }) => id),
       )
+      queryClient.clear()
       authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
       clearSocialLoginReturnTo()
       navigate(returnTo, { replace: true })

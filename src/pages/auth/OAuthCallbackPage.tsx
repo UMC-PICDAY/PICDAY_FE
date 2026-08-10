@@ -11,6 +11,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import NavigationBar from '@/components/layout/NavigationBar'
 import LogoType from '@/components/layout/LogoType'
 import { socialLogin } from '@/services/auth'
+import { queryClient } from '@/services/queryClient'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { SocialProvider } from '@/types/auth'
 import { clearSocialLoginReturnTo, getSocialLoginReturnTo } from '@/utils/authRedirect'
@@ -52,6 +53,7 @@ const OAuthCallbackPage = () => {
           })
           return
         }
+        queryClient.clear()
         authLogin({ accessToken: result.token.accessToken, refreshToken: result.token.refreshToken })
         clearSocialLoginReturnTo()
         navigate(returnTo, { replace: true })

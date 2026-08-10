@@ -14,6 +14,7 @@ import Toast from '@/components/common/Toast'
 import { useToast } from '@/hooks/useToast'
 import { useValidatedField } from '@/hooks/useValidatedField'
 import { checkLoginIdAvailable, login, signup } from '@/services/auth'
+import { queryClient } from '@/services/queryClient'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useSignUpDraftStore } from '@/stores/useSignUpDraftStore'
 import { ApiError } from '@/types/common'
@@ -160,6 +161,7 @@ const SignUpPage = () => {
       // 이 로그인 호출만 실패해도 회원가입 자체는 이미 끝난 상태이니 완료 화면으로는 그대로 이동한다.
       try {
         const { token } = await login(id.fieldProps.value, password.fieldProps.value)
+        queryClient.clear()
         authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
       } catch (loginError) {
         console.error('가입 직후 자동 로그인 실패:', loginError)
