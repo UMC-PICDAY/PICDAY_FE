@@ -25,6 +25,7 @@ import SegmentedTab from '@/components/common/SegmentedTab'
 import Toast from '@/components/common/Toast'
 import { IcEvent2 } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
+import { useToast } from '@/hooks/useToast'
 import { ReservationListSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { getMe } from '@/services/auth'
 import {
@@ -78,12 +79,7 @@ const MyReservationPage = () => {
   const location = useLocation()
   const [searchParams] = useSearchParams()
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  const showToast = (message: string) => {
-    setToastMessage(message)
-    window.setTimeout(() => setToastMessage(null), 3000)
-  }
+  const { toast, showToast } = useToast()
 
   // 다른 화면(예약 상세 등)에서 조회 실패로 이 화면으로 돌아올 때 넘겨준 안내
   // 메시지를 한 번만 보여주고, history state에서 지워 새로고침해도 다시 안 뜨게 한다.
@@ -97,7 +93,7 @@ const MyReservationPage = () => {
       replace: true,
       state: null,
     })
-  }, [location, navigate])
+  }, [location, navigate, showToast])
 
   const [
     reservations,
@@ -360,7 +356,7 @@ const MyReservationPage = () => {
           error,
         )
 
-        setToastMessage(
+        showToast(
           '예약 정보를 불러오지 못했습니다. 다시 시도해 주세요.'
         )
       }
@@ -514,9 +510,9 @@ const MyReservationPage = () => {
         <AppTabBar activeTab="mypage" />
       </div>
 
-      {toastMessage && (
+      {toast && (
         <div className="fixed bottom-[110px] left-1/2 z-[60] -translate-x-1/2">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 /** Figma A-2 로그인 화면 (라우트: /login) */
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
 import NavigationBar from '@/components/layout/NavigationBar'
@@ -8,21 +8,18 @@ import InputField from '@/components/common/InputField'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import { IcClose } from '@/components/icons'
+import { useToast } from '@/hooks/useToast'
 import { getSocialAuthUrl, login } from '@/services/auth'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { SocialProvider } from '@/types/auth'
 import { clearSocialLoginReturnTo, getSafeReturnTo, saveSocialLoginReturnTo } from '@/utils/authRedirect'
 
-type LoginToast = 'network' | 'auth' | null
-
 interface LoginLocationState {
   returnTo?: string
 }
 
-const TOAST_MESSAGE: Record<Exclude<LoginToast, null>, string> = {
-  network: '연결 상태를 확인해 주세요',
-  auth: '로그인에 실패했어요. 다시 시도해 주세요',
-}
+const NETWORK_ERROR_MESSAGE = '연결 상태를 확인해 주세요'
+const AUTH_ERROR_MESSAGE = '로그인에 실패했어요. 다시 시도해 주세요'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -34,14 +31,8 @@ const LoginPage = () => {
   const authLogin = useAuthStore((state) => state.login)
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
-  const [toast, setToast] = useState<LoginToast>(null)
+  const { toast, showToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), 3000)
-    return () => clearTimeout(timer)
-  }, [toast])
 
   const canSubmit = loginId !== '' && password !== '' && !isSubmitting
 
@@ -55,7 +46,7 @@ const LoginPage = () => {
       clearSocialLoginReturnTo()
       navigate(returnTo, { replace: true })
     } catch {
-      setToast(navigator.onLine ? 'auth' : 'network')
+      showToast(navigator.onLine ? AUTH_ERROR_MESSAGE : NETWORK_ERROR_MESSAGE)
     } finally {
       setIsSubmitting(false)
     }
@@ -69,7 +60,7 @@ const LoginPage = () => {
       window.location.href = authUrl
     } catch {
       clearSocialLoginReturnTo()
-      setToast(navigator.onLine ? 'auth' : 'network')
+      showToast(navigator.onLine ? AUTH_ERROR_MESSAGE : NETWORK_ERROR_MESSAGE)
     }
   }
 
@@ -187,7 +178,7 @@ const LoginPage = () => {
 
       {toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-10 flex justify-center px-5">
-          <Toast message={TOAST_MESSAGE[toast]} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </div>

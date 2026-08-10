@@ -17,6 +17,7 @@ import Alert2 from '@/components/common/Alert2'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import NavigationBar from '@/components/layout/NavigationBar'
+import { useToast } from '@/hooks/useToast'
 import {
   cancelReservation,
   getReservationDetail,
@@ -55,12 +56,7 @@ const ReservationCancelPage = () => {
     setIsSubmitting,
   ] = useState(false)
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  const showToast = (message: string) => {
-    setToastMessage(message)
-    window.setTimeout(() => setToastMessage(null), 3000)
-  }
+  const { toast, showToast } = useToast()
 
   useEffect(() => {
     if (!reservationId) {
@@ -305,9 +301,9 @@ const ReservationCancelPage = () => {
         </div>
       )}
 
-      {toastMessage && (
+      {toast && (
         <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </main>

@@ -6,6 +6,7 @@
  * 회원탈퇴 팝업 플로우를 처리함
  */
 import Toast from '@/components/common/Toast'
+import { useToast } from '@/hooks/useToast'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -33,16 +34,7 @@ const ProfileSettingPage = () => {
 
   const clearAuth = useAuthStore((state) => state.logout)
 
-  const [toastMessage, setToastMessage] = useState('')
-
-  // 토스트 메시지 표시
-  const showToast = (message: string) => {
-    setToastMessage(message)
-
-    window.setTimeout(() => {
-      setToastMessage('')
-    }, 3000)
-  }
+  const { toast, showToast } = useToast()
 
   // 사용자 정보
   const [nickname, setNickname] = useState('')
@@ -118,7 +110,7 @@ const ProfileSettingPage = () => {
     }
 
     fetchMyInfo()
-  }, [])
+  }, [showToast])
 
   // 닉네임 중복 확인
   useEffect(() => {
@@ -416,9 +408,9 @@ const ProfileSettingPage = () => {
         </div>
       )}
 
-      {toastMessage && (
+      {toast && (
         <div className="fixed bottom-[110px] left-1/2 z-[60] -translate-x-1/2">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </main>

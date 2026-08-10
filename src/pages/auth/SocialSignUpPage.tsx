@@ -15,6 +15,7 @@ import InputField from '@/components/common/InputField'
 import Agreement from '@/components/common/Agreement'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
+import { useToast } from '@/hooks/useToast'
 import { completeSocialSignup } from '@/services/auth'
 import { ApiError } from '@/types/common'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -42,7 +43,7 @@ const SocialSignUpPage = () => {
     marketing: false,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const { toast, showToast } = useToast()
 
   useEffect(() => {
     if (!signupToken) {
@@ -52,12 +53,6 @@ const SocialSignUpPage = () => {
       })
     }
   }, [signupToken, navigate, returnTo])
-
-  useEffect(() => {
-    if (!toastMessage) return
-    const timer = setTimeout(() => setToastMessage(null), 3000)
-    return () => clearTimeout(timer)
-  }, [toastMessage])
 
   const isAllAgreed = TERM_ITEMS.every(({ key }) => terms[key])
   const canSubmit = REQUIRED_TERMS.every((key) => terms[key]) && !isSubmitting
@@ -84,7 +79,7 @@ const SocialSignUpPage = () => {
       clearSocialLoginReturnTo()
       navigate(returnTo, { replace: true })
     } catch (error) {
-      setToastMessage(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
+      showToast(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
     } finally {
       setIsSubmitting(false)
     }
@@ -143,9 +138,9 @@ const SocialSignUpPage = () => {
         </Button>
       </div>
 
-      {toastMessage && (
+      {toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 flex justify-center px-5">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </div>

@@ -13,16 +13,12 @@ import DateChangeSheet from '@/pages/studio/components/DateChangeSheet'
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
 import { useStudioDetail, useStudioProducts, useStudioSlots } from '@/hooks/useStudio'
+import { useToast } from '@/hooks/useToast'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { StudioDateTimeSelection, StudioProduct } from '@/types/studio'
 
 import type { CalendarDate } from '@/components/common/Calendar'
-
-interface ReservationToast {
-  id: number
-  message: string
-}
 
 const formatDate = ({ year, month, day }: CalendarDate) =>
   [year, month, day]
@@ -100,8 +96,7 @@ const ConceptListPage = () => {
     dateTimeSelection?.date ?? parseCalendarDate(searchParams.get(DATE_PARAM))
   // 시트에서 선택 중인 날짜 (슬롯 조회 트리거)
   const [sheetDate, setSheetDate] = useState<CalendarDate | undefined>(undefined)
-  const [reservationToast, setReservationToast] =
-    useState<ReservationToast | null>(null)
+  const { toast: reservationToast, showToast: showReservationToast, clearToast: clearReservationToast } = useToast()
   // 예약 도메인 복귀 진입(state/query) 1회만 처리
   const entryHandledRef = useRef(false)
   const [favorited, setFavorited] = useState(false)
@@ -132,13 +127,6 @@ const ConceptListPage = () => {
   const isSlotsLoading = slotsQuery.isLoading
   const isSlotsError = slotsQuery.isError
 
-  useEffect(() => {
-    if (!reservationToast) return
-
-    const timer = window.setTimeout(() => setReservationToast(null), 3000)
-    return () => window.clearTimeout(timer)
-  }, [reservationToast])
-
   const subtitleDate = selectedDate ? formatDate(selectedDate) : '날짜, 시간 선택'
   // 날짜만 정해진 상태에서는 시간 자리에 남은 할 일을 띄운다.
   const subtitleTime = dateTimeSelection
@@ -161,10 +149,6 @@ const ConceptListPage = () => {
     setSearchParams(nextParams, { 
       replace: true,
       state: locationState, })
-  }
-
-  const showReservationToast = (message: string) => {
-    setReservationToast({ id: Date.now(), message })
   }
 
   const handleToggleFavorite = async () => {
@@ -194,7 +178,7 @@ const ConceptListPage = () => {
     entryHandledRef.current = true
 
     if (showTimeToast) {
-      setReservationToast({ id: Date.now(), message: '이미 예약된 시간대예요' })
+      showReservationToast('이미 예약된 시간대예요')
     }
     if (entryState?.openTimeSelectModal) {
       setSheetDate(parseDateTimeSelection(searchParams)?.date)
@@ -216,7 +200,7 @@ const ConceptListPage = () => {
         },
        },
     )
-  }, [location, searchParams, navigate])
+  }, [location, searchParams, navigate, showReservationToast])
 
   const handleLogin = () => {
     navigate('/login', {
@@ -249,7 +233,7 @@ const ConceptListPage = () => {
       return
     }
 
-    setReservationToast(null)
+    clearReservationToast()
 
     // 예약 생성(3-x)은 예약 도메인 담당 → 검증 통과 시 예약 화면으로 계약 데이터 전달
     const reservationDate = toApiDate(dateTimeSelection.date)

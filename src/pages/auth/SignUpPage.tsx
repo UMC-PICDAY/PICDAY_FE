@@ -11,6 +11,7 @@ import InputField from '@/components/common/InputField'
 import Agreement from '@/components/common/Agreement'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
+import { useToast } from '@/hooks/useToast'
 import { useValidatedField } from '@/hooks/useValidatedField'
 import { checkLoginIdAvailable, login, signup } from '@/services/auth'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -65,7 +66,7 @@ const SignUpPage = () => {
   const [terms, setTerms] = useState<Record<TermKey, boolean>>(signUpDraft.terms)
   const [idAvailability, setIdAvailability] = useState<IdAvailability>('idle')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const { toast, showToast } = useToast()
   // 중복확인 응답이 도착한 순서가 요청한 순서와 다를 수 있어(늦게 보낸 요청이 먼저 응답),
   // 마지막으로 보낸 요청의 결과만 반영하도록 매 요청마다 값을 갱신해 최신 요청인지 비교한다.
   const latestIdCheckRef = useRef('')
@@ -100,11 +101,6 @@ const SignUpPage = () => {
     setIdAvailability('idle')
   }, [id.fieldProps.value])
 
-  useEffect(() => {
-    if (!toastMessage) return
-    const timer = setTimeout(() => setToastMessage(null), 3000)
-    return () => clearTimeout(timer)
-  }, [toastMessage])
 
   const isAllAgreed = TERM_ITEMS.every(({ key }) => terms[key])
 
@@ -172,7 +168,7 @@ const SignUpPage = () => {
       useSignUpDraftStore.getState().reset()
       navigate('/signup/complete')
     } catch (error) {
-      setToastMessage(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
+      showToast(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
     } finally {
       setIsSubmitting(false)
     }
@@ -229,9 +225,9 @@ const SignUpPage = () => {
         </Button>
       </div>
 
-      {toastMessage && (
+      {toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 flex justify-center px-5">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </div>
