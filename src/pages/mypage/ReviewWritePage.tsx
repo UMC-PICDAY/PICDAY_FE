@@ -18,6 +18,7 @@ import Toast from '@/components/common/Toast'
 import { IcStar, IcStar2,} from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 import { useReservationDetail } from '@/hooks/useReservation'
+import { ReservationDetailSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { createReview, uploadImage,} from '@/services/review'
 import { ApiError } from '@/types/common'
 import type { ReviewKeyword } from '@/types/review'
@@ -103,6 +104,7 @@ const ReviewWritePage = () => {
 
   const {
     data: reservation,
+    isLoading: isReservationLoading,
     isError: hasReservationError,
   } = useReservationDetail(reservationId)
 
@@ -403,6 +405,10 @@ const ReviewWritePage = () => {
             navigate(-1)
           }
         />
+
+        {isReservationLoading && (
+          <ReservationDetailSkeleton />
+        )}
       </div>
     )
   }
