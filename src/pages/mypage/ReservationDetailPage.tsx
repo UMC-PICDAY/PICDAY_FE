@@ -25,6 +25,7 @@ import {
   getReservationDetail,
   type ReservationDetailData,
 } from '@/services/reservation'
+import { formatReservationDateTimeLong } from '@/utils/formatReservationDateTime'
 
 interface ChecklistItem {
   id: string
@@ -55,30 +56,6 @@ const saveCheckedIds = (reservationId: string, checkedIds: string[]) => {
     // 프라이빗 브라우징 등으로 localStorage 접근이 막혀있어도
     // 체크 자체(화면 동작)는 계속 되어야 하니 조용히 무시
   }
-}
-
-const formatReservationDateTime = (
-  reservationDate: string,
-  reservationTime: string,
-) => {
-  const [year, month, day] = reservationDate
-    .split('-')
-    .map(Number)
-
-  const date = new Date(
-    year,
-    month - 1,
-    day,
-  )
-
-  const weekday = new Intl.DateTimeFormat(
-    'ko-KR',
-    {
-      weekday: 'short',
-    },
-  ).format(date)
-
-  return `${year}년 ${month}월 ${day}일 (${weekday}) ${reservationTime}`
 }
 
 const formatCanceledAt = (
@@ -300,6 +277,10 @@ const ReservationDetailPage = () => {
 
           navigate('/mypage', {
             replace: true,
+            state: {
+              toastMessage:
+                '예약 정보를 불러오지 못했습니다.',
+            },
           })
         }
       }
@@ -361,7 +342,7 @@ const ReservationDetailPage = () => {
       : '취소'
 
   const formattedReservationDate =
-    formatReservationDateTime(
+    formatReservationDateTimeLong(
       reservation.timeSlot.date,
       reservation.timeSlot.startTime,
     )

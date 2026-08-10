@@ -348,24 +348,12 @@ const ReservationPage = () => {
         agreedTermIds,
       })
 
-      navigate('/reservation/complete', {
+      navigate(`/reservation/complete/${result.reservationId}`,
+        {
         replace: true,
-        state: {
-          reservation: {
-            reservationId:
-              result.reservationId,
-            status: result.status,
-            createdAt: result.createdAt,
-            studioName:
-              reservation.studioName,
-            reservationDateTime:
-              reservation.reservationDateTime,
-            conceptName:
-              reservation.conceptName,
-            totalAmount: result.totalPrice,
-          },
         },
-      })
+      )
+        
     } catch (error) {
       if (!(error instanceof ApiError)) {
         setModalType('reservationFailed')

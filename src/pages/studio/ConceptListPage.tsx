@@ -180,6 +180,7 @@ const ConceptListPage = () => {
       }
     } catch {
       setFavorited(!next)
+      showReservationToast('찜 처리에 실패했어요. 다시 시도해 주세요')
     }
   }
 

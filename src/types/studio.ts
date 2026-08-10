@@ -69,6 +69,24 @@ export interface StudioSearchByNameParams {
   minRating?: number
 }
 
+// 검색 화면(URL)의 상태 모델. 위 API 요청 타입과 달리 통합·이름 검색을 하나로
+// 품으며, URL 쿼리와 API 파라미터 이름·값을 동일하게 맞춘다.
+// location/concepts/services에는 한글 라벨이 아니라 백엔드 enum 코드가 들어간다.
+export interface StudioSearchFilters {
+  location?: string
+  date?: string
+  concepts: string[]
+  /** 이름 검색(2-3-2) 대상. 있으면 통합 검색 대신 이름 검색 API를 호출한다. */
+  studioId?: number
+  /** 표시 전용. API는 studioId만 쓰지만 검색 칩에 사진관 이름을 보여주려면 필요하다. */
+  studioName?: string
+  sort?: StudioSort
+  minPrice?: number
+  maxPrice?: number
+  services: StudioServiceTag[]
+  minRating?: number
+}
+
 export interface StudioSearchProductSummary {
   productId: number
   productName: string
@@ -145,6 +163,9 @@ export interface StudioRepresentativeProduct {
 
 // 실제 응답 enum(swagger 기준). FE에서 아이콘/라벨을 매핑해서 씀 (StudioDetailPage 참고)
 export type StudioServiceCode = 'HAIR_MAKEUP' | 'PARKING' | 'COSTUME' | 'WIFI'
+
+/** 검색 필터에 노출하는 서비스 코드. WIFI는 응답에만 있고 필터 대상이 아니다. */
+export type StudioServiceTag = Exclude<StudioServiceCode, 'WIFI'>
 
 // stationLineCodes를 제외한 전 필드가 nullable (명세 기준).
 // 위도·경도가 없으면 지도 대신 미제공 상태를 표시한다.

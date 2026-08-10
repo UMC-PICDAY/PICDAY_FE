@@ -7,6 +7,7 @@ import CompareActionBar from '@/components/common/CompareActionBar'
 import FilterBar2 from '@/components/common/FilterBar2'
 import MapButton from '@/components/common/MapButton'
 import Notice2 from '@/components/common/Notice2'
+import Toast from '@/components/common/Toast'
 import { IcError, IcFilter, IcPin } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
 import NavigationBar from '@/components/layout/NavigationBar'
@@ -19,75 +20,104 @@ import StudioSearchSkeleton from '@/pages/studio/components/StudioSearchSkeleton
 import { useBottomSheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import type { SheetSnap } from '@/pages/studio/hooks/useBottomSheetSnap'
 import { getLocationLabel } from '@/constants/locationCategory'
-import { getShootingCategoryLabel } from '@/constants/shootingCategory'
-import { studioSearchQueryKey, useStudioSearch } from '@/hooks/useStudio'
+import {
+  getShootingCategoryLabel,
+  SHOOTING_CATEGORY_LABEL,
+} from '@/constants/shootingCategory'
+import {
+  hasBaseSearchCondition,
+  studioSearchQueryKey,
+  useStudioSearch,
+} from '@/hooks/useStudio'
 import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
-import type { StudioSearchItem, StudioSearchResult } from '@/types/studio'
+import type {
+  StudioSearchFilters,
+  StudioSearchItem,
+  StudioSearchResult,
+} from '@/types/studio'
+import type { ShootingCategory } from '@/services/studio'
 import {
-  buildStudioSearchChipLabel,
-  hasBaseSearchCondition,
+  getStudioServiceShortLabel,
   isStudioServiceTag,
-  isStudioSort,
+  STUDIO_SERVICE_FILTER_CODES,
+} from '@/constants/studioService'
+import { isStudioSort, STUDIO_SORT_OPTIONS } from '@/constants/studioSort'
+import {
   parseStudioSearchParams,
-  resetStudioSearchFilters,
   serializeStudioSearchParams,
-  STUDIO_SERVICE_OPTIONS,
-  STUDIO_SORT_OPTIONS,
-  toggleStudioService,
 } from '@/utils/studioSearchParams'
 
-type ComparePurpose =
-  | '증명'
-  | '프로필'
-  | '개인화보'
-  | '취업'
-  | '가족'
-  | '우정'
-
-const SHOOTING_CATEGORY_TO_PURPOSE: Record<
-  string,
-  ComparePurpose
-> = {
-  ID_PHOTO: '증명',
-  PROFILE: '프로필',
-  PERSONAL_PORTRAIT: '개인화보',
-  JOB_PHOTO: '취업',
-  FAMILY: '가족',
-  FRIENDSHIP: '우정',
-}
-  
 const QUICK_FILTER_ITEMS = [
   ...STUDIO_SORT_OPTIONS,
-  ...STUDIO_SERVICE_OPTIONS
-    .filter(({ value }) => value !== 'COSTUME')
-    .map(({ value, quickLabel }) => ({ value, label: quickLabel })),
+  ...STUDIO_SERVICE_FILTER_CODES
+    .filter((code) => code !== 'COSTUME')
+    .map((code) => ({ value: code, label: getStudioServiceShortLabel(code) })),
 ]
+
+const toggle = <T extends string>(list: T[], value: T) =>
+  list.includes(value)
+    ? list.filter((item) => item !== value)
+    : [...list, value]
+
+/** 상세 필터(정렬·가격·서비스·별점)만 비우고 기본 검색조건은 유지한다(결과없음 화면의 '필터 초기화'). */
+const resetStudioSearchFilters = (
+  filters: StudioSearchFilters,
+): StudioSearchFilters => ({
+  ...filters,
+  sort: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
+  services: [],
+  minRating: undefined,
+})
+
+const formatUrlDateForChip = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return value
+  return `${Number(match[2])}월${Number(match[3])}일`
+}
+
+const buildStudioSearchChipLabel = (filters: StudioSearchFilters) => {
+  // 필터에는 코드가 들어 있으므로 칩에는 한글 라벨로 바꿔 보여준다.
+  const labels = [
+    filters.concepts.map(getShootingCategoryLabel).join(','),
+    filters.studioName ??
+      (filters.location ? getLocationLabel(filters.location) : undefined),
+    filters.date ? formatUrlDateForChip(filters.date) : undefined,
+  ].filter((label): label is string => Boolean(label))
+
+  return labels.length > 0 ? labels.join('·') : '사진관 검색'
+}
 
 const StudioSearchPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
+  // shootingCategory는 촬영 컨셉 enum 코드('PROFILE' 등). 받는 쪽
+  // (ComparePurposePage/CompareTwoPage/CompareThreePage)이 렌더링 시점에만
+  // getShootingCategoryLabel로 한글 라벨로 바꿔서 보여준다.
   const navigationState = location.state as {
-    purpose?: ComparePurpose
+    shootingCategory?: ShootingCategory
     snap?: SheetSnap
     } | null
 
-  const navigationPurpose = navigationState?.purpose
+  const navigationShootingCategory = navigationState?.shootingCategory
   const navigationSnap = navigationState?.snap
-  
+
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = parseStudioSearchParams(searchParams)
 
-  const searchPurpose =
-    SHOOTING_CATEGORY_TO_PURPOSE[
-      filters.concepts[0] ?? ''
-    ]
+  const searchShootingCategory =
+    filters.concepts[0] && filters.concepts[0] in SHOOTING_CATEGORY_LABEL
+      ? (filters.concepts[0] as ShootingCategory)
+      : undefined
 
-  const comparePurpose =
-    navigationPurpose ?? searchPurpose
+  const compareShootingCategory =
+    navigationShootingCategory ?? searchShootingCategory
 
   const [mapError, setMapError] = useState(false)
+  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
@@ -146,6 +176,8 @@ const StudioSearchPage = () => {
       }
     } catch {
       queryClient.invalidateQueries({ queryKey })
+      setFavoriteErrorMessage('찜 처리에 실패했어요. 다시 시도해 주세요')
+      setTimeout(() => setFavoriteErrorMessage(null), 2000)
     }
   }
 
@@ -164,7 +196,7 @@ const StudioSearchPage = () => {
     navigate('/compare', {
       state: {
         studioIds: compareItems.map((item) => item.studioId),
-        purpose: comparePurpose,
+        shootingCategory: compareShootingCategory,
         studioSearch: location.search,
       },
     })
@@ -247,17 +279,22 @@ const StudioSearchPage = () => {
     if (!canQuickFilter) return
 
     const nextFilters = isStudioServiceTag(value)
-      ? { ...filters, services: toggleStudioService(filters.services, value) }
+      ? { ...filters, services: toggle(filters.services, value) }
       : isStudioSort(value)
         ? // 서비스 칩과 동일하게 같은 정렬을 다시 누르면 해제한다.
           { ...filters, sort: filters.sort === value ? undefined : value }
         : filters
-    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams))
+    // 칩 조작은 화면 이동이 아니라 같은 화면의 조건 변경이므로 히스토리를 쌓지
+    // 않는다. 쌓으면 칩을 누른 횟수만큼 뒤로가기를 눌러야 화면을 빠져나간다.
+    setSearchParams(serializeStudioSearchParams(nextFilters, searchParams), {
+      replace: true,
+    })
   }
 
   const handleResetFilters = () => {
     setSearchParams(
       serializeStudioSearchParams(resetStudioSearchFilters(filters), searchParams),
+      { replace: true },
     )
   }
 
@@ -422,6 +459,12 @@ const StudioSearchPage = () => {
           </StudioResultsBottomSheet>
         )}
       </div>
+
+      {favoriteErrorMessage && (
+        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
+          <Toast message={favoriteErrorMessage} />
+        </div>
+      )}
     </div>
   )
 }
