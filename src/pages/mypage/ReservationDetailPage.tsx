@@ -291,27 +291,25 @@ const ReservationDetailPage = () => {
   const handleChecklistItemClick = (
     id: string,
   ) => {
-    setChecklistItems((prev) => {
-      const next = prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              checked: !item.checked,
-            }
-          : item,
+    const next = checklistItems.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            checked: !item.checked,
+          }
+        : item,
+    )
+
+    setChecklistItems(next)
+
+    if (reservationId) {
+      saveCheckedIds(
+        reservationId,
+        next
+          .filter((item) => item.checked)
+          .map((item) => item.id),
       )
-
-      if (reservationId) {
-        saveCheckedIds(
-          reservationId,
-          next
-            .filter((item) => item.checked)
-            .map((item) => item.id),
-        )
-      }
-
-      return next
-    })
+    }
   }
 
   if (!reservation) {
