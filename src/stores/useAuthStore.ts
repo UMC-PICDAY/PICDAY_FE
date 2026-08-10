@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { queryClient } from '@/services/queryClient'
+import { clearUserSessionState } from '@/utils/clearUserSession'
 
 interface LoginTokens {
   accessToken: string
@@ -31,11 +31,11 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: tokens?.refreshToken ?? null,
         }),
       // 명시적 로그아웃(ProfileSettingPage)과 자동 로그아웃(client.ts의 401
-      // 처리)이 모두 이 액션을 거치므로, 여기서 쿼리 캐시를 비워야 다음
+      // 처리)이 모두 이 액션을 거치므로, 여기서 상태를 비워야 다음
       // 사용자가 같은 브라우저에서 로그인했을 때 이전 사용자의 getMe() 등
       // 캐시된 응답이 그대로 보이는 걸 막을 수 있다.
       logout: () => {
-        queryClient.clear()
+        clearUserSessionState()
         set({ isLoggedIn: false, accessToken: null, refreshToken: null })
       },
       setAccessToken: (accessToken) => set({ accessToken }),

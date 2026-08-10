@@ -10,8 +10,8 @@ import Toast from '@/components/common/Toast'
 import { IcClose } from '@/components/icons'
 import { useToast } from '@/hooks/useToast'
 import { getSocialAuthUrl, login } from '@/services/auth'
-import { queryClient } from '@/services/queryClient'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { clearUserSessionState } from '@/utils/clearUserSession'
 import type { SocialProvider } from '@/types/auth'
 import { clearSocialLoginReturnTo, getSafeReturnTo, saveSocialLoginReturnTo } from '@/utils/authRedirect'
 
@@ -61,9 +61,9 @@ const LoginPage = () => {
     try {
       const { token } = await login(loginId, password)
       // 이전 사용자가 로그아웃 없이 다른 계정으로 로그인하는 경우까지
-      // 막으려면 새 로그인 시점에도 캐시를 비워야 한다 (로그아웃 시
+      // 막으려면 새 로그인 시점에도 상태를 비워야 한다 (로그아웃 시
       // 비우는 것만으로는 "로그아웃 없이 계정 전환" 케이스를 못 막음).
-      queryClient.clear()
+      clearUserSessionState()
       authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
       clearSocialLoginReturnTo()
       navigate(returnTo, { replace: true })

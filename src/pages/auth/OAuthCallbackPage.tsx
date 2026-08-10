@@ -11,10 +11,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import NavigationBar from '@/components/layout/NavigationBar'
 import LogoType from '@/components/layout/LogoType'
 import { socialLogin } from '@/services/auth'
-import { queryClient } from '@/services/queryClient'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { SocialProvider } from '@/types/auth'
 import { clearSocialLoginReturnTo, getSocialLoginReturnTo } from '@/utils/authRedirect'
+import { clearUserSessionState } from '@/utils/clearUserSession'
 
 const SOCIAL_LOGIN_ERROR_MESSAGE = '소셜 로그인에 실패했어요. 다시 시도해 주세요'
 
@@ -53,7 +53,7 @@ const OAuthCallbackPage = () => {
           })
           return
         }
-        queryClient.clear()
+        clearUserSessionState()
         authLogin({ accessToken: result.token.accessToken, refreshToken: result.token.refreshToken })
         clearSocialLoginReturnTo()
         navigate(returnTo, { replace: true })

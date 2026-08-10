@@ -17,13 +17,13 @@ import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import { useToast } from '@/hooks/useToast'
 import { completeSocialSignup } from '@/services/auth'
-import { queryClient } from '@/services/queryClient'
 import { ApiError } from '@/types/common'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { REQUIRED_TERMS, TERM_ITEMS } from '@/constants/terms'
 import type { TermKey } from '@/constants/terms'
 import type { SocialInfo } from '@/types/auth'
 import { clearSocialLoginReturnTo, getSocialLoginReturnTo } from '@/utils/authRedirect'
+import { clearUserSessionState } from '@/utils/clearUserSession'
 
 interface LocationState {
   signupToken?: string
@@ -76,7 +76,7 @@ const SocialSignUpPage = () => {
         signupToken,
         TERM_ITEMS.filter(({ key }) => terms[key]).map(({ id }) => id),
       )
-      queryClient.clear()
+      clearUserSessionState()
       authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
       clearSocialLoginReturnTo()
       navigate(returnTo, { replace: true })
