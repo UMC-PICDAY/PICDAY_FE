@@ -5,7 +5,7 @@ import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
 import Dropdown from '@/components/common/Dropdown'
 import Notice2 from '@/components/common/Notice2'
-import { IcError, IcFilter, IcStar, IcStarHalf } from '@/components/icons'
+import { IcError, IcFilter, IcStar, IcStar2, IcStarHalf } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
@@ -17,6 +17,47 @@ import {
 import { useStudioReviews } from '@/hooks/useStudioReviews'
 import type { ReviewSort } from '@/types/review'
 import { useAuthStore } from '@/stores/useAuthStore'
+
+// 평균 별점은 개별 리뷰(정수)와 달리 3.7 같은 실수라 반 별까지 그린다.
+// 0.5 단위 내림이라 3.7은 3.5개, 3.2는 3개로 보인다.
+const SummaryStars = ({ rating }: { rating: number }) => (
+  <div className="flex">
+    {Array.from({ length: 5 }).map((_, index) => {
+      const starNumber = index + 1
+
+      if (rating >= starNumber) {
+        return (
+          <IcStar
+            key={starNumber}
+            width={36}
+            height={36}
+            className="text-brand-80"
+          />
+        )
+      }
+
+      if (rating >= starNumber - 0.5) {
+        return (
+          <IcStarHalf
+            key={starNumber}
+            width={36}
+            height={36}
+            className="text-brand-80"
+          />
+        )
+      }
+
+      return (
+        <IcStar2
+          key={starNumber}
+          width={36}
+          height={36}
+          className="text-gray-20"
+        />
+      )
+    })}
+  </div>
+)
 
 const SORT_OPTIONS = [
   { value: 'recent', label: '최신순' },
@@ -106,13 +147,7 @@ const ReviewDetailPage = () => {
       {!isError && !isLoading && (
         <div className="flex flex-col items-center px-5 py-8">
           <div className="flex items-center pb-1">
-            <div className="flex">
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStarHalf width={36} height={36} className="text-brand-80" />
-            </div>
+            <SummaryStars rating={summary?.avgRating ?? 0} />
             <span className="pl-2 font-h2 text-black">
               {(summary?.avgRating ?? 0).toFixed(1)}
             </span>
