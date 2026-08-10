@@ -14,7 +14,7 @@ import ErrorNotice from '@/pages/studio/components/ErrorNotice'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
 import { useStudioDetail, useStudioProducts, useStudioSlots } from '@/hooks/useStudio'
 import { useToast } from '@/hooks/useToast'
-import { addWishlist, removeWishlist } from '@/services/wishlist'
+import { useWishlistToggle } from '@/hooks/useWishlistToggle'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { StudioDateTimeSelection, StudioProduct } from '@/types/studio'
 
@@ -97,6 +97,7 @@ const ConceptListPage = () => {
   // 시트에서 선택 중인 날짜 (슬롯 조회 트리거)
   const [sheetDate, setSheetDate] = useState<CalendarDate | undefined>(undefined)
   const { toast: reservationToast, showToast: showReservationToast, clearToast: clearReservationToast } = useToast()
+  const { toggleWishlist } = useWishlistToggle()
   // 예약 도메인 복귀 진입(state/query) 1회만 처리
   const entryHandledRef = useRef(false)
   const [favorited, setFavorited] = useState(false)
@@ -156,16 +157,12 @@ const ConceptListPage = () => {
 
     const next = !favorited
     setFavorited(next)
-    try {
-      if (next) {
-        await addWishlist(Number(studioId))
-      } else {
-        await removeWishlist(Number(studioId))
-      }
-    } catch {
-      setFavorited(!next)
-      showReservationToast('찜 처리에 실패했어요. 다시 시도해 주세요')
-    }
+    await toggleWishlist(Number(studioId), next, {
+      onError: () => {
+        setFavorited(!next)
+        showReservationToast('찜 처리에 실패했어요. 다시 시도해 주세요')
+      },
+    })
   }
 
   // 예약 생성 중 슬롯 충돌(RESERVATION_4091) 또는 재예약으로 C-7에 진입할 때:

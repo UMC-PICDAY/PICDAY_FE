@@ -29,8 +29,8 @@ import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { STUDIO_SERVICE_LABEL } from '@/constants/studioService'
 import { useStudioDetail } from '@/hooks/useStudio'
 import { useToast } from '@/hooks/useToast'
+import { useWishlistToggle } from '@/hooks/useWishlistToggle'
 import { saveRecentStudioView } from '@/services/studio'
-import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { StudioServiceCode } from '@/types/studio'
 
@@ -73,6 +73,7 @@ const StudioDetailPage = () => {
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
   const { toast: favoriteErrorToast, showToast: showFavoriteError } = useToast()
+  const { toggleWishlist } = useWishlistToggle()
   const [introExpanded, setIntroExpanded] = useState(false)
   const [introOverflow, setIntroOverflow] = useState(false)
   const introRef = useRef<HTMLParagraphElement>(null)
@@ -127,16 +128,12 @@ const StudioDetailPage = () => {
 
     const next = !favorited
     setFavorited(next)
-    try {
-      if (next) {
-        await addWishlist(Number(studioId))
-      } else {
-        await removeWishlist(Number(studioId))
-      }
-    } catch {
-      setFavorited(!next)
-      showFavoriteError('찜 처리에 실패했어요. 다시 시도해 주세요')
-    }
+    await toggleWishlist(Number(studioId), next, {
+      onError: () => {
+        setFavorited(!next)
+        showFavoriteError('찜 처리에 실패했어요. 다시 시도해 주세요')
+      },
+    })
   }
 
   const handleCopyAddress = () => {
