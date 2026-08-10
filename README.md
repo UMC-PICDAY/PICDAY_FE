@@ -27,9 +27,12 @@ PICDAY는 사용자가 촬영 목적, 날짜, 지역 등의 조건으로 사진�
 |------|------|
 | 번들러 | Vite |
 | UI | React + TypeScript |
+| 스타일링 | Tailwind CSS v4 |
 | 라우터 | React Router v8 |
 | 전역 상태 | Zustand v5 |
 | 서버 상태 | TanStack Query v5 |
+| HTTP 클라이언트 | axios |
+| 지도 | react-kakao-maps-sdk |
 
 <br>
 
