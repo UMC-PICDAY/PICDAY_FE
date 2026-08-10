@@ -189,7 +189,7 @@ const ReservationCancelPage = () => {
 
   if (!reservation) {
     return (
-      <main className="flex min-h-dvh w-full flex-col bg-white">
+      <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white">
         <NavigationBar
           title="예약 취소"
           showRight={false}
@@ -212,7 +212,7 @@ const ReservationCancelPage = () => {
     )
 
   return (
-    <main className="flex min-h-dvh w-full flex-col bg-white">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white pb-[120px]">
       <NavigationBar
         title="예약 취소"
         showRight={false}
@@ -242,7 +242,7 @@ const ReservationCancelPage = () => {
         />
       </div>
 
-      <section className="flex h-[170px] w-full flex-col items-center gap-6 px-5 py-[10px]">
+      <section className="flex w-full flex-col items-center gap-6 px-5 py-[10px]">
         <div className="flex w-full flex-col rounded-[8px] bg-brand-20 p-5">
           <div className="flex flex-col items-start self-stretch pb-3">
             <h2 className="font-b5 text-black">

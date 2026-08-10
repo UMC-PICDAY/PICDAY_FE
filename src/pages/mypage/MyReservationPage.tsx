@@ -374,7 +374,7 @@ const MyReservationPage = () => {
     filteredReservations.length === 0
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-white">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
       <Profile
         variant="userInfo"
         userName={userName}
