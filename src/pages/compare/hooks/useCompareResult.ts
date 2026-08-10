@@ -25,6 +25,7 @@
 
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 
 import {
   getCompareResult,
@@ -164,6 +165,35 @@ const convertStudio = (
 const isValidCount = (maxCount: 2 | 3, count: number) =>
   maxCount === 3 ? count === 3 : count >= 1 && count <= 2
 
+// navigation state 자체가 잘못된 경우는 API 호출 전에 걸러야 해서
+// 쿼리 enabled와 별개로 먼저 계산한다.
+const getValidationError = (
+  maxCount: 2 | 3,
+  initialStudioIds: string[] | undefined,
+  shootingCategory: ShootingCategory | undefined,
+) => {
+  if (
+    !initialStudioIds ||
+    !isValidCount(maxCount, initialStudioIds.length)
+  ) {
+    return '비교할 사진관 목록이 올바르지 않습니다.'
+  }
+
+  if (initialStudioIds.some((studioId) => !isValidStudioId(studioId))) {
+    return '올바르지 않은 사진관 ID입니다.'
+  }
+
+  if (new Set(initialStudioIds).size !== initialStudioIds.length) {
+    return '비교할 사진관 목록이 올바르지 않습니다.'
+  }
+
+  if (!shootingCategory) {
+    return '비교할 촬영 컨셉이 올바르지 않습니다.'
+  }
+
+  return null
+}
+
 export const useCompareResult = (maxCount: 2 | 3) => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -181,6 +211,39 @@ export const useCompareResult = (maxCount: 2 | 3) => {
     navigationState?.shootingCategory
   const studioSearch = navigationState?.studioSearch ?? ''
 
+  const validationError = getValidationError(
+    maxCount,
+    initialStudioIds,
+    shootingCategory,
+  )
+
+  const query = useQuery({
+    queryKey: [
+      'compareResult',
+      maxCount,
+      initialStudioIds,
+      shootingCategory,
+    ],
+    queryFn: () =>
+      getCompareResult({
+        studioIds: initialStudioIds ?? [],
+        shootingCategory: shootingCategory as ShootingCategory,
+      }),
+    enabled: validationError === null,
+  })
+
+  const hasValidResponseCount =
+    query.data !== undefined &&
+    isValidCount(maxCount, query.data.studios.length)
+
+  const errorMessage =
+    validationError ??
+    (query.isError
+      ? '사진관 비교 정보를 불러오지 못했습니다.'
+      : query.data && !hasValidResponseCount
+        ? '비교할 사진관 정보를 불러오지 못했습니다.'
+        : null)
+
   const [selectedStudios, setSelectedStudios] = useState<
     SelectedStudio[]
   >([])
@@ -189,10 +252,17 @@ export const useCompareResult = (maxCount: 2 | 3) => {
     string | null
   >(null)
 
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<
-    string | null
-  >(null)
+  // 조회 결과를 로컬 상태로 복사한다. 사진관 삭제는 서버에 반영되는 동작이
+  // 아니라 이 화면 안에서만 목록을 줄이는 것이라 쿼리 캐시가 아니라 로컬
+  // 상태로 관리한다.
+  useEffect(() => {
+    if (!query.data || !hasValidResponseCount) return
+
+    const studios = query.data.studios.map(convertStudio)
+
+    setSelectedStudios(studios)
+    setSelectedStudioId(studios[0]?.id ?? null)
+  }, [query.data, hasValidResponseCount])
 
   const currentStudioIds = selectedStudios.map(
     (studio) => studio.id,
@@ -201,85 +271,6 @@ export const useCompareResult = (maxCount: 2 | 3) => {
   const hasSelectedStudio = selectedStudios.some(
     (studio) => studio.id === selectedStudioId,
   )
-
-  useEffect(() => {
-    if (
-      !initialStudioIds ||
-      !isValidCount(maxCount, initialStudioIds.length)
-    ) {
-      setIsLoading(false)
-      setErrorMessage(
-        '비교할 사진관 목록이 올바르지 않습니다.',
-      )
-      return
-    }
-
-    const hasInvalidStudioId = initialStudioIds.some(
-      (studioId) => !isValidStudioId(studioId),
-    )
-
-    if (hasInvalidStudioId) {
-      setIsLoading(false)
-      setErrorMessage('올바르지 않은 사진관 ID입니다.')
-      return
-    }
-
-    const hasDuplicateStudioId =
-      new Set(initialStudioIds).size !==
-      initialStudioIds.length
-
-    if (hasDuplicateStudioId) {
-      setIsLoading(false)
-      setErrorMessage(
-        '비교할 사진관 목록이 올바르지 않습니다.',
-      )
-      return
-    }
-
-    if (!shootingCategory) {
-      setIsLoading(false)
-      setErrorMessage(
-        '비교할 촬영 컨셉이 올바르지 않습니다.',
-      )
-      return
-    }
-
-    const fetchCompareResult = async () => {
-      try {
-        setIsLoading(true)
-        setErrorMessage(null)
-
-        const data = await getCompareResult({
-          studioIds: initialStudioIds,
-          shootingCategory,
-        })
-
-        if (!isValidCount(maxCount, data.studios.length)) {
-          setSelectedStudios([])
-          setSelectedStudioId(null)
-          setErrorMessage(
-            '비교할 사진관 정보를 불러오지 못했습니다.',
-          )
-          return
-        }
-
-        const studios = data.studios.map(convertStudio)
-
-        setSelectedStudios(studios)
-        setSelectedStudioId(studios[0]?.id ?? null)
-      } catch {
-        setSelectedStudios([])
-        setSelectedStudioId(null)
-        setErrorMessage(
-          '사진관 비교 정보를 불러오지 못했습니다.',
-        )
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    void fetchCompareResult()
-  }, [initialStudioIds, shootingCategory, maxCount])
 
   const handleBack = () => {
     navigate('/compare', {
@@ -398,14 +389,14 @@ export const useCompareResult = (maxCount: 2 | 3) => {
   }
 
   const isConceptButtonDisabled =
-    isLoading ||
+    query.isLoading ||
     errorMessage !== null ||
     !hasSelectedStudio
 
   return {
     selectedStudios,
     selectedStudioId,
-    isLoading,
+    isLoading: query.isLoading,
     errorMessage,
     shootingCategory,
     isConceptButtonDisabled,

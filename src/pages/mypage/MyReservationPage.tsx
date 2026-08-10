@@ -6,11 +6,7 @@
  * 예약 내역이 없는 경우 empty 상태 화면을 표시함
  */
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   useLocation,
   useNavigate,
@@ -26,10 +22,10 @@ import Toast from '@/components/common/Toast'
 import { IcEvent2 } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
 import { useToast } from '@/hooks/useToast'
+import { useMe } from '@/hooks/useAuth'
+import { useMyReservations } from '@/hooks/useReservation'
 import { ReservationListSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
-import { getMe } from '@/services/auth'
 import {
-  getMyReservations,
   getReservationDetail,
   type ReservationListItem,
   type ReservationStatus,
@@ -95,31 +91,17 @@ const MyReservationPage = () => {
     })
   }, [location, navigate, showToast])
 
-  const [
-    reservations,
-    setReservations,
-  ] = useState<ReservationListItem[]>([])
-
-  const [
+  const {
+    data: reservations = [],
     isLoading,
-    setIsLoading,
-  ] = useState(true)
+    isError: hasError,
+  } = useMyReservations()
 
-  const [
-    hasError,
-    setHasError,
-  ] = useState(false)
+  const { data: meData } = useMe()
 
-  const [userName, setUserName] = useState('')
-
-  const [
-    profileImageUrl,
-    setProfileImageUrl,
-  ] = useState('')
-
-  const [provider, setProvider] = useState<
-    'LOCAL' | 'KAKAO' | 'GOOGLE'
-  >('LOCAL')
+  const userName = meData?.user.nickname ?? ''
+  const profileImageUrl = meData?.user.profileImageUrl ?? ''
+  const provider = meData?.user.provider ?? 'LOCAL'
 
   const filterParam =
     searchParams.get('filter')
@@ -128,45 +110,6 @@ const MyReservationPage = () => {
     isFilterType(filterParam)
       ? filterParam
       : 'all'
-
-  useEffect(() => {
-    const fetchReservations =
-      async () => {
-        setIsLoading(true)
-        setHasError(false)
-
-        try {
-          const result =
-            await getMyReservations()
-
-          setReservations(result)
-        } catch (error) {
-          console.error(
-            '예약 내역 조회에 실패했습니다.',
-            error,
-          )
-
-          setReservations([])
-          setHasError(true)
-        } finally {
-          setIsLoading(false)
-        }
-      }
-
-    void fetchReservations()
-  }, [])
-
-  useEffect(() => {
-    getMe()
-      .then((result) => {
-        setUserName(result.user.nickname)
-        setProfileImageUrl(result.user.profileImageUrl ?? '')
-        setProvider(result.user.provider)
-      })
-      .catch((error) => {
-        console.error('내 정보 조회에 실패했습니다.', error)
-      })
-  }, [])
 
   const isSocialLogin = provider !== 'LOCAL'
 
