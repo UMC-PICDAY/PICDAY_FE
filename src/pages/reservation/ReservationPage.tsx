@@ -21,7 +21,7 @@ import type {
   ChangeEvent,
   ReactNode,
 } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useLocation,
   useNavigate,
@@ -33,6 +33,7 @@ import Alert3 from '@/components/common/Alert3'
 import Button from '@/components/common/Button'
 import MiniTitle from '@/components/common/MiniTitle'
 import NavigationBar from '@/components/layout/NavigationBar'
+import { getMe } from '@/services/auth'
 import {
   createReservation,
   type PaymentMethod,
@@ -207,6 +208,18 @@ const ReservationPage = () => {
   const [reserverPhone, setReserverPhone] = useState(
     draft?.reserverPhone ?? reservation.reserverPhone,
   )
+
+  // 신규 예약(컨셉목록에서 바로 넘어온 경우)이라 이름이 비어있으면, 회원가입 때
+  // 등록한 이름으로 채워준다. 이미 값이 있으면(재예약, 약관상세 다녀온 draft
+  // 등) 덮어쓰지 않는다. 비로그인 등으로 실패해도 조용히 무시 — 이름을 직접
+  // 입력하면 되니 예약 진행 자체는 막지 않는다.
+  useEffect(() => {
+    if (draft?.reserverName || reservation.reserverName) return
+
+    getMe()
+      .then((result) => setReserverName(result.user.name))
+      .catch(() => {})
+  }, [draft?.reserverName, reservation.reserverName])
 
   const [modalType, setModalType] =
     useState<ModalType>(null)
