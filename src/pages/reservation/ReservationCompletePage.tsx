@@ -133,7 +133,7 @@ const ReservationCompletePage = () => {
       </div>
 
       <main className="flex flex-1 flex-col">
-        <section className="flex h-[256px] w-full shrink-0 flex-col items-center px-5 py-[50px] text-center">
+        <section className="flex w-full shrink-0 flex-col items-center px-5 py-[50px] text-center">
           <div className="flex pb-5">
             <div className="flex size-[70px] items-center justify-center rounded-full bg-brand-100 text-white">
               <IcCheck
@@ -165,7 +165,7 @@ const ReservationCompletePage = () => {
         </div>
       </main>
 
-      <footer className="mt-auto flex h-[129px] w-full shrink-0 flex-col gap-3 bg-white px-5 py-[10px]">
+      <footer className="mt-auto flex w-full shrink-0 flex-col gap-3 bg-white px-5 py-[10px]">
         <Button
           variant="primary"
           onClick={handleMyPageClick}

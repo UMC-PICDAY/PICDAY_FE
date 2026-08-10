@@ -27,10 +27,10 @@ export const ProfileHeaderSkeleton = () => (
 )
 
 const ReservationCardSkeleton = () => (
-  <div className="relative flex w-[362px] flex-col items-center gap-[10px] rounded-[20px] border border-[rgba(254,228,235,0.3)] bg-[rgba(252,252,252,0.75)] py-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
-    <div className="flex shrink-0 items-center gap-[10px]">
-      <Skeleton className="h-[181px] w-[181px] rounded-[16px]" />
-      <Skeleton className="h-[181px] w-[149px] rounded-[16px]" />
+  <div className="relative flex w-full flex-col items-center gap-[10px] rounded-[20px] border border-[rgba(254,228,235,0.3)] bg-[rgba(252,252,252,0.75)] py-[10px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
+    <div className="flex w-full shrink-0 items-center justify-center gap-[10px]">
+      <Skeleton className="h-[181px] w-[181px] min-w-0 shrink rounded-[16px]" />
+      <Skeleton className="h-[181px] w-[149px] min-w-0 shrink rounded-[16px]" />
     </div>
 
     <div className="flex w-full flex-col gap-[10px] px-[12px] py-[8px]">
