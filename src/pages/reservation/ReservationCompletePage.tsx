@@ -35,6 +35,7 @@ import {
   getReservationDetail,
   type ReservationDetailData,
 } from '@/services/reservation'
+import { formatReservationDateTimeLong } from '@/utils/formatReservationDateTime'
 
 const ReservationCompletePage = () => {
   const navigate = useNavigate()
@@ -137,7 +138,10 @@ const ReservationCompletePage = () => {
     reservation.totalPrice.toLocaleString('ko-KR')
 
   const reservationDateTime =
-    `${reservation.timeSlot.date} ${reservation.timeSlot.startTime}`
+    formatReservationDateTimeLong(
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
+    )
 
   const receiptItems = [
     {

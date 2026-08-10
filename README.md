@@ -39,7 +39,7 @@ PICDAY는 사용자가 촬영 목적, 날짜, 지역 등의 조건으로 사진�
 src/
 ├── components/
 │   ├── common/       # 공통 UI 컴포넌트 (Button, Card, Chip 등)
-│   ├── layout/       # 레이아웃 컴포넌트 (HomeBar, StatusBar)
+│   ├── layout/       # 레이아웃 컴포넌트 (NavigationBar, AppTabBar 등)
 │   └── icons/        # 아이콘 컴포넌트
 ├── pages/
 │   ├── auth/         # A - 로그인/회원가입
