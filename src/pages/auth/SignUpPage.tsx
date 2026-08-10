@@ -72,6 +72,20 @@ const SignUpPage = () => {
   // 마지막으로 보낸 요청의 결과만 반영하도록 매 요청마다 값을 갱신해 최신 요청인지 비교한다.
   const latestIdCheckRef = useRef('')
 
+  // 약관 상세로 갔다가 돌아오는 경우에만 draft(비밀번호 포함 평문)를 살려두고,
+  // 그 외 방식으로 이 화면을 벗어나면(뒤로가기, 브라우저 뒤로가기 등) 지운다.
+  // 안 지우면 같은 기기에서 회원가입을 하다 만 다음 사람이 /signup에 다시
+  // 들어왔을 때 이전 사람이 입력하던 비밀번호까지 눈 아이콘으로 그대로 볼 수 있다.
+  const isLeavingToTermsRef = useRef(false)
+
+  useEffect(() => {
+    return () => {
+      if (!isLeavingToTermsRef.current) {
+        useSignUpDraftStore.getState().reset()
+      }
+    }
+  }, [])
+
   // 약관 상세(/terms/:termType)로 갔다가 뒤로가기로 돌아와도 입력값이 날아가지 않도록,
   // draft 스토어에 있던 값으로 시작하고 아래 useEffect에서 계속 동기화한다.
   const name = useValidatedField(validateName, signUpDraft.name)
@@ -217,7 +231,10 @@ const SignUpPage = () => {
           checked={terms}
           onToggleAll={toggleAll}
           onToggleItem={(key) => toggleTerm(key as TermKey)}
-          onItemDetailClick={(key) => navigate(`/terms/${key}`)}
+          onItemDetailClick={(key) => {
+            isLeavingToTermsRef.current = true
+            navigate(`/terms/${key}`)
+          }}
         />
       </div>
 
