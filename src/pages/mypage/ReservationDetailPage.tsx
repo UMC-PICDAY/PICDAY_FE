@@ -32,6 +32,31 @@ interface ChecklistItem {
   checked: boolean
 }
 
+// 체크리스트 체크 여부를 저장하는 백엔드 API가 없어서, 예약 ID별로 localStorage에
+// 체크된 항목 id만 저장해두고 재진입 시 복원한다 (기기·브라우저 간 동기화는 안 됨).
+const CHECKLIST_STORAGE_KEY_PREFIX = 'picday-reservation-checklist-'
+
+const getStoredCheckedIds = (reservationId: string): Set<string> => {
+  try {
+    const raw = localStorage.getItem(`${CHECKLIST_STORAGE_KEY_PREFIX}${reservationId}`)
+    return raw ? new Set(JSON.parse(raw)) : new Set()
+  } catch {
+    return new Set()
+  }
+}
+
+const saveCheckedIds = (reservationId: string, checkedIds: string[]) => {
+  try {
+    localStorage.setItem(
+      `${CHECKLIST_STORAGE_KEY_PREFIX}${reservationId}`,
+      JSON.stringify(checkedIds),
+    )
+  } catch {
+    // 프라이빗 브라우징 등으로 localStorage 접근이 막혀있어도
+    // 체크 자체(화면 동작)는 계속 되어야 하니 조용히 무시
+  }
+}
+
 const formatReservationDateTime = (
   reservationDate: string,
   reservationTime: string,
@@ -251,13 +276,20 @@ const ReservationDetailPage = () => {
 
           setReservation(result)
 
+          const storedCheckedIds =
+            getStoredCheckedIds(reservationId)
+
           setChecklistItems(
             (result.checklist ?? []).map(
-              (label, index) => ({
-                id: `checklist-${index}`,
-                label,
-                checked: false,
-              }),
+              (label, index) => {
+                const id = `checklist-${index}`
+
+                return {
+                  id,
+                  label,
+                  checked: storedCheckedIds.has(id),
+                }
+              },
             ),
           )
         } catch (error) {
@@ -278,16 +310,27 @@ const ReservationDetailPage = () => {
   const handleChecklistItemClick = (
     id: string,
   ) => {
-    setChecklistItems((prev) =>
-      prev.map((item) =>
+    setChecklistItems((prev) => {
+      const next = prev.map((item) =>
         item.id === id
           ? {
               ...item,
               checked: !item.checked,
             }
           : item,
-      ),
-    )
+      )
+
+      if (reservationId) {
+        saveCheckedIds(
+          reservationId,
+          next
+            .filter((item) => item.checked)
+            .map((item) => item.id),
+        )
+      }
+
+      return next
+    })
   }
 
   if (!reservation) {
