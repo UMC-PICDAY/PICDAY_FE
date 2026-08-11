@@ -17,11 +17,9 @@ import Alert2 from '@/components/common/Alert2'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import NavigationBar from '@/components/layout/NavigationBar'
-import {
-  cancelReservation,
-  getReservationDetail,
-  type ReservationDetailData,
-} from '@/services/reservation'
+import { useToast } from '@/hooks/useToast'
+import { useReservationDetail } from '@/hooks/useReservation'
+import { cancelReservation } from '@/services/reservation'
 import { ApiError } from '@/types/common'
 import { formatReservationDateTimeDotted } from '@/utils/formatReservationDateTime'
 
@@ -38,12 +36,10 @@ const ReservationCancelPage = () => {
     reservationId: string
   }>()
 
-  const [
-    reservation,
-    setReservation,
-  ] = useState<ReservationDetailData | null>(
-    null,
-  )
+  const {
+    data: reservation,
+    isError: hasReservationError,
+  } = useReservationDetail(reservationId)
 
   const [
     isCancelModalOpen,
@@ -55,49 +51,31 @@ const ReservationCancelPage = () => {
     setIsSubmitting,
   ] = useState(false)
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  const showToast = (message: string) => {
-    setToastMessage(message)
-    window.setTimeout(() => setToastMessage(null), 3000)
-  }
+  const { toast, showToast } = useToast()
 
   useEffect(() => {
     if (!reservationId) {
       navigate('/mypage', {
         replace: true,
       })
-
-      return
     }
-
-    const fetchReservationDetail =
-      async () => {
-        try {
-          const result =
-            await getReservationDetail(
-              reservationId,
-            )
-
-          setReservation(result)
-        } catch (error) {
-          console.error(
-            '예약 상세 조회에 실패했습니다.',
-            error,
-          )
-
-          navigate('/mypage', {
-            replace: true,
-            state: {
-              toastMessage:
-                '예약 정보를 불러오지 못했습니다.',
-            },
-          })
-        }
-      }
-
-    void fetchReservationDetail()
   }, [navigate, reservationId])
+
+  useEffect(() => {
+    if (hasReservationError) {
+      console.error(
+        '예약 상세 조회에 실패했습니다.',
+      )
+
+      navigate('/mypage', {
+        replace: true,
+        state: {
+          toastMessage:
+            '예약 정보를 불러오지 못했습니다.',
+        },
+      })
+    }
+  }, [hasReservationError, navigate])
 
   const handleCancelReservation =
     async () => {
@@ -305,9 +283,9 @@ const ReservationCancelPage = () => {
         </div>
       )}
 
-      {toastMessage && (
+      {toast && (
         <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </main>

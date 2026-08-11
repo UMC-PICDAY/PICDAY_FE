@@ -49,13 +49,13 @@ import ButtonCompareSlot from '@/components/common/ButtonCompareSlot'
 import CategoryButton from '@/components/common/CategoryButton'
 import Title from '@/components/common/Title'
 import { IcBack } from '@/components/icons'
-import {
-  getComparePurposes,
-  type CompareShootingPurpose,
-  type PurposeType,
-  type ShootingCategory,
+import type {
+  CompareShootingPurpose,
+  PurposeType,
+  ShootingCategory,
 } from '@/services/studio'
 import ComparePurposeSkeleton from '@/pages/compare/components/ComparePurposeSkeleton'
+import { useComparePurposes } from '@/pages/compare/hooks/useComparePurposes'
 import { useCompareStore } from '@/stores/useCompareStore'
 import { getShootingCategoryLabel, SHOOTING_CATEGORY_LABEL } from '@/constants/shootingCategory'
 
@@ -76,6 +76,26 @@ interface CompareNavigationState {
 const SHOOTING_CATEGORIES = Object.keys(SHOOTING_CATEGORY_LABEL) as ShootingCategory[]
 
 const STUDIO_LIST_PATH = '/studios'
+
+// navigation state의 studioIds 자체가 잘못된 경우는 API 호출 전에 걸러야 해서
+// 쿼리 enabled와 별개로 먼저 계산한다.
+const getStudioIdsValidationError = (
+  studioIds: string[] | undefined,
+) => {
+  if (!studioIds || studioIds.length < 2 || studioIds.length > 3) {
+    return '비교할 사진관 목록이 올바르지 않습니다.'
+  }
+
+  if (studioIds.some((studioId) => !/^[1-9]\d*$/.test(studioId))) {
+    return '올바르지 않은 사진관 ID입니다.'
+  }
+
+  if (new Set(studioIds).size !== studioIds.length) {
+    return '비교할 사진관 목록이 올바르지 않습니다.'
+  }
+
+  return null
+}
 
 const ComparePurposePage = () => {
   const navigate = useNavigate()
@@ -98,76 +118,47 @@ const ComparePurposePage = () => {
       navigationState?.shootingCategory ?? 'PROFILE',
     )
 
+  const validationError = getStudioIdsValidationError(studioIds)
+
+  const purposesQuery = useComparePurposes(
+    studioIds,
+    validationError === null,
+  )
+
   const [selectedStudios, setSelectedStudios] = useState<Studio[]>([])
   const [shootingPurposes, setShootingPurposes] = useState<
     CompareShootingPurpose[]
   >([])
-
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const [alertType, setAlertType] = useState<AlertType>(null)
   const [unavailableStudios, setUnavailableStudios] = useState<Studio[]>([])
 
   const selectedStudioCount = selectedStudios.length
 
+  // 조회 결과를 로컬 상태로 복사한다. X 버튼으로 사진관을 빼는 동작은 서버에
+  // 반영되지 않는, 이 화면 안에서만의 목록 축소라 쿼리 캐시가 아니라 로컬
+  // 상태로 관리한다. selectedStudios·shootingPurposes를 같은 이펙트에서 함께
+  // 갱신해야 한다 — 따로 나누면 한 렌더 동안 shootingPurposes만 채워지고
+  // selectedStudios는 비어 있는 틈이 생겨, isShootingCategoryDisabled가
+  // "지원 사진관 0개"로 오판해 reselect 알럿이 잘못 뜬다.
   useEffect(() => {
-    if (!studioIds || studioIds.length < 2 || studioIds.length > 3) {
-      setSelectedStudios([])
-      setShootingPurposes([])
-      setIsLoading(false)
-      setErrorMessage('비교할 사진관 목록이 올바르지 않습니다.')
-      return
-    }
+    if (!purposesQuery.data) return
 
-    const hasInvalidStudioId = studioIds.some(
-      (studioId) => !/^[1-9]\d*$/.test(studioId),
+    setSelectedStudios(
+      purposesQuery.data.studios.map((studio) => ({
+        id: studio.studioId,
+        name: studio.studioName,
+      })),
     )
+    setShootingPurposes(purposesQuery.data.shootingPurposes)
+  }, [purposesQuery.data])
 
-    const hasDuplicateStudioId =
-      new Set(studioIds).size !== studioIds.length
-
-    if (hasInvalidStudioId) {
-      setSelectedStudios([])
-      setShootingPurposes([])
-      setIsLoading(false)
-      setErrorMessage('올바르지 않은 사진관 ID입니다.')
-      return
-    }
-
-    if (hasDuplicateStudioId) {
-      setSelectedStudios([])
-      setShootingPurposes([])
-      setIsLoading(false)
-      setErrorMessage('비교할 사진관 목록이 올바르지 않습니다.')
-      return
-    }
-
-    const fetchComparePurposes = async () => {
-      try {
-        setIsLoading(true)
-        setErrorMessage(null)
-
-        const data = await getComparePurposes(studioIds)
-
-        const studios: Studio[] = data.studios.map((studio) => ({
-          id: studio.studioId,
-          name: studio.studioName,
-        }))
-
-        setSelectedStudios(studios)
-        setShootingPurposes(data.shootingPurposes)
-      } catch {
-        setSelectedStudios([])
-        setShootingPurposes([])
-        setErrorMessage('비교 정보를 불러오지 못했습니다.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    void fetchComparePurposes()
-  }, [studioIds])
+  const isLoading = purposesQuery.isLoading
+  const errorMessage =
+    validationError ??
+    (purposesQuery.isError
+      ? '비교 정보를 불러오지 못했습니다.'
+      : null)
 
   const getSelectedShootingPurpose = () =>
     shootingPurposes.find(

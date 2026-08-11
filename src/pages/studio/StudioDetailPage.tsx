@@ -28,8 +28,9 @@ import StudioInfoSheet from '@/pages/studio/components/StudioInfoSheet'
 import StudioLocationMap from '@/pages/studio/components/StudioLocationMap'
 import { STUDIO_SERVICE_LABEL } from '@/constants/studioService'
 import { useStudioDetail } from '@/hooks/useStudio'
+import { useToast } from '@/hooks/useToast'
+import { useWishlistToggle } from '@/hooks/useWishlistToggle'
 import { saveRecentStudioView } from '@/services/studio'
-import { addWishlist, removeWishlist } from '@/services/wishlist'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { StudioServiceCode } from '@/types/studio'
 
@@ -71,7 +72,8 @@ const StudioDetailPage = () => {
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const [favorited, setFavorited] = useState(false)
   const [addressCopied, setAddressCopied] = useState(false)
-  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
+  const { toast: favoriteErrorToast, showToast: showFavoriteError } = useToast()
+  const { toggleWishlist } = useWishlistToggle()
   const [introExpanded, setIntroExpanded] = useState(false)
   const [introOverflow, setIntroOverflow] = useState(false)
   const introRef = useRef<HTMLParagraphElement>(null)
@@ -126,17 +128,12 @@ const StudioDetailPage = () => {
 
     const next = !favorited
     setFavorited(next)
-    try {
-      if (next) {
-        await addWishlist(Number(studioId))
-      } else {
-        await removeWishlist(Number(studioId))
-      }
-    } catch {
-      setFavorited(!next)
-      setFavoriteErrorMessage('찜 처리에 실패했어요. 다시 시도해 주세요')
-      setTimeout(() => setFavoriteErrorMessage(null), 2000)
-    }
+    await toggleWishlist(Number(studioId), next, {
+      onError: () => {
+        setFavorited(!next)
+        showFavoriteError('찜 처리에 실패했어요. 다시 시도해 주세요')
+      },
+    })
   }
 
   const handleCopyAddress = () => {
@@ -473,9 +470,9 @@ const StudioDetailPage = () => {
         </div>
       )}
 
-      {favoriteErrorMessage && (
+      {favoriteErrorToast && (
         <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
-          <Toast message={favoriteErrorMessage} />
+          <Toast key={favoriteErrorToast.id} message={favoriteErrorToast.message} />
         </div>
       )}
 

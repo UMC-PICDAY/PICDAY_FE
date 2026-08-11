@@ -41,6 +41,15 @@ const requestRefreshedAccessToken = async (): Promise<string> => {
     throw new ApiError(response.data.code, response.data.message)
   }
 
+  // 갱신 요청이 응답을 기다리는 동안 로그아웃했거나 다른 계정으로 새로
+  // 로그인했다면(= refreshToken이 요청 시작 시점과 달라졌다면) 이 응답은
+  // 더 이상 지금 세션의 것이 아니다. 그대로 login()을 호출하면 로그아웃
+  // 직후 세션이 부활하거나, 그사이 로그인한 다른 계정의 토큰을 덮어쓰게
+  // 된다.
+  if (useAuthStore.getState().refreshToken !== refreshToken) {
+    throw new ApiError('AUTH_4016', '세션이 만료되었습니다. 다시 로그인해 주세요.')
+  }
+
   const { token } = response.data.data
   useAuthStore.getState().login({ accessToken: token.accessToken, refreshToken: token.refreshToken })
   return token.accessToken

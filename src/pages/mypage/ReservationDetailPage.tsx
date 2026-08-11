@@ -21,10 +21,8 @@ import {
   IcCheckBoxFill,
 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
-import {
-  getReservationDetail,
-  type ReservationDetailData,
-} from '@/services/reservation'
+import { useReservationDetail } from '@/hooks/useReservation'
+import { ReservationDetailSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { formatReservationDateTimeLong } from '@/utils/formatReservationDateTime'
 
 interface ChecklistItem {
@@ -268,12 +266,11 @@ const ReservationDetailPage = () => {
     reservationId: string
   }>()
 
-  const [
-    reservation,
-    setReservation,
-  ] = useState<ReservationDetailData | null>(
-    null,
-  )
+  const {
+    data: reservation,
+    isLoading,
+    isError,
+  } = useReservationDetail(reservationId)
 
   const [
     checklistItems,
@@ -285,89 +282,78 @@ const ReservationDetailPage = () => {
       navigate('/mypage', {
         replace: true,
       })
+    }
+  }, [navigate, reservationId])
 
-      return
+  useEffect(() => {
+    if (isError) {
+      console.error(
+        '예약 상세 조회에 실패했습니다.',
+      )
+
+      navigate('/mypage', {
+        replace: true,
+        state: {
+          toastMessage:
+            '예약 정보를 불러오지 못했습니다.',
+        },
+      })
+    }
+  }, [isError, navigate])
+
+  // 체크리스트는 조회 결과가 도착했을 때 한 번만 localStorage에서
+  // 저장된 체크 상태를 복원해 로컬 편집 상태로 채운다. 촬영완료(COMPLETED)나
+  // 취소(CANCELLED)로 넘어간 예약은 체크리스트가 더 이상 의미 없으므로
+  // 저장해둔 체크 상태를 지우고 복원하지 않는다.
+  useEffect(() => {
+    if (!reservation || !reservationId) return
+
+    if (reservation.status !== 'RESERVED') {
+      clearStoredChecklist(reservationId)
     }
 
-    const fetchReservationDetail =
-      async () => {
-        try {
-          const result =
-            await getReservationDetail(
-              reservationId,
-            )
+    const storedCheckedIds =
+      reservation.status === 'RESERVED'
+        ? getStoredCheckedIds(reservationId)
+        : new Set<string>()
 
-          setReservation(result)
+    setChecklistItems(
+      (reservation.checklist ?? []).map(
+        (label, index) => {
+          const id = `checklist-${index}`
 
-          // 촬영완료(COMPLETED)나 취소(CANCELLED)로 넘어간 예약은 체크리스트가
-          // 더 이상 필요 없으므로 저장해둔 체크 상태를 지운다.
-          if (result.status !== 'RESERVED') {
-            clearStoredChecklist(reservationId)
+          return {
+            id,
+            label,
+            checked: storedCheckedIds.has(id),
           }
-
-          const storedCheckedIds =
-            result.status === 'RESERVED'
-              ? getStoredCheckedIds(reservationId)
-              : new Set<string>()
-
-          setChecklistItems(
-            (result.checklist ?? []).map(
-              (label, index) => {
-                const id = `checklist-${index}`
-
-                return {
-                  id,
-                  label,
-                  checked: storedCheckedIds.has(id),
-                }
-              },
-            ),
-          )
-        } catch (error) {
-          console.error(
-            '예약 상세 조회에 실패했습니다.',
-            error,
-          )
-
-          navigate('/mypage', {
-            replace: true,
-            state: {
-              toastMessage:
-                '예약 정보를 불러오지 못했습니다.',
-            },
-          })
-        }
-      }
-
-    void fetchReservationDetail()
-  }, [navigate, reservationId])
+        },
+      ),
+    )
+  }, [reservation, reservationId])
 
   const handleChecklistItemClick = (
     id: string,
   ) => {
-    setChecklistItems((prev) => {
-      const next = prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              checked: !item.checked,
-            }
-          : item,
+    const next = checklistItems.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            checked: !item.checked,
+          }
+        : item,
+    )
+
+    setChecklistItems(next)
+
+    if (reservationId) {
+      saveCheckedIds(
+        reservationId,
+        next
+          .filter((item) => item.checked)
+          .map((item) => item.id),
       )
-
-      // 체크할 때마다 localStorage에도 같이 저장해서, 화면을 나갔다가
-      // 다시 들어와도 체크 상태가 복원되게 한다.
-      if (reservationId) {
-        saveCheckedIds(
-          reservationId,
-          next
-            .filter((item) => item.checked)
-            .map((item) => item.id),
-        )
-      }
-
-      return next
-    })
+    }
   }
 
   if (!reservation) {
@@ -378,6 +364,8 @@ const ReservationDetailPage = () => {
           showRight={false}
           onBack={() => navigate(-1)}
         />
+
+        {isLoading && <ReservationDetailSkeleton />}
       </div>
     )
   }

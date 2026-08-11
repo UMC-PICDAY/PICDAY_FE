@@ -29,7 +29,8 @@ import {
   studioSearchQueryKey,
   useStudioSearch,
 } from '@/hooks/useStudio'
-import { addWishlist, removeWishlist } from '@/services/wishlist'
+import { useToast } from '@/hooks/useToast'
+import { useWishlistToggle } from '@/hooks/useWishlistToggle'
 import { MAX_COMPARE, useCompareStore } from '@/stores/useCompareStore'
 import type {
   StudioSearchFilters,
@@ -117,7 +118,8 @@ const StudioSearchPage = () => {
     navigationShootingCategory ?? searchShootingCategory
 
   const [mapError, setMapError] = useState(false)
-  const [favoriteErrorMessage, setFavoriteErrorMessage] = useState<string | null>(null)
+  const { toast: favoriteErrorToast, showToast: showFavoriteError } = useToast()
+  const { toggleWishlist } = useWishlistToggle()
   const queryClient = useQueryClient()
 
   // 기본 검색 조건이 있을 때만 조회(B#2). 파라미터 변경 시 자동 재조회.
@@ -168,17 +170,12 @@ const StudioSearchPage = () => {
 
     queryClient.setQueryData<StudioSearchResult>(queryKey, patchStudios)
 
-    try {
-      if (nextWishlisted) {
-        await addWishlist(studio.studioId)
-      } else {
-        await removeWishlist(studio.studioId)
-      }
-    } catch {
-      queryClient.invalidateQueries({ queryKey })
-      setFavoriteErrorMessage('찜 처리에 실패했어요. 다시 시도해 주세요')
-      setTimeout(() => setFavoriteErrorMessage(null), 2000)
-    }
+    await toggleWishlist(studio.studioId, nextWishlisted, {
+      onError: () => {
+        queryClient.invalidateQueries({ queryKey })
+        showFavoriteError('찜 처리에 실패했어요. 다시 시도해 주세요')
+      },
+    })
   }
 
   // 검색에서 고른 날짜를 상세로 넘긴다. 상세가 컨셉 목록(C-7)까지 이어주면
@@ -460,9 +457,9 @@ const StudioSearchPage = () => {
         )}
       </div>
 
-      {favoriteErrorMessage && (
+      {favoriteErrorToast && (
         <div className="fixed inset-x-0 bottom-24 z-40 mx-auto flex max-w-[390px] justify-center px-5">
-          <Toast message={favoriteErrorMessage} />
+          <Toast key={favoriteErrorToast.id} message={favoriteErrorToast.message} />
         </div>
       )}
     </div>

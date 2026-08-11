@@ -17,60 +17,25 @@
  * 마이페이지 이동 버튼을 표시
  */
 
-import {
-  useEffect,
-  useState,
-} from 'react'
-import {
-  useNavigate,
-  useParams,
-} from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 import ReservationDetail from '@/components/cards/ReservationDetail'
 import Button from '@/components/common/Button'
 import NoticeBanner from '@/components/common/NoticeBanner'
 import { IcCheck } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
-import {
-  getReservationDetail,
-  type ReservationDetailData,
-} from '@/services/reservation'
+import { useReservationDetail } from '@/hooks/useReservation'
+import { formatReservationDateTimeLong } from '@/utils/formatReservationDateTime'
 
 const ReservationCompletePage = () => {
   const navigate = useNavigate()
   const { reservationId } = useParams()
 
-  const [reservation, setReservation] =
-    useState<ReservationDetailData | null>(null)
-
-  const [isLoading, setIsLoading] =
-    useState(true)
-
-  const [isError, setIsError] =
-    useState(false)
-
-  useEffect(() => {
-    const fetchReservation = async () => {
-      if (!reservationId) {
-        setIsError(true)
-        setIsLoading(false)
-        return
-      }
-
-      try {
-        const result =
-          await getReservationDetail(reservationId)
-
-        setReservation(result)
-      } catch {
-        setIsError(true)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    void fetchReservation()
-  }, [reservationId])
+  const {
+    data: reservation,
+    isLoading,
+    isError,
+  } = useReservationDetail(reservationId)
 
   const handleMyPageClick = () => {
     navigate('/mypage')
@@ -137,7 +102,10 @@ const ReservationCompletePage = () => {
     reservation.totalPrice.toLocaleString('ko-KR')
 
   const reservationDateTime =
-    `${reservation.timeSlot.date} ${reservation.timeSlot.startTime}`
+    formatReservationDateTimeLong(
+      reservation.timeSlot.date,
+      reservation.timeSlot.startTime,
+    )
 
   const receiptItems = [
     {

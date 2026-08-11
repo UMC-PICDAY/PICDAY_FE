@@ -11,6 +11,7 @@ import InputField from '@/components/common/InputField'
 import Agreement from '@/components/common/Agreement'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
+import { useToast } from '@/hooks/useToast'
 import { useValidatedField } from '@/hooks/useValidatedField'
 import { checkLoginIdAvailable, login, signup } from '@/services/auth'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -18,6 +19,7 @@ import { useSignUpDraftStore } from '@/stores/useSignUpDraftStore'
 import { ApiError } from '@/types/common'
 import { REQUIRED_TERMS, TERM_ITEMS } from '@/constants/terms'
 import type { TermKey } from '@/constants/terms'
+import { clearUserSessionState } from '@/utils/clearUserSession'
 
 // 영문 소문자로 시작, 소문자/숫자만 허용, 4~12자 (대문자·공백·특수문자·숫자시작·숫자만 금지)
 const ID_REGEX = /^[a-z][a-z0-9]{3,11}$/
@@ -65,10 +67,24 @@ const SignUpPage = () => {
   const [terms, setTerms] = useState<Record<TermKey, boolean>>(signUpDraft.terms)
   const [idAvailability, setIdAvailability] = useState<IdAvailability>('idle')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const { toast, showToast } = useToast()
   // 중복확인 응답이 도착한 순서가 요청한 순서와 다를 수 있어(늦게 보낸 요청이 먼저 응답),
   // 마지막으로 보낸 요청의 결과만 반영하도록 매 요청마다 값을 갱신해 최신 요청인지 비교한다.
   const latestIdCheckRef = useRef('')
+
+  // 약관 상세로 갔다가 돌아오는 경우에만 draft(비밀번호 포함 평문)를 살려두고,
+  // 그 외 방식으로 이 화면을 벗어나면(뒤로가기, 브라우저 뒤로가기 등) 지운다.
+  // 안 지우면 같은 기기에서 회원가입을 하다 만 다음 사람이 /signup에 다시
+  // 들어왔을 때 이전 사람이 입력하던 비밀번호까지 눈 아이콘으로 그대로 볼 수 있다.
+  const isLeavingToTermsRef = useRef(false)
+
+  useEffect(() => {
+    return () => {
+      if (!isLeavingToTermsRef.current) {
+        useSignUpDraftStore.getState().reset()
+      }
+    }
+  }, [])
 
   // 약관 상세(/terms/:termType)로 갔다가 뒤로가기로 돌아와도 입력값이 날아가지 않도록,
   // draft 스토어에 있던 값으로 시작하고 아래 useEffect에서 계속 동기화한다.
@@ -100,11 +116,6 @@ const SignUpPage = () => {
     setIdAvailability('idle')
   }, [id.fieldProps.value])
 
-  useEffect(() => {
-    if (!toastMessage) return
-    const timer = setTimeout(() => setToastMessage(null), 3000)
-    return () => clearTimeout(timer)
-  }, [toastMessage])
 
   const isAllAgreed = TERM_ITEMS.every(({ key }) => terms[key])
 
@@ -164,6 +175,7 @@ const SignUpPage = () => {
       // 이 로그인 호출만 실패해도 회원가입 자체는 이미 끝난 상태이니 완료 화면으로는 그대로 이동한다.
       try {
         const { token } = await login(id.fieldProps.value, password.fieldProps.value)
+        clearUserSessionState()
         authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
       } catch (loginError) {
         console.error('가입 직후 자동 로그인 실패:', loginError)
@@ -172,7 +184,7 @@ const SignUpPage = () => {
       useSignUpDraftStore.getState().reset()
       navigate('/signup/complete')
     } catch (error) {
-      setToastMessage(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
+      showToast(error instanceof ApiError ? error.message : '회원가입에 실패했어요. 다시 시도해 주세요')
     } finally {
       setIsSubmitting(false)
     }
@@ -219,7 +231,10 @@ const SignUpPage = () => {
           checked={terms}
           onToggleAll={toggleAll}
           onToggleItem={(key) => toggleTerm(key as TermKey)}
-          onItemDetailClick={(key) => navigate(`/terms/${key}`)}
+          onItemDetailClick={(key) => {
+            isLeavingToTermsRef.current = true
+            navigate(`/terms/${key}`)
+          }}
         />
       </div>
 
@@ -229,9 +244,9 @@ const SignUpPage = () => {
         </Button>
       </div>
 
-      {toastMessage && (
+      {toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 flex justify-center px-5">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </div>
