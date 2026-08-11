@@ -70,7 +70,7 @@ export interface ReservationListItem {
   reservationId: number
   studioName: string
   thumbnailUrl: string
-  secondthumbnailUrl: string
+  secondThumbnailUrl: string | null
   conceptName: string
   reservationDate: string
   reservationTime: string
