@@ -26,7 +26,8 @@ const StudioCardSkeleton = () => (
 
 const HomeSkeleton = () => (
   <>
-    <div className="flex w-full items-center gap-[20px] overflow-hidden py-[10px]">
+    {/* 실제 캐러셀은 마운트 시 center 카드를 화면 중앙으로 스크롤하므로, 스켈레톤도 justify-center여야 로딩 후 안 밀린다 */}
+    <div className="flex w-full items-center justify-center gap-[20px] overflow-hidden py-[10px]">
       <LargeCardSkeleton />
       <LargeCardSkeleton isCenter />
       <LargeCardSkeleton />
