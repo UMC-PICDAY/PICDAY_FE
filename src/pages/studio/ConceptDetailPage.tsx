@@ -48,9 +48,9 @@ const ConceptDetailPage = () => {
         </div>
       ) : (
         <div className="flex flex-col gap-5 p-5">
-          {images.map((src, index) => (
+          {images.map((src) => (
             <img
-              key={index}
+              key={src}
               src={src}
               alt="컨셉 사진"
               className="aspect-[363/543] w-full object-cover"

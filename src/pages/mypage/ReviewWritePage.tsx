@@ -17,7 +17,8 @@ import TimeChip from '@/components/common/TimeChip'
 import Toast from '@/components/common/Toast'
 import { IcStar, IcStar2,} from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
-import { getReservationDetail,type ReservationDetailData,} from '@/services/reservation'
+import { useReservationDetail } from '@/hooks/useReservation'
+import { ReservationDetailSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
 import { createReview, uploadImage,} from '@/services/review'
 import { ApiError } from '@/types/common'
 import type { ReviewKeyword } from '@/types/review'
@@ -101,13 +102,11 @@ const ReviewWritePage = () => {
   const imageListRef =
     useRef<ReviewImage[]>([])
 
-  const [
-    reservation,
-    setReservation,
-  ] =
-    useState<ReservationDetailData | null>(
-      null,
-    )
+  const {
+    data: reservation,
+    isLoading: isReservationLoading,
+    isError: hasReservationError,
+  } = useReservationDetail(reservationId)
 
   const [rating, setRating] =
     useState(5)
@@ -168,37 +167,24 @@ const ReviewWritePage = () => {
       navigate('/mypage', {
         replace: true,
       })
-
-      return
     }
-
-    const fetchReservationDetail =
-      async () => {
-        try {
-          const result =
-            await getReservationDetail(
-              reservationId,
-            )
-
-          setReservation(result)
-        } catch (error) {
-          console.error(
-            '예약 정보 조회에 실패했습니다.',
-            error,
-          )
-
-          navigate('/mypage', {
-            replace: true,
-            state: {
-              toastMessage:
-                '예약 정보를 불러오지 못했습니다.',
-            },
-          })
-        }
-      }
-
-    void fetchReservationDetail()
   }, [navigate, reservationId])
+
+  useEffect(() => {
+    if (hasReservationError) {
+      console.error(
+        '예약 정보 조회에 실패했습니다.',
+      )
+
+      navigate('/mypage', {
+        replace: true,
+        state: {
+          toastMessage:
+            '예약 정보를 불러오지 못했습니다.',
+        },
+      })
+    }
+  }, [hasReservationError, navigate])
 
   useEffect(() => {
     imageListRef.current =
@@ -419,6 +405,10 @@ const ReviewWritePage = () => {
             navigate(-1)
           }
         />
+
+        {isReservationLoading && (
+          <ReservationDetailSkeleton />
+        )}
       </div>
     )
   }

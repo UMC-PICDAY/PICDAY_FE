@@ -13,382 +13,35 @@
  * 초기 로드
  *   studioIds와 shootingCategory로 비교 결과 조회 API 호출
  *   API 응답을 화면 비교 데이터로 변환하여 렌더링
+ *
+ * 비교 로직은 useCompareResult 훅에서 CompareThreePage와 공유한다.
  */
 
-import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
-
 import CompareSkeleton from '@/pages/compare/components/CompareSkeleton'
+import CompareRow from '@/pages/compare/components/CompareRow'
 import CardStudioCompare from '@/components/cards/CardStudioCompare'
 import AddButton from '@/components/common/AddButton'
 import Button from '@/components/common/Button'
 import NavigationBar from '@/components/layout/NavigationBar'
-import {
-  getCompareResult,
-  type CompareResultStudio,
-  type ShootingCategory,
-} from '@/services/studio'
-import { useCompareStore } from '@/stores/useCompareStore'
-import { getLocationLabel } from '@/constants/locationCategory'
-import { getStudioServiceShortLabel } from '@/constants/studioService'
 import { getShootingCategoryLabel } from '@/constants/shootingCategory'
-
-interface CompareData {
-  price: string
-  description: string
-  badgeLabel?: string
-  services: string[]
-  location: string
-  reservationDate: string
-}
-
-interface SelectedStudio {
-  id: string
-  name: string
-  imageSrc?: string
-  rating: number
-  reviewCount: number
-  compareData: CompareData
-}
-
-interface NavigationStudio {
-  id: string
-  name: string
-  imageSrc?: string
-  rating?: number
-  reviewCount?: number
-  compareData?: CompareData
-}
-
-interface NavigationState {
-  studioIds?: string[]
-  shootingCategory?: ShootingCategory
-  studios?: NavigationStudio[]
-  studioSearch?: string
-}
-
-interface CompareRowProps {
-  title: string
-  children: ReactNode
-}
-
-
-const isValidStudioId = (studioId: string) =>
-  /^[1-9]\d*$/.test(studioId)
-
-
-const formatLocation = (
-  location: CompareResultStudio['location'],
-) => {
-  if (!location) {
-    return '위치 정보 없음'
-  }
-
-  const {
-    locationCategory,
-    nearestStation,
-    walkingMinutes,
-  } = location
-
-  const locationName = getLocationLabel(locationCategory)
-
-  if (
-    nearestStation &&
-    walkingMinutes !== null
-  ) {
-    return `${nearestStation} · 도보 ${walkingMinutes}분`
-  }
-
-  if (walkingMinutes !== null) {
-    return `${locationName} · 도보 ${walkingMinutes}분`
-  }
-
-  return locationName
-}
-
-const formatReservationDate = (date: string | null) => {
-  if (!date) {
-    return '예약 가능일 없음'
-  }
-
-  const [year, month, day] = date.split('-').map(Number)
-
-  if (!year || !month || !day) {
-    return date
-  }
-
-  const parsedDate = new Date(year, month - 1, day)
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return date
-  }
-
-  return parsedDate.toLocaleDateString('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  })
-}
-
-const formatPrice = (
-  minimumPrice: number,
-  hasPriceRange: boolean,
-) =>
-  `₩${minimumPrice.toLocaleString('ko-KR')}${
-    hasPriceRange ? '~' : ''
-  }`
-
-const convertStudio = (
-  studio: CompareResultStudio,
-): SelectedStudio => ({
-  id: studio.studioId,
-  name: studio.studioName,
-  imageSrc: studio.thumbnailUrl ?? undefined,
-  rating: studio.rating,
-  reviewCount: studio.reviewCount,
-  compareData: {
-    price: formatPrice(
-      studio.productInformation.minimumPrice,
-      studio.productInformation.hasPriceRange,
-    ),
-    description:
-      studio.productInformation.comparisonSummary,
-    badgeLabel: studio.productInformation
-      .hasAdditionalPrice
-      ? undefined
-      : '추가금 없음',
-    services: studio.serviceTags.map(getStudioServiceShortLabel),
-    location: formatLocation(studio.location),
-    reservationDate: formatReservationDate(
-      studio.earliestReservationDate,
-    ),
-  },
-})
+import { useCompareResult } from '@/pages/compare/hooks/useCompareResult'
 
 const CompareTwoPage = () => {
-  const location = useLocation()
-  const navigate = useNavigate()
-
   const {
-    remove: removeCompare,
-    clear: clearCompare,
-  } = useCompareStore()
-
-  const navigationState =
-    location.state as NavigationState | null
-
-  const initialStudioIds = navigationState?.studioIds
-  const shootingCategory =
-    navigationState?.shootingCategory
-  const studioSearch = navigationState?.studioSearch ?? ''
-
-  const [selectedStudios, setSelectedStudios] = useState<
-    SelectedStudio[]
-  >([])
-
-  const [selectedStudioId, setSelectedStudioId] = useState<
-    string | null
-  >(null)
-
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<
-    string | null
-  >(null)
-
-  const currentStudioIds = selectedStudios.map(
-    (studio) => studio.id,
-  )
-
-  const hasSelectedStudio = selectedStudios.some(
-    (studio) => studio.id === selectedStudioId,
-  )
-
-  useEffect(() => {
-    if (
-      !initialStudioIds ||
-      initialStudioIds.length < 1 ||
-      initialStudioIds.length > 2
-    ) {
-      setIsLoading(false)
-      setErrorMessage(
-        '비교할 사진관 목록이 올바르지 않습니다.',
-      )
-      return
-    }
-
-    const hasInvalidStudioId = initialStudioIds.some(
-      (studioId) => !isValidStudioId(studioId),
-    )
-
-    if (hasInvalidStudioId) {
-      setIsLoading(false)
-      setErrorMessage('올바르지 않은 사진관 ID입니다.')
-      return
-    }
-
-    const hasDuplicateStudioId =
-      new Set(initialStudioIds).size !==
-      initialStudioIds.length
-
-    if (hasDuplicateStudioId) {
-      setIsLoading(false)
-      setErrorMessage(
-        '비교할 사진관 목록이 올바르지 않습니다.',
-      )
-      return
-    }
-
-    if (!shootingCategory) {
-      setIsLoading(false)
-      setErrorMessage(
-        '비교할 촬영 컨셉이 올바르지 않습니다.',
-      )
-      return
-    }
-
-    const fetchCompareResult = async () => {
-      try {
-        setIsLoading(true)
-        setErrorMessage(null)
-
-        const data = await getCompareResult({
-          studioIds: initialStudioIds,
-          shootingCategory,
-        })
-
-        if (data.studios.length < 1 ||
-          data.studios.length > 2
-        ) {
-          setSelectedStudios([])
-          setSelectedStudioId(null)
-          setErrorMessage(
-            '비교할 사진관 정보를 불러오지 못했습니다.',
-          )
-          return
-        }
-
-        const studios = data.studios.map(convertStudio)
-
-        setSelectedStudios(studios)
-        setSelectedStudioId(studios[0]?.id ?? null)
-      } catch {
-        setSelectedStudios([])
-        setSelectedStudioId(null)
-        setErrorMessage(
-          '사진관 비교 정보를 불러오지 못했습니다.',
-        )
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    void fetchCompareResult()
-  }, [initialStudioIds, shootingCategory])
-
-  const handleBack = () => {
-    navigate('/compare', {
-      replace: true,
-      state: {
-        studioIds:
-          currentStudioIds.length > 0
-            ? currentStudioIds
-            : initialStudioIds,
-        shootingCategory,
-        studioSearch,
-      },
-    })
-  }
-
-  const handleClose = () => {
-    clearCompare()
-
-    navigate(
-      {
-        pathname: '/studios',
-        search: studioSearch,
-      },
-      {
-        replace: true,
-      },
-    )
-  }
-
-  const handleStudioDetail = (studioId: string) => {
-    navigate(`/studios/${studioId}`)
-  }
-
-  const handleSelectStudio = (studioId: string) => {
-    setSelectedStudioId(studioId)
-  }
-
-  const handleDeleteStudio = (studioId: string) => {
-      const remainingStudios = selectedStudios.filter(
-        (studio) => studio.id !== studioId,
-      )
-
-      removeCompare(Number(studioId))
-
-      //1개 -> 0개
-      if (remainingStudios.length === 0) {
-        //비교 대상 없으므로 트레이 전체 초기화
-        clearCompare()
-
-        navigate(
-          {
-            pathname: '/studios',
-            search: studioSearch,
-          },
-          {
-            replace: true,
-          },
-        )
-        return
-      }
-
-      //2개 -> 1개: D-2 화면 유지
-      setSelectedStudios(remainingStudios)
-
-      if(selectedStudioId === studioId){
-        setSelectedStudioId(
-          remainingStudios[0]?.id ?? null,
-        )
-      }
-  }
-
-  const handleAddStudio = () => {
-    navigate(
-      {
-        pathname: '/studios', 
-        search: studioSearch,
-      },
-      {
-      state: {
-        studioIds: currentStudioIds,
-        selectedStudios,
-        shootingCategory,
-        studioSearch,
-      },
-    },)
-  }
-
-  const handleConceptList = () => {
-    if (
-      !hasSelectedStudio ||
-      selectedStudioId === null
-    ) {
-      return
-    }
-
-    navigate(
-      `/studios/${selectedStudioId}/concepts`,
-    )
-  }
-
-  const isConceptButtonDisabled =
-    isLoading ||
-    errorMessage !== null ||
-    !hasSelectedStudio
+    selectedStudios,
+    selectedStudioId,
+    isLoading,
+    errorMessage,
+    shootingCategory,
+    isConceptButtonDisabled,
+    handleBack,
+    handleClose,
+    handleStudioDetail,
+    handleSelectStudio,
+    handleDeleteStudio,
+    handleAddStudio,
+    handleConceptList,
+  } = useCompareResult(2)
 
   return (
     <div className="relative mx-auto min-h-dvh w-full max-w-[402px] overflow-x-hidden bg-white">
@@ -478,7 +131,7 @@ const CompareTwoPage = () => {
                 </div>
               </div>
 
-              <CompareRow title="연계 서비스">
+              <CompareRow title="연계 서비스" columns={2}>
                 {selectedStudios.map((studio) => (
                   <div
                     key={`${studio.id}-services`}
@@ -505,7 +158,7 @@ const CompareTwoPage = () => {
                 ))}
               </CompareRow>
 
-              <CompareRow title="위치">
+              <CompareRow title="위치" columns={2}>
                 {selectedStudios.map((studio) => (
                   <p
                     key={`${studio.id}-location`}
@@ -516,7 +169,7 @@ const CompareTwoPage = () => {
                 ))}
               </CompareRow>
 
-              <CompareRow title="예약 가능일">
+              <CompareRow title="예약 가능일" columns={2}>
                 {selectedStudios.map((studio) => (
                   <p
                     key={`${studio.id}-reservation`}
@@ -592,22 +245,5 @@ const CompareTwoPage = () => {
     </div>
   )
 }
-
-const CompareRow = ({
-  title,
-  children,
-}: CompareRowProps) => (
-  <div className="flex w-full flex-col bg-[rgba(252,252,252,0.75)] py-[5px] shadow-[0px_15px_48px_0px_rgba(252,200,215,0.1)] backdrop-blur-[10px]">
-    <div className="px-5 py-[5px]">
-      <p className="font-b7 text-brand-100">
-        {title}
-      </p>
-    </div>
-
-    <div className="grid grid-cols-2 gap-4 px-5 py-[5px]">
-      {children}
-    </div>
-  </div>
-)
 
 export default CompareTwoPage

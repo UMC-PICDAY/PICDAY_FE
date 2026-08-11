@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 
 import Alert from '@/components/common/Alert'
 import Button from '@/components/common/Button'
@@ -11,10 +12,12 @@ import TimeChip from '@/components/common/TimeChip'
 import Toast from '@/components/common/Toast'
 import { IcStar, IcStar2 } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
+import { myReservationsQueryKey } from '@/hooks/useReservation'
+import { reviewDetailQueryKey, useReviewDetail } from '@/hooks/useReview'
 import { ReviewDetailSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
-import { deleteReview, getReview, updateReview, uploadImage,} from '@/services/review'
+import { deleteReview, updateReview, uploadImage } from '@/services/review'
 import { ApiError } from '@/types/common'
-import type { ReviewDetailData, ReviewKeyword,} from '@/types/review'
+import type { ReviewKeyword } from '@/types/review'
 
 type PageMode = 'view' | 'edit'
 type ModalType = 'delete' | 'leave' | null
@@ -131,6 +134,7 @@ const SectionTitle = ({ children }: { children: string }) => (
 const MyReviewPage = () => {
   const navigate = useNavigate()
   const { reviewId } = useParams<{ reviewId: string }>()
+  const queryClient = useQueryClient()
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const newImageListRef = useRef<NewReviewImage[]>([])
@@ -139,9 +143,12 @@ const MyReviewPage = () => {
   const isValidReviewId =
     Number.isInteger(parsedReviewId) && parsedReviewId > 0
 
-  const [reviewData, setReviewData] = useState<ReviewDetailData | null>(
-    null,
-  )
+  const {
+    data: reviewData,
+    isLoading,
+    isError: hasError,
+  } = useReviewDetail(parsedReviewId, isValidReviewId)
+
   const [pageMode, setPageMode] = useState<PageMode>('view')
   const [modal, setModal] = useState<ModalType>(null)
   const [score, setScore] = useState(5)
@@ -155,8 +162,6 @@ const MyReviewPage = () => {
   const [newImageList, setNewImageList] = useState<NewReviewImage[]>([])
   const [originalReview, setOriginalReview] =
     useState<ReviewSnapshot | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -191,31 +196,19 @@ const MyReviewPage = () => {
       navigate('/mypage', {
         replace: true,
       })
-      return
     }
+  }, [isValidReviewId, navigate])
 
-    const fetchReview = async () => {
-      try {
-        setIsLoading(true)
-        setHasError(false)
+  // 조회 결과를 편집 가능한 로컬 상태로 복사한다. 수정 중 변경 사항은 이 로컬
+  // 상태에서만 관리하고, 서버 값(reviewData)은 취소 시 스냅샷 복원용으로만 쓴다.
+  useEffect(() => {
+    if (!reviewData) return
 
-        const result = await getReview(parsedReviewId)
-
-        setReviewData(result)
-        setScore(result.rating)
-        setSelectedKeywords(result.keywords)
-        setReview(result.content)
-        setExistingImageUrls(result.images)
-      } catch (error) {
-        console.error('리뷰 조회 실패:', error)
-        setHasError(true)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    void fetchReview()
-  }, [isValidReviewId, navigate, parsedReviewId])
+    setScore(reviewData.rating)
+    setSelectedKeywords(reviewData.keywords)
+    setReview(reviewData.content)
+    setExistingImageUrls(reviewData.images)
+  }, [reviewData])
 
   useEffect(() => {
     newImageListRef.current = newImageList
@@ -349,16 +342,18 @@ const MyReviewPage = () => {
 
       setExistingImageUrls(nextImageUrls)
 
-      setReviewData((current) =>
-        current
-          ? {
-              ...current,
-              rating: score,
-              content: trimmedReview,
-              keywords: [...selectedKeywords],
-              images: nextImageUrls,
-            }
-          : current,
+      queryClient.setQueryData(
+        reviewDetailQueryKey(parsedReviewId),
+        (current: typeof reviewData) =>
+          current
+            ? {
+                ...current,
+                rating: score,
+                content: trimmedReview,
+                keywords: [...selectedKeywords],
+                images: nextImageUrls,
+              }
+            : current,
       )
 
       setNewImageList([])
@@ -386,6 +381,10 @@ const MyReviewPage = () => {
       setIsDeleting(true)
 
       await deleteReview(parsedReviewId)
+
+      queryClient.invalidateQueries({
+        queryKey: myReservationsQueryKey,
+      })
 
       setModal(null)
       navigate('/mypage', {

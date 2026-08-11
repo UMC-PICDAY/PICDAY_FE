@@ -5,7 +5,8 @@ import Alert3 from '@/components/common/Alert3'
 import Checkbox from '@/components/common/Checkbox'
 import Dropdown from '@/components/common/Dropdown'
 import Notice2 from '@/components/common/Notice2'
-import { IcError, IcFilter, IcStar, IcStarHalf } from '@/components/icons'
+import Review from '@/components/common/Review'
+import { IcError, IcFilter } from '@/components/icons'
 import NavigationBar from '@/components/layout/NavigationBar'
 
 import ErrorNotice from '@/pages/studio/components/ErrorNotice'
@@ -106,13 +107,15 @@ const ReviewDetailPage = () => {
       {!isError && !isLoading && (
         <div className="flex flex-col items-center px-5 py-8">
           <div className="flex items-center pb-1">
-            <div className="flex">
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStar width={36} height={36} className="text-brand-80" />
-              <IcStarHalf width={36} height={36} className="text-brand-80" />
-            </div>
+            {/* 평균 별점은 개별 리뷰(정수)와 달리 실수라 반 별까지 그린다.
+                점수 텍스트는 요약용 타이포가 달라 호출부에서 직접 렌더한다. */}
+            <Review
+              score={summary?.avgRating ?? 0}
+              size={36}
+              starClassName="text-brand-80"
+              className="flex"
+              showScore={false}
+            />
             <span className="pl-2 font-h2 text-black">
               {(summary?.avgRating ?? 0).toFixed(1)}
             </span>

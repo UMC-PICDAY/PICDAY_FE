@@ -8,21 +8,20 @@ import InputField from '@/components/common/InputField'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import { IcClose } from '@/components/icons'
+import { useToast } from '@/hooks/useToast'
 import { getSocialAuthUrl, login } from '@/services/auth'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { clearUserSessionState } from '@/utils/clearUserSession'
 import type { SocialProvider } from '@/types/auth'
 import { clearSocialLoginReturnTo, getSafeReturnTo, saveSocialLoginReturnTo } from '@/utils/authRedirect'
 
-type LoginToast = 'network' | 'auth' | null
-
 interface LoginLocationState {
   returnTo?: string
+  toastMessage?: string
 }
 
-const TOAST_MESSAGE: Record<Exclude<LoginToast, null>, string> = {
-  network: '연결 상태를 확인해 주세요',
-  auth: '로그인에 실패했어요. 다시 시도해 주세요',
-}
+const NETWORK_ERROR_MESSAGE = '연결 상태를 확인해 주세요'
+const AUTH_ERROR_MESSAGE = '로그인에 실패했어요. 다시 시도해 주세요'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -34,14 +33,24 @@ const LoginPage = () => {
   const authLogin = useAuthStore((state) => state.login)
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
-  const [toast, setToast] = useState<LoginToast>(null)
+  const { toast, showToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // 다른 화면(소셜 로그인 콜백 실패 등)에서 안내 메시지를 담아 이 화면으로
+  // 돌아올 때 한 번만 보여주고, history state에서 지워 새로고침해도 다시
+  // 안 뜨게 한다.
   useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), 3000)
-    return () => clearTimeout(timer)
-  }, [toast])
+    const incomingToast = (
+      location.state as LoginLocationState | null
+    )?.toastMessage
+    if (!incomingToast) return
+
+    showToast(incomingToast)
+    navigate(location.pathname, {
+      replace: true,
+      state: { returnTo },
+    })
+  }, [location, navigate, returnTo, showToast])
 
   const canSubmit = loginId !== '' && password !== '' && !isSubmitting
 
@@ -51,11 +60,15 @@ const LoginPage = () => {
     setIsSubmitting(true)
     try {
       const { token } = await login(loginId, password)
+      // 이전 사용자가 로그아웃 없이 다른 계정으로 로그인하는 경우까지
+      // 막으려면 새 로그인 시점에도 상태를 비워야 한다 (로그아웃 시
+      // 비우는 것만으로는 "로그아웃 없이 계정 전환" 케이스를 못 막음).
+      clearUserSessionState()
       authLogin({ accessToken: token.accessToken, refreshToken: token.refreshToken })
       clearSocialLoginReturnTo()
       navigate(returnTo, { replace: true })
     } catch {
-      setToast(navigator.onLine ? 'auth' : 'network')
+      showToast(navigator.onLine ? AUTH_ERROR_MESSAGE : NETWORK_ERROR_MESSAGE)
     } finally {
       setIsSubmitting(false)
     }
@@ -69,7 +82,7 @@ const LoginPage = () => {
       window.location.href = authUrl
     } catch {
       clearSocialLoginReturnTo()
-      setToast(navigator.onLine ? 'auth' : 'network')
+      showToast(navigator.onLine ? AUTH_ERROR_MESSAGE : NETWORK_ERROR_MESSAGE)
     }
   }
 
@@ -187,7 +200,7 @@ const LoginPage = () => {
 
       {toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-10 flex justify-center px-5">
-          <Toast message={TOAST_MESSAGE[toast]} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </div>

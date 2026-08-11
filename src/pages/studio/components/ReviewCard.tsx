@@ -49,7 +49,7 @@ const Photos = ({ photos, size, bleed }: PhotosProps) => (
     {photos.map((src, index) =>
       src ? (
         <img
-          key={index}
+          key={src}
           src={src}
           alt=""
           style={{ width: size, height: size }}
@@ -57,7 +57,7 @@ const Photos = ({ photos, size, bleed }: PhotosProps) => (
         />
       ) : (
         <div
-          key={index}
+          key={`placeholder-${index}`}
           style={{ width: size, height: size }}
           className="shrink-0 rounded-lg bg-brand-60"
         />

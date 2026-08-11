@@ -6,6 +6,13 @@
  * 회원탈퇴 팝업 플로우를 처리함
  */
 import Toast from '@/components/common/Toast'
+import { useToast } from '@/hooks/useToast'
+import {
+  useMe,
+  useNicknameAvailability,
+  useUpdateNickname,
+  useWithdraw,
+} from '@/hooks/useAuth'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -20,39 +27,29 @@ import SegmentedTab from '@/components/common/SegmentedTab'
 import Toggle from '@/components/common/Toggle'
 import AppTabBar from '@/components/layout/AppTabBar'
 import { ProfileHeaderSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
-import {
-  checkNicknameAvailable,
-  getMe,
-  logout,
-  updateNickname,
-  withdraw,
-} from '@/services/auth'
+import { logout } from '@/services/auth'
 
 const ProfileSettingPage = () => {
   const navigate = useNavigate()
 
   const clearAuth = useAuthStore((state) => state.logout)
 
-  const [toastMessage, setToastMessage] = useState('')
+  const { toast, showToast } = useToast()
 
-  // 토스트 메시지 표시
-  const showToast = (message: string) => {
-    setToastMessage(message)
+  const {
+    data: meData,
+    isLoading,
+    isError: isMeError,
+  } = useMe()
 
-    window.setTimeout(() => {
-      setToastMessage('')
-    }, 3000)
-  }
+  const updateNicknameMutation = useUpdateNickname()
+  const withdrawMutation = useWithdraw()
 
-  // 사용자 정보
+  // 사용자 정보 — getMe 응답을 그대로 쓰지 않고 로컬 편집 상태로 복사해
+  // 닉네임 입력·저장 중에도 화면이 즉시 반응하게 한다.
   const [nickname, setNickname] = useState('')
   const [originalNickname, setOriginalNickname] =
     useState('')
-  const [profileImageUrl, setProfileImageUrl] =
-    useState('')
-  const [provider, setProvider] = useState<
-    'LOCAL' | 'KAKAO' | 'GOOGLE'
-  >('LOCAL')
 
   // 알림 설정
   const [reservationAlarm, setReservationAlarm] =
@@ -60,22 +57,33 @@ const ProfileSettingPage = () => {
   const [marketingAlarm, setMarketingAlarm] =
     useState(false)
 
-  // API 처리 상태
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [
-    isCheckingNickname,
-    setIsCheckingNickname,
-  ] = useState(false)
-  const [
-    isNicknameDuplicate,
-    setIsNicknameDuplicate,
-  ] = useState(false)
-
   // 회원탈퇴 팝업 단계
   const [withdrawStep, setWithdrawStep] = useState<
     'none' | 'confirm' | 'delete'
   >('none')
+
+  const profileImageUrl =
+    meData?.user.profileImageUrl ?? ''
+  const provider = meData?.user.provider ?? 'LOCAL'
+
+  // getMe 응답이 도착하면 로컬 편집 상태를 한 번 채운다.
+  useEffect(() => {
+    if (!meData) return
+
+    setNickname(meData.user.nickname)
+    setOriginalNickname(meData.user.nickname)
+    setReservationAlarm(
+      meData.user.notification?.reservation ?? false,
+    )
+    setMarketingAlarm(
+      meData.user.notification?.marketing ?? false,
+    )
+  }, [meData])
+
+  useEffect(() => {
+    if (!isMeError) return
+    showToast('내 정보를 불러오지 못했습니다.')
+  }, [isMeError, showToast])
 
   // 닉네임 유효성 검사
   const trimmedNickname = nickname.trim()
@@ -84,84 +92,40 @@ const ProfileSettingPage = () => {
     trimmedNickname.length >= 2 &&
     trimmedNickname.length <= 10
 
+  // 닉네임 중복 확인 — 입력이 멈춘 뒤 300ms 후의 값만 조회 대상으로 삼는다.
+  const [debouncedNickname, setDebouncedNickname] =
+    useState('')
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedNickname(trimmedNickname)
+    }, 300)
+
+    return () => window.clearTimeout(timer)
+  }, [trimmedNickname])
+
+  const shouldCheckNickname =
+    isNicknameValid &&
+    debouncedNickname === trimmedNickname &&
+    debouncedNickname !== originalNickname
+
+  const {
+    data: nicknameAvailability,
+    isFetching: isCheckingNickname,
+  } = useNicknameAvailability(
+    debouncedNickname,
+    shouldCheckNickname,
+  )
+
+  const isNicknameDuplicate =
+    shouldCheckNickname &&
+    nicknameAvailability?.available === false
+
   const isSaveDisabled =
-    isSaving ||
+    updateNicknameMutation.isPending ||
     isCheckingNickname ||
     !isNicknameValid ||
     isNicknameDuplicate
-
-  // 내 정보 조회
-  useEffect(() => {
-    const fetchMyInfo = async () => {
-      try {
-        setIsLoading(true)
-
-        const result = await getMe()
-        const user = result.user
-
-        setNickname(user.nickname)
-        setOriginalNickname(user.nickname)
-        setProfileImageUrl(user.profileImageUrl ?? '')
-        setProvider(user.provider)
-        setReservationAlarm(
-          user.notification?.reservation ?? false,
-        )
-        setMarketingAlarm(
-          user.notification?.marketing ?? false,
-        )
-      } catch (error) {
-        console.error('내 정보 조회 실패:', error)
-        showToast('내 정보를 불러오지 못했습니다.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchMyInfo()
-  }, [])
-
-  // 닉네임 중복 확인
-  useEffect(() => {
-    if (!isNicknameValid) {
-      setIsNicknameDuplicate(false)
-      setIsCheckingNickname(false)
-      return
-    }
-
-    if (trimmedNickname === originalNickname) {
-      setIsNicknameDuplicate(false)
-      setIsCheckingNickname(false)
-      return
-    }
-
-    const timer = window.setTimeout(async () => {
-      try {
-        setIsCheckingNickname(true)
-
-        const result =
-          await checkNicknameAvailable(
-            trimmedNickname,
-          )
-
-        setIsNicknameDuplicate(!result.available)
-      } catch (error) {
-        console.error(
-          '닉네임 중복 확인 실패:',
-          error,
-        )
-      } finally {
-        setIsCheckingNickname(false)
-      }
-    }, 300)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [
-    trimmedNickname,
-    originalNickname,
-    isNicknameValid,
-  ])
 
   // 로그인 제공자 표시 문구
   const isSocialLogin = provider !== 'LOCAL'
@@ -186,32 +150,25 @@ const ProfileSettingPage = () => {
     : '연동된 외부 계정 없음'
 
   // 닉네임 저장
-  const handleSave = async () => {
+  const handleSave = () => {
     if (isSaveDisabled) {
       return
     }
 
-    try {
-      setIsSaving(true)
+    updateNicknameMutation.mutate(trimmedNickname, {
+      onSuccess: (result) => {
+        const updatedNickname = result.user.nickname
 
-      const result = await updateNickname(
-        trimmedNickname,
-      )
+        setNickname(updatedNickname)
+        setOriginalNickname(updatedNickname)
 
-      const updatedNickname =
-        result.user.nickname
-
-      setNickname(updatedNickname)
-      setOriginalNickname(updatedNickname)
-      setIsNicknameDuplicate(false)
-
-      showToast('프로필이 저장되었습니다.')
-    } catch (error) {
-      console.error('닉네임 수정 실패:', error)
-      showToast('프로필 저장에 실패했습니다.')
-    } finally {
-      setIsSaving(false)
-    }
+        showToast('프로필이 저장되었습니다.')
+      },
+      onError: (error) => {
+        console.error('닉네임 수정 실패:', error)
+        showToast('프로필 저장에 실패했습니다.')
+      },
+    })
   }
 
   // 로그아웃
@@ -229,18 +186,19 @@ const ProfileSettingPage = () => {
   }
 
   // 회원탈퇴
-  const handleWithdraw = async () => {
-    try {
-      await withdraw()
-
-      clearAuth()
-      navigate('/mypage/withdraw/complete')
-    } catch (error) {
-      console.error('회원탈퇴 실패:', error)
-      showToast(
-        '회원탈퇴에 실패했습니다. 진행 중인 예약을 확인해 주세요.',
-      )
-    }
+  const handleWithdraw = () => {
+    withdrawMutation.mutate(undefined, {
+      onSuccess: () => {
+        clearAuth()
+        navigate('/mypage/withdraw/complete')
+      },
+      onError: (error) => {
+        console.error('회원탈퇴 실패:', error)
+        showToast(
+          '회원탈퇴에 실패했습니다. 진행 중인 예약을 확인해 주세요.',
+        )
+      },
+    })
   }
 
   // 상단 탭 이동
@@ -364,7 +322,7 @@ const ProfileSettingPage = () => {
                 : handleSave
             }
           >
-            {isSaving
+            {updateNicknameMutation.isPending
               ? '저장 중...'
               : isCheckingNickname
                 ? '확인 중...'
@@ -416,9 +374,9 @@ const ProfileSettingPage = () => {
         </div>
       )}
 
-      {toastMessage && (
+      {toast && (
         <div className="fixed bottom-[110px] left-1/2 z-[60] -translate-x-1/2">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </main>

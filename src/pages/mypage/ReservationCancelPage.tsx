@@ -17,11 +17,9 @@ import Alert2 from '@/components/common/Alert2'
 import Button from '@/components/common/Button'
 import Toast from '@/components/common/Toast'
 import NavigationBar from '@/components/layout/NavigationBar'
-import {
-  cancelReservation,
-  getReservationDetail,
-  type ReservationDetailData,
-} from '@/services/reservation'
+import { useToast } from '@/hooks/useToast'
+import { useReservationDetail } from '@/hooks/useReservation'
+import { cancelReservation } from '@/services/reservation'
 import { ApiError } from '@/types/common'
 import { formatReservationDateTimeDotted } from '@/utils/formatReservationDateTime'
 
@@ -38,12 +36,10 @@ const ReservationCancelPage = () => {
     reservationId: string
   }>()
 
-  const [
-    reservation,
-    setReservation,
-  ] = useState<ReservationDetailData | null>(
-    null,
-  )
+  const {
+    data: reservation,
+    isError: hasReservationError,
+  } = useReservationDetail(reservationId)
 
   const [
     isCancelModalOpen,
@@ -55,49 +51,31 @@ const ReservationCancelPage = () => {
     setIsSubmitting,
   ] = useState(false)
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  const showToast = (message: string) => {
-    setToastMessage(message)
-    window.setTimeout(() => setToastMessage(null), 3000)
-  }
+  const { toast, showToast } = useToast()
 
   useEffect(() => {
     if (!reservationId) {
       navigate('/mypage', {
         replace: true,
       })
-
-      return
     }
-
-    const fetchReservationDetail =
-      async () => {
-        try {
-          const result =
-            await getReservationDetail(
-              reservationId,
-            )
-
-          setReservation(result)
-        } catch (error) {
-          console.error(
-            '예약 상세 조회에 실패했습니다.',
-            error,
-          )
-
-          navigate('/mypage', {
-            replace: true,
-            state: {
-              toastMessage:
-                '예약 정보를 불러오지 못했습니다.',
-            },
-          })
-        }
-      }
-
-    void fetchReservationDetail()
   }, [navigate, reservationId])
+
+  useEffect(() => {
+    if (hasReservationError) {
+      console.error(
+        '예약 상세 조회에 실패했습니다.',
+      )
+
+      navigate('/mypage', {
+        replace: true,
+        state: {
+          toastMessage:
+            '예약 정보를 불러오지 못했습니다.',
+        },
+      })
+    }
+  }, [hasReservationError, navigate])
 
   const handleCancelReservation =
     async () => {
@@ -189,7 +167,7 @@ const ReservationCancelPage = () => {
 
   if (!reservation) {
     return (
-      <main className="flex min-h-dvh w-full flex-col bg-white">
+      <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white">
         <NavigationBar
           title="예약 취소"
           showRight={false}
@@ -212,7 +190,7 @@ const ReservationCancelPage = () => {
     )
 
   return (
-    <main className="flex min-h-dvh w-full flex-col bg-white">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col overflow-x-hidden bg-white pb-[120px]">
       <NavigationBar
         title="예약 취소"
         showRight={false}
@@ -242,7 +220,7 @@ const ReservationCancelPage = () => {
         />
       </div>
 
-      <section className="flex h-[170px] w-full flex-col items-center gap-6 px-5 py-[10px]">
+      <section className="flex w-full flex-col items-center gap-6 px-5 py-[10px]">
         <div className="flex w-full flex-col rounded-[8px] bg-brand-20 p-5">
           <div className="flex flex-col items-start self-stretch pb-3">
             <h2 className="font-b5 text-black">
@@ -305,9 +283,9 @@ const ReservationCancelPage = () => {
         </div>
       )}
 
-      {toastMessage && (
+      {toast && (
         <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </main>

@@ -6,11 +6,7 @@
  * 예약 내역이 없는 경우 empty 상태 화면을 표시함
  */
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   useLocation,
   useNavigate,
@@ -25,10 +21,11 @@ import SegmentedTab from '@/components/common/SegmentedTab'
 import Toast from '@/components/common/Toast'
 import { IcEvent2 } from '@/components/icons'
 import AppTabBar from '@/components/layout/AppTabBar'
+import { useToast } from '@/hooks/useToast'
+import { useMe } from '@/hooks/useAuth'
+import { useMyReservations } from '@/hooks/useReservation'
 import { ReservationListSkeleton } from '@/pages/mypage/components/MyPageSkeleton'
-import { getMe } from '@/services/auth'
 import {
-  getMyReservations,
   getReservationDetail,
   type ReservationListItem,
   type ReservationStatus,
@@ -78,12 +75,7 @@ const MyReservationPage = () => {
   const location = useLocation()
   const [searchParams] = useSearchParams()
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  const showToast = (message: string) => {
-    setToastMessage(message)
-    window.setTimeout(() => setToastMessage(null), 3000)
-  }
+  const { toast, showToast } = useToast()
 
   // 다른 화면(예약 상세 등)에서 조회 실패로 이 화면으로 돌아올 때 넘겨준 안내
   // 메시지를 한 번만 보여주고, history state에서 지워 새로고침해도 다시 안 뜨게 한다.
@@ -97,33 +89,19 @@ const MyReservationPage = () => {
       replace: true,
       state: null,
     })
-  }, [location, navigate])
+  }, [location, navigate, showToast])
 
-  const [
-    reservations,
-    setReservations,
-  ] = useState<ReservationListItem[]>([])
-
-  const [
+  const {
+    data: reservations = [],
     isLoading,
-    setIsLoading,
-  ] = useState(true)
+    isError: hasError,
+  } = useMyReservations()
 
-  const [
-    hasError,
-    setHasError,
-  ] = useState(false)
+  const { data: meData } = useMe()
 
-  const [userName, setUserName] = useState('')
-
-  const [
-    profileImageUrl,
-    setProfileImageUrl,
-  ] = useState('')
-
-  const [provider, setProvider] = useState<
-    'LOCAL' | 'KAKAO' | 'GOOGLE'
-  >('LOCAL')
+  const userName = meData?.user.nickname ?? ''
+  const profileImageUrl = meData?.user.profileImageUrl ?? ''
+  const provider = meData?.user.provider ?? 'LOCAL'
 
   const filterParam =
     searchParams.get('filter')
@@ -132,45 +110,6 @@ const MyReservationPage = () => {
     isFilterType(filterParam)
       ? filterParam
       : 'all'
-
-  useEffect(() => {
-    const fetchReservations =
-      async () => {
-        setIsLoading(true)
-        setHasError(false)
-
-        try {
-          const result =
-            await getMyReservations()
-
-          setReservations(result)
-        } catch (error) {
-          console.error(
-            '예약 내역 조회에 실패했습니다.',
-            error,
-          )
-
-          setReservations([])
-          setHasError(true)
-        } finally {
-          setIsLoading(false)
-        }
-      }
-
-    void fetchReservations()
-  }, [])
-
-  useEffect(() => {
-    getMe()
-      .then((result) => {
-        setUserName(result.user.nickname)
-        setProfileImageUrl(result.user.profileImageUrl ?? '')
-        setProvider(result.user.provider)
-      })
-      .catch((error) => {
-        console.error('내 정보 조회에 실패했습니다.', error)
-      })
-  }, [])
 
   const isSocialLogin = provider !== 'LOCAL'
 
@@ -360,7 +299,7 @@ const MyReservationPage = () => {
           error,
         )
 
-        setToastMessage(
+        showToast(
           '예약 정보를 불러오지 못했습니다. 다시 시도해 주세요.'
         )
       }
@@ -374,7 +313,7 @@ const MyReservationPage = () => {
     filteredReservations.length === 0
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-white">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-[402px] flex-col bg-white">
       <Profile
         variant="userInfo"
         userName={userName}
@@ -514,9 +453,9 @@ const MyReservationPage = () => {
         <AppTabBar activeTab="mypage" />
       </div>
 
-      {toastMessage && (
+      {toast && (
         <div className="fixed bottom-[110px] left-1/2 z-[60] -translate-x-1/2">
-          <Toast message={toastMessage} />
+          <Toast key={toast.id} message={toast.message} />
         </div>
       )}
     </div>
