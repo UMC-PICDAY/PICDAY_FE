@@ -54,6 +54,16 @@ const LoginPage = () => {
 
   const canSubmit = loginId !== '' && password !== '' && !isSubmitting
 
+  // 공유 링크로 리뷰 화면에 바로 들어와 로그인으로 넘어온 경우처럼 이전 히스토리가
+  // 없으면 navigate(-1)이 갈 곳이 없어 로그인 화면에 갇힌다. 이때만 비로그인 홈으로 뺀다.
+  const handleClose = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/', { replace: true })
+  }
+
   const handleLogin = async () => {
     if (!canSubmit) return
 
@@ -79,7 +89,11 @@ const LoginPage = () => {
       saveSocialLoginReturnTo(returnTo)
 
       const { authUrl } = await getSocialAuthUrl(provider)
-      window.location.href = authUrl
+      // href 대입은 히스토리에 엔트리를 하나 더 쌓고, 그 엔트리가 인증 리다이렉트를
+      // 거쳐 콜백 URL로 끝난 뒤 returnTo로 replace된다. 그러면 이 로그인 화면이
+      // 스택에 그대로 남아 로그인 후 뒤로가기가 로그인 화면으로 돌아온다.
+      // replace로 이 화면을 인증 페이지로 덮어써야 한다.
+      window.location.replace(authUrl)
     } catch {
       clearSocialLoginReturnTo()
       showToast(navigator.onLine ? AUTH_ERROR_MESSAGE : NETWORK_ERROR_MESSAGE)
@@ -94,7 +108,7 @@ const LoginPage = () => {
           <button
             type="button"
             className="cursor-pointer border-none bg-transparent p-0"
-            onClick={() => navigate(-1)}
+            onClick={handleClose}
             aria-label="닫기"
           >
             <IcClose width={24} height={24} />

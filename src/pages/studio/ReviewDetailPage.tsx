@@ -59,8 +59,11 @@ const ReviewDetailPage = () => {
   }
 
   // 로그인 후 홈이 아니라 보려던 리뷰 화면으로 돌아오도록 현재 경로를 넘긴다.
+  // 비로그인 상태의 이 화면은 모달만 띄우는 빈 화면이라 히스토리에 남길 이유가 없다.
+  // replace로 덮어써야 로그인 후 뒤로가기 한 번에 사진관 상세로 돌아간다.
   const handleLogin = () => {
     navigate('/login', {
+      replace: true,
       state: {
         returnTo: `${location.pathname}${location.search}`,
       },
