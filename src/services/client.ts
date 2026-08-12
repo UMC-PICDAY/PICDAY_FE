@@ -90,6 +90,16 @@ apiClient.interceptors.response.use(
 )
 
 const unwrap = <T>(response: { data: ApiResponse<T> }): T => {
+  // 일부 DELETE 엔드포인트(리뷰 삭제, 위시리스트 삭제 등)는 성공해도 본문 없이
+  // 200/204만 내려준다. axios는 빈 본문을 빈 문자열로 파싱하는데, 이걸 그대로
+  // 구조분해하면 success가 undefined가 되어 실제로는 성공한 요청을 실패로
+  // 오판해 ApiError를 던지게 된다. 여기까지 왔다는 건 이미 axios가 2xx로
+  // 판단한 응답이므로(비-2xx는 인터셉터가 먼저 reject) 본문이 없으면 성공으로
+  // 처리한다.
+  if (!response.data) {
+    return undefined as T
+  }
+
   const { success, code, message, data } = response.data
   if (!success) {
     throw new ApiError(code, message)
