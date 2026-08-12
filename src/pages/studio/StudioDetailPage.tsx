@@ -195,6 +195,7 @@ const StudioDetailPage = () => {
   ]
   const bestReview = detail.reviewSummary.previewReview
   const hasReviews = detail.reviewSummary.reviewCount > 0
+  const hasHairMakeupPartners = detail.hairMakeupPartnerCount > 0
   const avgRatingText =
     detail.reviewSummary.averageRating != null
       ? detail.reviewSummary.averageRating.toFixed(1)
@@ -394,15 +395,22 @@ const StudioDetailPage = () => {
 
       <Divider />
 
-      {/* 헤어메이크업 연계 */}
+      {/* 헤어메이크업 연계. 제휴샵이 0곳이면 시트에 보여줄 게 없어 진입을 막는다. */}
       <section className="px-5 py-5">
         <button
           type="button"
           onClick={() => setOpenSheet('hairmakeup')}
-          className="flex w-full items-center pb-3"
+          disabled={!hasHairMakeupPartners}
+          className={`flex w-full items-center pb-3 ${
+            hasHairMakeupPartners ? '' : 'cursor-not-allowed'
+          }`}
         >
           <h2 className="flex-1 text-left font-b3 text-black">헤어메이크업 연계</h2>
-          <IcRight width={24} height={24} className="text-gray-40" />
+          <IcRight
+            width={24}
+            height={24}
+            className={hasHairMakeupPartners ? 'text-gray-40' : 'text-gray-20'}
+          />
         </button>
         <p className="font-b6 text-gray-80">
           제휴 헤어메이크업샵 {detail.hairMakeupPartnerCount}곳
